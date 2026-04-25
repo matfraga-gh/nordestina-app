@@ -1018,9 +1018,38 @@ function setGFormType(t){
 }
 
 function gUpdateIncomeCats(){var g=document.getElementById("gFormIncomeGroup").value,cats=g==="reservas"?INCOME_CATS_RES:g==="outros"?INCOME_CATS_OUT:[];var h="<option value=''>Categoria...</option>";cats.forEach(function(c){h+="<option>"+c+"</option>";});document.getElementById("gFormCategory").innerHTML=h;document.getElementById("gProvWrap").style.display="none";}
-function gUpdateSubcats(){var g=document.getElementById("gFormGroup").value,cats=g?EXP_CATS[g]||[]:[];var h="<option value=''>Categoria...</option>";cats.forEach(function(c){h+="<option>"+c+"</option>";});document.getElementById("gFormCategory").innerHTML=h;document.getElementById("gProvWrap").style.display="none";}
-function gUpdateProvSelect(){var cat=document.getElementById("gFormCategory").value,wrap=document.getElementById("gProvWrap");if(gestFormType!=="expense"||!cat){wrap.style.display="none";return;}var provs=allProvs.filter(function(p){return p.categoria===cat;});if(!provs.length){wrap.style.display="none";return;}wrap.style.display="block";var h="<option value=''>Selecionar fornecedor...</option>";provs.forEach(function(p){h+="<option>"+p.nome+"</option>";});h+="<option value='__outro'>Outro...</option>";document.getElementById("gFormProv").innerHTML=h;}
-function gOnProvChange(){var v=document.getElementById("gFormProv").value;if(v==="__outro"){document.getElementById("gFormDesc").value="";document.getElementById("gFormDesc").focus();}else if(v)document.getElementById("gFormDesc").value=v;}
+function gUpdateSubcats(){
+  var g=document.getElementById("gFormGroup").value;
+  var cats=g?EXP_CATS[g]||[]:[];
+  var h="<option value=''>Categoria...</option>";
+  cats.forEach(function(c){h+="<option>"+c+"</option>";});
+  document.getElementById("gFormCategory").innerHTML=h;
+  document.getElementById("gProvWrap").style.display="none";
+  document.getElementById("gFormProv").innerHTML="<option value=''>Selecionar...</option>";
+}
+
+function gUpdateProvSelect(){
+  var cat=document.getElementById("gFormCategory").value;
+  var wrap=document.getElementById("gProvWrap");
+  if(gestFormType!=="expense"||!cat){wrap.style.display="none";return;}
+  var provs=allProvs.filter(function(p){return p.categoria===cat;});
+  wrap.style.display="block";
+  var h="<option value=''>Selecionar fornecedor...</option>";
+  provs.forEach(function(p){h+="<option value='"+p.nome+"'>"+p.nome+"</option>";});
+  h+="<option value='__novo'>+ Novo fornecedor...</option>";
+  if(!provs.length) h="<option value=''>Nenhum fornecedor cadastrado</option><option value='__novo'>+ Novo fornecedor...</option>";
+  document.getElementById("gFormProv").innerHTML=h;
+}
+
+function gOnProvChange(){
+  var v=document.getElementById("gFormProv").value;
+  if(v==="__novo"||v==="__outro"){
+    document.getElementById("gFormDesc").value="";
+    document.getElementById("gFormDesc").focus();
+  } else if(v){
+    document.getElementById("gFormDesc").value=v;
+  }
+}
 
 async function saveGestEntry(){
   var cat=document.getElementById("gFormCategory").value,amt=document.getElementById("gFormAmount").value,date=document.getElementById("gFormDate").value;
