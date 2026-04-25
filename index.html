@@ -768,14 +768,12 @@ function openResDetail(id){
 }
 
 async function resChangeStatus(id,status){
-  var label = RES_SL[status];
-  var msgs = {cancelada:"Cancelar esta reserva?", pendiente:"Reativar esta reserva?", confirmada:"Confirmar esta reserva?"};
-  var icons = {cancelada:"❌", pendiente:"↩️", confirmada:"✓"};
-  confirmDialog(label, msgs[status]||"Continuar?", icons[status]||"❓", async function(){
-    document.getElementById("resDetailOverlay").classList.remove("open");
-    await api("reservas?id=eq."+id,"PATCH",{status:status});
-    await loadReservas();showToast(RES_SL[status]);
-  });
+  var msgs={cancelada:"Cancelar esta reserva?",pendiente:"Reativar esta reserva?",confirmada:"Confirmar esta reserva?"};
+  if(!window.confirm(msgs[status]||"Continuar?")) return;
+  document.getElementById("resDetailOverlay").classList.remove("open");
+  await api("reservas?id=eq."+id,"PATCH",{status:status});
+  await loadReservas();
+  showToast(RES_SL[status]);
 }
 
 // ── CHECKOUT ─────────────────────────────────────────────────────────────────
@@ -1044,14 +1042,22 @@ function gUpdateProvSelect(){
 function gOnProvChange(){
   var v=document.getElementById("gFormProv").value;
   if(v==="__novo"){
-    // cerrar form y abrir modal de fornecedores con categoría pre-seleccionada
     var cat=document.getElementById("gFormCategory").value;
-    document.getElementById("gestFormOverlay").classList.remove("open");
-    openProvModal();
-    setTimeout(function(){
-      document.getElementById("provCatSel").value=cat;
-      renderProvList();
-    },100);
+    var nome=window.prompt("Nome do novo fornecedor para '"+cat+"':");
+    if(nome&&nome.trim()){
+      api("fornecedores","POST",{categoria:cat,nome:nome.trim()}).then(function(res){
+        if(res){
+          loadGestao().then(function(){
+            gUpdateProvSelect();
+            document.getElementById("gFormProv").value=nome.trim();
+            document.getElementById("gFormDesc").value=nome.trim();
+          });
+          showToast("Fornecedor adicionado!");
+        }
+      });
+    } else {
+      document.getElementById("gFormProv").value="";
+    }
   } else if(v){
     document.getElementById("gFormDesc").value=v;
   }
@@ -1066,9 +1072,10 @@ async function saveGestEntry(){
 }
 
 async function delEntry(id){
-  confirmDialog("Apagar movimento","Tem certeza? Esta acao nao pode ser desfeita.","🗑", async function(){
-    await api("entries?id=eq."+id,"DELETE");await loadGestao();
-  });
+  if(!window.confirm("Apagar este movimento?")) return;
+  await api("entries?id=eq."+id,"DELETE");
+  await loadGestao();
+  showToast("Movimento apagado");
 }
 
 // ── FORNECEDORES ─────────────────────────────────────────────────────────────
@@ -1088,9 +1095,10 @@ function renderProvList(){
 }
 async function addProv(){var cat=document.getElementById("provCatSel").value,nome=document.getElementById("provNewName").value.trim();if(!cat||!nome)return;var res=await api("fornecedores","POST",{categoria:cat,nome:nome});if(res){document.getElementById("provNewName").value="";await loadGestao();renderProvList();showToast("Fornecedor adicionado!");}}
 async function delProv(id){
-  confirmDialog("Remover fornecedor","Tem certeza?","🗑", async function(){
-    await api("fornecedores?id=eq."+id,"DELETE");await loadGestao();renderProvList();
-  });
+  if(!window.confirm("Remover fornecedor?")) return;
+  await api("fornecedores?id=eq."+id,"DELETE");
+  await loadGestao();
+  renderProvList();
 }
 
 // ── EXPORT ───────────────────────────────────────────────────────────────────
@@ -1133,9 +1141,9 @@ async function saveUser(){
 }
 async function deleteUser(id){
   var u=allUsers.find(function(x){return x.id===id;});
-  confirmDialog("Remover usuario","Remover "+(u?u.nome:"este usuario")+"?","🗑", async function(){
-    var res=await api("usuarios?id=eq."+id,"DELETE");if(res){await loadUsers();showToast("Usuario removido");}
-  });
+  if(!window.confirm("Remover usuario "+(u?u.nome:"")+"?")) return;
+  var res=await api("usuarios?id=eq."+id,"DELETE");
+  if(res){await loadUsers();showToast("Usuario removido");}
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
