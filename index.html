@@ -563,7 +563,8 @@ function showView(id){
   if(id==="viewLogin") document.getElementById("viewLogin").classList.add("active");
 }
 
-// ── AUTH ─────────────────────────────────────────────────────────────────────
+function isReadonly(){ return curUser && curUser.rol==="auditor"; }
+
 async function doLogin(){
   var user=document.getElementById("loginUser").value.trim().toLowerCase();
   var pass=document.getElementById("loginPass").value;
@@ -620,6 +621,8 @@ function checkSession(){
 // ── RESERVAS ─────────────────────────────────────────────────────────────────
 function openReservas(){
   document.getElementById("resUser").textContent=curUser.nome;
+  // ocultar botón nueva reserva para auditor
+  document.getElementById("resBtnNova").style.display=isReadonly()?"none":"inline-block";
   showView("viewReservas");
   loadReservas();
 }
@@ -747,11 +750,15 @@ function openResDetail(id){
     if(r.co_obs)h+="<div style='font-size:11px;color:var(--text-soft);margin-top:8px;border-top:1px solid rgba(0,0,0,.08);padding-top:8px'>"+r.co_obs+"</div>";
     h+="</div>";
   }
-  if(r.status==="pendiente"){h+="<button class='btn-save' data-a='confirmar' data-id='"+r.id+"'>Confirmar Reserva</button><button class='btn-secondary' data-a='editar' data-id='"+r.id+"'>Editar</button><button class='btn-danger' data-a='cancelar' data-id='"+r.id+"'>Cancelar</button>";}
-  else if(r.status==="confirmada"){h+="<button class='btn-save' data-a='checkin' data-id='"+r.id+"'>Registrar Check-in</button><button class='btn-secondary' data-a='editar' data-id='"+r.id+"'>Editar</button><button class='btn-danger' data-a='cancelar' data-id='"+r.id+"'>Cancelar</button>";}
-  else if(r.status==="checkin"){h+="<button class='btn-green' data-a='checkout' data-id='"+r.id+"'>&#128722; Registrar Checkout</button><button class='btn-secondary' data-a='editar' data-id='"+r.id+"'>Editar</button>";}
-  else if(r.status==="checkout"){h+="<button class='btn-secondary' data-a='recheckout' data-id='"+r.id+"'>&#9998; Editar Verificacao</button>";}
-  else if(r.status==="cancelada"){h+="<button class='btn-secondary' data-a='reativar' data-id='"+r.id+"'>Reativar</button>";}
+  if(!isReadonly()){
+    if(r.status==="pendiente"){h+="<button class='btn-save' data-a='confirmar' data-id='"+r.id+"'>Confirmar Reserva</button><button class='btn-secondary' data-a='editar' data-id='"+r.id+"'>Editar</button><button class='btn-danger' data-a='cancelar' data-id='"+r.id+"'>Cancelar</button>";}
+    else if(r.status==="confirmada"){h+="<button class='btn-save' data-a='checkin' data-id='"+r.id+"'>Registrar Check-in</button><button class='btn-secondary' data-a='editar' data-id='"+r.id+"'>Editar</button><button class='btn-danger' data-a='cancelar' data-id='"+r.id+"'>Cancelar</button>";}
+    else if(r.status==="checkin"){h+="<button class='btn-green' data-a='checkout' data-id='"+r.id+"'>&#128722; Registrar Checkout</button><button class='btn-secondary' data-a='editar' data-id='"+r.id+"'>Editar</button>";}
+    else if(r.status==="checkout"){h+="<button class='btn-secondary' data-a='recheckout' data-id='"+r.id+"'>&#9998; Editar Verificacao</button>";}
+    else if(r.status==="cancelada"){h+="<button class='btn-secondary' data-a='reativar' data-id='"+r.id+"'>Reativar</button>";}
+  } else {
+    h+="<div style='text-align:center;padding:12px;font-size:12px;color:var(--text-soft);background:var(--sand-mid);border-radius:8px'>&#128274; Modo somente leitura</div>";
+  }
   document.getElementById("resDetailContent").innerHTML=h;
   document.querySelectorAll("[data-a]").forEach(function(btn){
     btn.addEventListener("click",function(){
@@ -912,6 +919,11 @@ async function resUpdateRes(){
 // ── GESTAO ───────────────────────────────────────────────────────────────────
 function openGestao(){
   document.getElementById("gestUser").textContent=curUser.nome;
+  // ocultar botones de acción para auditor
+  var ro=isReadonly();
+  document.getElementById("gestBtnNovo").style.display=ro?"none":"inline-block";
+  document.getElementById("gestBtnFornec").style.display=ro?"none":"inline-block";
+  document.getElementById("gestBtnExcel").style.display="inline-block"; // auditor sí puede exportar
   showView("viewGestao");
   loadGestao();
 }
@@ -962,7 +974,7 @@ function renderGestList(f){
     h+="<div class='entry-date'>"+e.date+"</div>";
     if(e.reserva_id)h+="<span class='entry-source'>&#128279; Reservas</span>";
     h+="</div><div class='entry-amt' style='color:"+(isI?"var(--green)":"var(--red)")+"'>"+(isI?"+":"-")+fmt(e.amount)+"</div>";
-    if(!e.reserva_id)h+="<button class='btn-del-e' data-eid='"+e.id+"' style='background:none;border:none;cursor:pointer;color:#c8a0a0;font-size:16px'>&#128465;</button>";
+    if(!e.reserva_id && !isReadonly())h+="<button class='btn-del-e' data-eid='"+e.id+"' style='background:none;border:none;cursor:pointer;color:#c8a0a0;font-size:16px'>&#128465;</button>";
     else h+="<div style='width:24px'></div>";
     h+="</div>";
   });
