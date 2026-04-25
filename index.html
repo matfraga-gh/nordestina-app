@@ -1043,9 +1043,15 @@ function gUpdateProvSelect(){
 
 function gOnProvChange(){
   var v=document.getElementById("gFormProv").value;
-  if(v==="__novo"||v==="__outro"){
-    document.getElementById("gFormDesc").value="";
-    document.getElementById("gFormDesc").focus();
+  if(v==="__novo"){
+    // cerrar form y abrir modal de fornecedores con categoría pre-seleccionada
+    var cat=document.getElementById("gFormCategory").value;
+    document.getElementById("gestFormOverlay").classList.remove("open");
+    openProvModal();
+    setTimeout(function(){
+      document.getElementById("provCatSel").value=cat;
+      renderProvList();
+    },100);
   } else if(v){
     document.getElementById("gFormDesc").value=v;
   }
@@ -1135,7 +1141,7 @@ async function deleteUser(id){
 // ── INIT ─────────────────────────────────────────────────────────────────────
 // Login
 document.getElementById("confirmCancel").addEventListener("click",function(){document.getElementById("confirmOverlay").classList.remove("open");});
-document.getElementById("btnLogin").addEventListener("click",doLogin);
+// Login
 document.getElementById("loginPass").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
 document.getElementById("btnLogoutDash").addEventListener("click",doLogout);
 
