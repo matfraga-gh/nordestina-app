@@ -1045,14 +1045,21 @@ function gOnProvChange(){
     var cat=document.getElementById("gFormCategory").value;
     var nome=window.prompt("Nome do novo fornecedor para '"+cat+"':");
     if(nome&&nome.trim()){
-      api("fornecedores","POST",{categoria:cat,nome:nome.trim()}).then(function(res){
+      nome=nome.trim();
+      api("fornecedores","POST",{categoria:cat,nome:nome}).then(function(res){
         if(res){
-          loadGestao().then(function(){
+          // recargar solo proveedores sin cerrar el form
+          api("fornecedores?select=*&order=nome.asc").then(function(data){
+            allProvs=data||[];
             gUpdateProvSelect();
-            document.getElementById("gFormProv").value=nome.trim();
-            document.getElementById("gFormDesc").value=nome.trim();
+            // seleccionar el nuevo proveedor
+            document.getElementById("gFormProv").value=nome;
+            document.getElementById("gFormDesc").value=nome;
+            showToast("Fornecedor adicionado!");
           });
-          showToast("Fornecedor adicionado!");
+        } else {
+          showToast("Erro ao salvar fornecedor");
+          document.getElementById("gFormProv").value="";
         }
       });
     } else {
