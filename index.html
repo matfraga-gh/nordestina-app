@@ -466,6 +466,19 @@ canvas{max-width:100%}
   </div>
 </div>
 
+<!-- ══ MODAL CONFIRMACION ════════════════════════════════════════════════ -->
+<div class="overlay" id="confirmOverlay">
+  <div class="modal" style="max-height:auto;padding:28px 24px 32px">
+    <div style="text-align:center;margin-bottom:8px;font-size:28px" id="confirmIcon">&#128465;</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--ocean);text-align:center;margin-bottom:8px" id="confirmTitle">Confirmar</div>
+    <div style="font-size:13px;color:var(--text-soft);text-align:center;margin-bottom:24px" id="confirmMsg">Tem certeza?</div>
+    <div style="display:flex;gap:10px">
+      <button class="btn-secondary" style="margin-top:0;flex:1" id="confirmCancel">Cancelar</button>
+      <button class="btn-danger" style="margin-top:0;flex:1" id="confirmOk">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MODAL USUARIOS ════════════════════════════════════════════════════ -->
 <div class="overlay" id="userFormOverlay">
   <div class="modal">
@@ -755,9 +768,14 @@ function openResDetail(id){
 }
 
 async function resChangeStatus(id,status){
-  document.getElementById("resDetailOverlay").classList.remove("open");
-  await api("reservas?id=eq."+id,"PATCH",{status:status});
-  await loadReservas();showToast(RES_SL[status]);
+  var label = RES_SL[status];
+  var msgs = {cancelada:"Cancelar esta reserva?", pendiente:"Reativar esta reserva?", confirmada:"Confirmar esta reserva?"};
+  var icons = {cancelada:"❌", pendiente:"↩️", confirmada:"✓"};
+  confirmDialog(label, msgs[status]||"Continuar?", icons[status]||"❓", async function(){
+    document.getElementById("resDetailOverlay").classList.remove("open");
+    await api("reservas?id=eq."+id,"PATCH",{status:status});
+    await loadReservas();showToast(RES_SL[status]);
+  });
 }
 
 // ── CHECKOUT ─────────────────────────────────────────────────────────────────
@@ -1012,7 +1030,11 @@ async function saveGestEntry(){
   if(res){document.getElementById("gestFormOverlay").classList.remove("open");await loadGestao();showToast("Salvo!");}else showToast("Erro ao salvar");
 }
 
-async function delEntry(id){if(!confirm("Apagar este movimento?"))return;await api("entries?id=eq."+id,"DELETE");await loadGestao();}
+async function delEntry(id){
+  confirmDialog("Apagar movimento","Tem certeza? Esta acao nao pode ser desfeita.","🗑", async function(){
+    await api("entries?id=eq."+id,"DELETE");await loadGestao();
+  });
+}
 
 // ── FORNECEDORES ─────────────────────────────────────────────────────────────
 function openProvModal(){
@@ -1030,7 +1052,11 @@ function renderProvList(){
   listEl.innerHTML=h;document.querySelectorAll("[data-pd]").forEach(function(btn){btn.addEventListener("click",function(){delProv(parseInt(btn.dataset.pd));});});
 }
 async function addProv(){var cat=document.getElementById("provCatSel").value,nome=document.getElementById("provNewName").value.trim();if(!cat||!nome)return;var res=await api("fornecedores","POST",{categoria:cat,nome:nome});if(res){document.getElementById("provNewName").value="";await loadGestao();renderProvList();showToast("Fornecedor adicionado!");}}
-async function delProv(id){if(!confirm("Remover fornecedor?"))return;await api("fornecedores?id=eq."+id,"DELETE");await loadGestao();renderProvList();}
+async function delProv(id){
+  confirmDialog("Remover fornecedor","Tem certeza?","🗑", async function(){
+    await api("fornecedores?id=eq."+id,"DELETE");await loadGestao();renderProvList();
+  });
+}
 
 // ── EXPORT ───────────────────────────────────────────────────────────────────
 async function exportExcel(){
@@ -1070,10 +1096,16 @@ async function saveUser(){
   if(editingUserId){if(senha){if(senha.length<6){showToast("Senha deve ter pelo menos 6 caracteres");return;}body.senha_hash=await sha256(senha);}var res=await api("usuarios?id=eq."+editingUserId,"PATCH",body);if(res){document.getElementById("userFormOverlay").classList.remove("open");await loadUsers();showToast("Usuario atualizado!");}}
   else{if(!senha||senha.length<6){showToast("Senha deve ter pelo menos 6 caracteres");return;}body.senha_hash=await sha256(senha);var res=await api("usuarios","POST",body);if(res){document.getElementById("userFormOverlay").classList.remove("open");await loadUsers();showToast("Usuario criado!");}}
 }
-async function deleteUser(id){var u=allUsers.find(function(x){return x.id===id;});if(!confirm("Remover usuario "+(u?u.nome:"")+"?"))return;var res=await api("usuarios?id=eq."+id,"DELETE");if(res){await loadUsers();showToast("Usuario removido");}}
+async function deleteUser(id){
+  var u=allUsers.find(function(x){return x.id===id;});
+  confirmDialog("Remover usuario","Remover "+(u?u.nome:"este usuario")+"?","🗑", async function(){
+    var res=await api("usuarios?id=eq."+id,"DELETE");if(res){await loadUsers();showToast("Usuario removido");}
+  });
+}
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 // Login
+document.getElementById("confirmCancel").addEventListener("click",function(){document.getElementById("confirmOverlay").classList.remove("open");});
 document.getElementById("btnLogin").addEventListener("click",doLogin);
 document.getElementById("loginPass").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
 document.getElementById("btnLogoutDash").addEventListener("click",doLogout);
