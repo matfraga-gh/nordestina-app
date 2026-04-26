@@ -375,13 +375,15 @@ canvas{max-width:100%}
     <!-- Servicos Adicionais -->
     <div class="form-section">
       <div class="fsec-title">&#10133; Servicos Adicionais</div>
-      <div class="cafe-row"><input type="checkbox" id="fCafe" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fCafe" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Cafe da manha</label></div>
-      <div class="cafe-row"><input type="checkbox" id="fAdicEarlyCI" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fAdicEarlyCI" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Early check-in</label></div>
-      <div class="cafe-row"><input type="checkbox" id="fAdicLateCO" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fAdicLateCO" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Late check-out</label></div>
-      <div class="cafe-row"><input type="checkbox" id="fCozinheira" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fCozinheira" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Servico de cozinheira</label></div>
-      <div class="cafe-row"><input type="checkbox" id="fAdicOutros" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fAdicOutros" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Outros</label></div>
-      <div id="fAdicDetalheWrap" style="display:none;margin-top:4px"><label>Detalhe</label><input type="text" id="fAdicDetalhe" placeholder="Descreva brevemente..."/></div>
-      <div id="fAdicValorWrap" style="display:none;margin-top:4px">
+      <div class="row2" style="gap:8px;margin-bottom:0">
+        <div class="cafe-row" style="margin-bottom:8px"><input type="checkbox" id="fCafe" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fCafe" style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Cafe da manha</label></div>
+        <div class="cafe-row" style="margin-bottom:8px"><input type="checkbox" id="fAdicEarlyCI" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fAdicEarlyCI" style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Early check-in</label></div>
+        <div class="cafe-row" style="margin-bottom:8px"><input type="checkbox" id="fAdicLateCO" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fAdicLateCO" style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Late check-out</label></div>
+        <div class="cafe-row" style="margin-bottom:8px"><input type="checkbox" id="fCozinheira" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fCozinheira" style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Cozinheira</label></div>
+        <div class="cafe-row" style="margin-bottom:0"><input type="checkbox" id="fAdicOutros" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fAdicOutros" style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Outros</label></div>
+      </div>
+      <div id="fAdicDetalheWrap" style="display:none;margin-top:8px"><label>Detalhe</label><input type="text" id="fAdicDetalhe" placeholder="Descreva brevemente..."/></div>
+      <div id="fAdicValorWrap" style="display:none;margin-top:8px">
         <label>Valor Total Adicionais (R$)</label><input type="number" id="fAdicValor" placeholder="0,00"/>
         <label>Forma de Pagamento</label>
         <select id="fAdicPago"><option value="">A cobrar no check-in</option></select>
@@ -691,7 +693,7 @@ function renderResList(){
   h+="</div>";
   if(!f.length){h+="<div class='empty'>Nenhuma reserva neste mes.</div>";}
   else f.forEach(function(r){
-    var n=nights(r.checkin,r.checkout),saldo=Number(r.total||0)-Number(r.anticipo||0);
+    var n=nights(r.checkin,r.checkout),saldo=Number(r.total||0)+Number(r.adic_valor||0)-Number(r.anticipo||0);
     var sH="";
     if(r.status!=="checkin"&&r.status!=="cancelada"&&r.status!=="checkout"&&saldo>0)sH="<div style='font-size:11px;font-weight:600;color:var(--yellow)'>Saldo: "+fmt(saldo)+"</div>";
     if(r.status==="checkin")sH="<div style='font-size:11px;font-weight:600;color:var(--green)'>Pago completo</div>";
@@ -762,7 +764,7 @@ async function syncMetrics(noites,cap){
 // ── RES DETAIL ────────────────────────────────────────────────────────────────
 function openResDetail(id){
   var r=allRes.find(function(x){return x.id===id;});if(!r)return;
-  var n=nights(r.checkin,r.checkout),saldo=Number(r.total||0)-Number(r.anticipo||0);
+  var n=nights(r.checkin,r.checkout),saldo=Number(r.total||0)+Number(r.adic_valor||0)-Number(r.anticipo||0);
   el("resDetailTitle").textContent=r.apto||"Reserva";
   var step={pendiente:1,confirmada:2,checkin:3,checkout:4}[r.status]||0;
   var h="<div class='status-bar'><div class='s-step"+(step>=1?" done":"")+"'></div><div class='s-step"+(step>=2?" done":step===1?" current":"")+"'></div><div class='s-step"+(step>=3?" done":step===2?" current":"")+"'></div><div class='s-step"+(step>=4?" done":step===3?" current":"")+"'></div></div>";
@@ -939,7 +941,7 @@ function calcNoites(){
   if(ci){var m=new Date(ci+"T12:00:00");m.setDate(m.getDate()+1);el("fCheckout").min=m.toISOString().slice(0,10);if(co&&new Date(co+"T12:00:00")<=new Date(ci+"T12:00:00")){el("fCheckout").value="";el("noitesCalc").textContent="—";return;}}
   el("noitesCalc").textContent=nights(ci,co)||"—";
 }
-function calcSaldo(){var t=parseFloat(el("fTotal").value)||0,a=parseFloat(el("fAnticipo").value)||0;el("saldoCalc").textContent=fmt(Math.max(0,t-a));}
+function calcSaldo(){var t=parseFloat(el("fTotal").value)||0,a=parseFloat(el("fAnticipo").value)||0,adic=parseFloat(el("fAdicValor").value)||0;el("saldoCalc").textContent=fmt(Math.max(0,t+adic-a));}
 
 function resPagoChange(tipo){
   var sId=tipo==="anticipo"?"fPagoAnticipo":"fPagoSaldo",bId=tipo==="anticipo"?"fxAnticipo":"fxSaldo",lId=tipo==="anticipo"?"fxAntLabel":"fxSaldoLabel";
@@ -967,6 +969,7 @@ function updateAdicResumo(){
   var v=parseFloat(el("fAdicValor").value)||0,p=el("fAdicPago").value;
   if(labels.length&&v>0){el("fAdicResumoTxt").textContent=labels.join(", ")+": "+fmt(v)+(p?" · "+p:" · A cobrar no check-in");el("fAdicResumo").style.display="flex";}
   else el("fAdicResumo").style.display="none";
+  calcSaldo();
 }
 
 function checkSolap(apto,ci,co,exId){
@@ -1025,6 +1028,7 @@ async function resSaveNew(status){
   try{
     var d=resGetBaseData();
     if(!d.apto||!d.checkin||!d.checkout||!d.nome){showToast("Preencha os campos obrigatorios");btn.disabled=false;btn.textContent="Salvar Reserva";return;}
+    var today=new Date();today.setHours(0,0,0,0);var ciDate=new Date(d.checkin+"T12:00:00");if(ciDate<today){showToast("Nao e possivel reservar com datas passadas");btn.disabled=false;btn.textContent="Salvar Reserva";return;}
     if(new Date(d.checkout+"T12:00:00")<=new Date(d.checkin+"T12:00:00")){showToast("Check-out deve ser posterior ao check-in");btn.disabled=false;btn.textContent="Salvar Reserva";return;}
     if(d.total>0&&d.anticipo>d.total){showToast("O anticipo nao pode ser maior que o total");btn.disabled=false;btn.textContent="Salvar Reserva";return;}
     if(checkSolap(d.apto,d.checkin,d.checkout,null)){showToast("Conflito: "+d.apto+" ja tem reserva nessas datas");btn.disabled=false;btn.textContent="Salvar Reserva";return;}
