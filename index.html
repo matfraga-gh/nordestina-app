@@ -1187,6 +1187,7 @@ async function deleteUser(id){
 // Login
 document.getElementById("confirmCancel").addEventListener("click",function(){document.getElementById("confirmOverlay").classList.remove("open");});
 // Login
+document.getElementById("btnLogin").addEventListener("click",doLogin);
 document.getElementById("loginPass").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
 document.getElementById("btnLogoutDash").addEventListener("click",doLogout);
 
