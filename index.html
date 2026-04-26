@@ -374,7 +374,7 @@ canvas{max-width:100%}
       <label>Nacionalidade</label>
       <div style="position:relative">
       <input type="text" id="fNacionalidade" placeholder="Ex: Brasileira, Argentina..." autocomplete="off" oninput="filterNacionalidade(this.value)" onfocus="filterNacionalidade(this.value)" onblur="setTimeout(function(){document.getElementById('nacList').style.display='none'},200)"/>
-      <div id="nacList" style="display:none;position:absolute;background:var(--white);border:1px solid var(--sand-dark);border-radius:8px;max-height:160px;overflow-y:auto;z-index:999;width:100%;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.1)"></div>
+      <div id="nacList" style="display:none;position:fixed;background:var(--white);border:1px solid var(--sand-dark);border-radius:8px;max-height:160px;overflow-y:auto;z-index:9999;width:280px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
       </div>
       <label>Canal de Venda</label>
       <select id="fCanal"><option value="">Selecionar...</option><option>WhatsApp</option><option>Booking.com</option><option>Walk-in</option><option>Indicacao</option><option>Instagram</option><option>Outro</option></select>
@@ -432,7 +432,7 @@ canvas{max-width:100%}
       </div>
     </div>
     </div>
-    <div id="resFormActions"></div>
+    <div id="resFormActions"><button class="btn-save" id="btnResAction">Salvar Reserva</button></div>
   </div>
 </div>
 
@@ -540,9 +540,14 @@ var ROL_LABELS={master:"Master",administrativa:"Administrativa",comercial:"Comer
 var NACIONALIDADES=["Afghã","Albanesa","Alemã","Andorrana","Angolana","Antiguense","Árabe","Argentina","Armênia","Australiana","Austríaca","Azerbaijana","Bahamense","Bangladeshiana","Barbadiana","Belga","Belizenha","Beninesa","Bielorrussa","Boliviana","Bósnia","Botswanesa","Brasileira","Bruneiana","Búlgara","Burkinesa","Burundinesa","Cabo-verdiana","Camaronesa","Canadense","Catarense","Cazaque","Chadiana","Chilena","Chinesa","Cipriota","Colombiana","Comorense","Congolesa","Costarriquenha","Croata","Cubana","Dinamarquesa","Djiboutiana","Dominicana","Egípcia","Salvadorenha","Emiradense","Equatoriana","Eritreia","Eslovaca","Eslovena","Espanhola","Estadunidense","Estoniana","Etíope","Fijiana","Filipina","Finlandesa","Francesa","Gabonesa","Gambiana","Ganesa","Georgiana","Granadina","Grega","Guatemalteca","Guineense","Guineense-equatorial","Haitiana","Hondurenha","Húngara","Iemenita","Indiana","Indonésia","Iraniana","Iraquiana","Irlandesa","Islandesa","Israelense","Italiana","Jamaicana","Japonesa","Jordaniana","Keniana","Kosovar","Kuwaitiana","Laosiana","Lesotiana","Letã","Libanesa","Liberiana","Líbia","Liechtensteiniana","Lituana","Luxemburguesa","Macedônia","Malgaxe","Malaiana","Malauiana","Maldívia","Maliana","Maltesa","Marroquina","Mauriciana","Mauritana","Mexicana","Moçambicana","Moldávia","Monegasca","Mongol","Montenegrina","Moçambicana","Namibiana","Nepalesa","Nicaraguense","Nigeriana","Nigerina","Norueguesa","Neozelandesa","Omani","Paquistanesa","Palestina","Panamenha","Papua-nova-guineense","Paraguaia","Peruana","Polaca","Portuguesa","Queniana","Quirguiz","Romena","Ruandesa","Russa","Samoana","Santa-lucense","São-tomense","Saudita","Senegalesa","Sérvia","Seychellense","Serra-leonesa","Singapuriana","Somali","Sri-lankesa","Sudanesa","Sueca","Suíça","Surinamesa","Suazi","Síria","Taiwanesa","Tajique","Tanzaniana","Tailandesa","Timorense","Togolesa","Trinidadense","Tunisiana","Turca","Turcomana","Ugandesa","Ucraniana","Uruguaia","Uzbeque","Vanuatuana","Venezuelana","Vietnamita","Zambiana","Zimbabuense"];
 function filterNacionalidade(v){
   var list=document.getElementById("nacList");
+  var input=document.getElementById("fNacionalidade");
   if(!v){list.style.display="none";return;}
   var matches=NACIONALIDADES.filter(function(n){return n.toLowerCase().startsWith(v.toLowerCase());});
   if(!matches.length){list.style.display="none";return;}
+  var rect=input.getBoundingClientRect();
+  list.style.top=(rect.bottom+4)+"px";
+  list.style.left=rect.left+"px";
+  list.style.width=rect.width+"px";
   list.innerHTML=matches.slice(0,8).map(function(n){return "<div style='padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--sand-mid)' onmousedown=\"document.getElementById('fNacionalidade').value='"+n+"';document.getElementById('nacList').style.display='none'\">"+n+"</div>";}).join("");
   list.style.display="block";
 }
@@ -933,9 +938,9 @@ function checkSolap(apto,ci,co,exId){
   return allRes.some(function(r){if(r.status==="cancelada"||r.status==="checkout")return false;if(r.apto!==apto)return false;if(exId!=null&&String(r.id)===String(exId))return false;return c1<new Date(r.checkout+"T12:00:00")&&c2>new Date(r.checkin+"T12:00:00");});
 }
 
-function resOpenNew(){resEditingId=null;resResetForm();document.getElementById("resFormTitle").textContent="Nova Reserva";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResNew'>Salvar Reserva</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResNew").addEventListener("click",function(){resSaveNew("confirmada");});}
-function resEditForm(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Editar Reserva";if(r.status==="checkin"||r.status==="confirmada")document.getElementById("secCheckinForm").style.display="block";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResEdit'>Salvar Alteracoes</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResEdit").addEventListener("click",resUpdateRes);}
-function resOpenCheckin(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Registrar Check-in";document.getElementById("secCheckinForm").style.display="block";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResCheckin'>Confirmar Check-in</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResCheckin").addEventListener("click",resSaveCheckin);}
+function resOpenNew(){resEditingId=null;resResetForm();document.getElementById("resFormTitle").textContent="Nova Reserva";document.getElementById("btnResAction").textContent="Salvar Reserva";document.getElementById("btnResAction").onclick=function(){resSaveNew("confirmada");};document.getElementById("resFormOverlay").classList.add("open");}
+function resEditForm(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Editar Reserva";if(r.status==="checkin"||r.status==="confirmada")document.getElementById("secCheckinForm").style.display="block";document.getElementById("btnResAction").textContent="Salvar Alteracoes";document.getElementById("btnResAction").onclick=resUpdateRes;document.getElementById("resFormOverlay").classList.add("open");}
+function resOpenCheckin(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Registrar Check-in";document.getElementById("secCheckinForm").style.display="block";document.getElementById("btnResAction").textContent="Confirmar Check-in";document.getElementById("btnResAction").onclick=resSaveCheckin;document.getElementById("resFormOverlay").classList.add("open");}
 
 async function syncAnticipo(rid,reserva){
   if(!reserva.anticipo||reserva.anticipo<=0)return;
