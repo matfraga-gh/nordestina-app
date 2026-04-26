@@ -163,7 +163,7 @@ body{background:var(--sand);font-family:'Jost',sans-serif;color:var(--text);min-
 /* ── MODALS ── */
 .overlay{position:fixed;inset:0;background:rgba(26,46,59,.55);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .overlay.open{display:flex}
-.modal{background:var(--sand);border-radius:16px 16px 0 0;padding:20px 18px 36px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto}
+.modal{background:var(--sand);border-radius:16px 16px 0 0;padding:20px 18px 36px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;overflow-x:visible}
 .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
 .modal-title{font-size:16px;font-weight:700;color:var(--ocean);font-family:'Cormorant Garamond',serif;letter-spacing:1px}
 .btn-x{background:none;border:none;cursor:pointer;color:var(--text-soft);font-size:22px;line-height:1}
@@ -424,20 +424,26 @@ canvas{max-width:100%}
       </div>
       <label>Observacoes / Danos</label><textarea id="fObsCheckin" placeholder="Estado do apartamento, danos..."></textarea>
     </div>
-    <div class="form-section" id="secAdicionaisForm" style="display:none">
-      <div class="fsec-title">➕ Cobros Adicionais</div>
+    <div class="form-section" id="secAdicionaisForm">
+      <div class="fsec-title">➕ Servicos Adicionais</div>
       <label>Conceito</label>
       <select id="fAdicConceito">
-        <option value="">Selecionar...</option>
-        <option value="Desayuno">Desayuno</option>
+        <option value="">Nenhum adicional</option>
+        <option value="Cafe da manha">Cafe da manha</option>
         <option value="Early check-in">Early check-in</option>
         <option value="Late check-out">Late check-out</option>
         <option value="Servico de cozinheira">Servico de cozinheira</option>
         <option value="Outros">Outros</option>
       </select>
       <div id="fAdicDetalheWrap" style="display:none"><label>Detalhe</label><input type="text" id="fAdicDetalhe" placeholder="Descreva brevemente..."/></div>
-      <label>Valor (R$)</label><input type="number" id="fAdicValor" placeholder="0,00"/>
-      <div class="saldo-box" id="fAdicResumo" style="display:none"><span style="font-size:12px;color:var(--ocean)" id="fAdicResumoTxt"></span></div>
+      <div id="fAdicValorWrap" style="display:none">
+        <label>Valor (R$)</label><input type="number" id="fAdicValor" placeholder="0,00"/>
+        <label>Forma de Pagamento</label>
+        <select id="fAdicPago">
+          <option value="">A cobrar no check-in</option>
+        </select>
+        <div class="saldo-box" id="fAdicResumo" style="display:none"><span style="font-size:12px;color:var(--ocean)" id="fAdicResumoTxt"></span></div>
+      </div>
     </div>
     <div id="resFormActions"></div>
   </div>
@@ -779,7 +785,9 @@ function openResDetail(id){
   h+="<div class='detail-row'><span class='detail-label'>Noites</span><span class='detail-value'>"+n+"</span></div>";
   h+="<div class='detail-row'><span class='detail-label'>Adultos</span><span class='detail-value'>"+(r.adultos||"—")+"</span></div>";
   if(r.criancas>0)h+="<div class='detail-row'><span class='detail-label'>Criancas</span><span class='detail-value'>"+r.criancas+"</span></div>";
-  h+="<div class='detail-row'><span class='detail-label'>Cafe da manha</span><span class='detail-value'>"+(r.cafe?"Sim":"Nao")+"</span></div>";h+="<div class='detail-row'><span class='detail-label'>Servico de cozinheira</span><span class='detail-value'>"+(r.cozinheira?"Sim":"Nao")+"</span></div></div>";
+  h+="<div class='detail-row'><span class='detail-label'>Cafe da manha</span><span class='detail-value'>"+(r.cafe?"Sim":"Nao")+"</span></div>";h+="<div class='detail-row'><span class='detail-label'>Servico de cozinheira</span><span class='detail-value'>"+(r.cozinheira?"Sim":"Nao")+"</span></div>";
+  if(r.adic_conceito&&r.adic_valor){var adicLabel=r.adic_conceito+(r.adic_conceito==="Outros"&&r.adic_detalhe?" — "+r.adic_detalhe:"");h+="<div class='detail-row'><span class='detail-label'>Adicional</span><span class='detail-value'>"+adicLabel+"<br><span style='color:var(--green);font-weight:600'>"+fmt(r.adic_valor)+"</span>"+(r.adic_pago?" <span class='pago-tag'>"+r.adic_pago+"</span>":" <span style='font-size:10px;color:var(--yellow)'>A cobrar no check-in</span>")+"</span></div>";}
+  h+="</div>";
   h+="<div class='detail-section'><span class='sec-title'>Financeiro</span>";
   h+="<div class='detail-row'><span class='detail-label'>Total</span><span class='detail-value' style='font-weight:700;color:var(--ocean)'>"+fmt(r.total)+"</span></div>";
   h+="<div class='detail-row'><span class='detail-label'>Anticipo</span><span class='detail-value'>"+fmt(r.anticipo)+(r.pago_anticipo?" <span class='pago-tag'>"+r.pago_anticipo+"</span>":"")+(r.fx_moeda_anticipo?"<br><span style='font-size:10px;color:var(--text-soft)'>"+r.fx_moeda_anticipo+" "+r.fx_valor_anticipo+" x "+r.fx_taxa_anticipo+"</span>":"")+"</span></div>";
@@ -860,12 +868,26 @@ function resPopulateSelects(){
 
 function resResetForm(){
   resPopulateSelects();
-  ["fCheckin","fCheckout","fNome","fDoc","fEmail","fTelefone","fNacionalidade","fTotal","fAnticipo","fObsCom","fSaldoCob","fObsCheckin","fValFxAnt","fTaxaAnt","fValFxSaldo","fTaxaSaldo"].forEach(function(id){document.getElementById(id).value="";});
+  ["fCheckin","fCheckout","fNome","fDoc","fEmail","fTelefone","fNacionalidade","fTotal","fAnticipo","fObsCom","fSaldoCob","fObsCheckin","fValFxAnt","fTaxaAnt","fValFxSaldo","fTaxaSaldo","fAdicValor","fAdicDetalhe"].forEach(function(id){document.getElementById(id).value="";});
   document.getElementById("fCanal").value="";document.getElementById("fAdultos").value="2";document.getElementById("fCriancas").value="0";document.getElementById("fCafe").checked=false;document.getElementById("fCozinheira").checked=false;
+  document.getElementById("fAdicConceito").value="";document.getElementById("fAdicDetalheWrap").style.display="none";document.getElementById("fAdicValorWrap").style.display="none";document.getElementById("fAdicResumo").style.display="none";
+  var pagOpts="<option value=''>A cobrar no check-in</option>";PAGOS.forEach(function(p){if(p!=="Pendente")pagOpts+="<option>"+p+"</option>";});document.getElementById("fAdicPago").innerHTML=pagOpts;
   document.getElementById("noitesCalc").textContent="—";document.getElementById("saldoCalc").textContent="R$ 0,00";
   document.getElementById("fxAnticipo").style.display="none";document.getElementById("fxSaldo").style.display="none";
   document.getElementById("fxAntResult").textContent="—";document.getElementById("fxSaldoResult").textContent="—";
   document.getElementById("secCheckinForm").style.display="none";
+  // adicionales siempre visibles
+  document.getElementById("secAdicionaisForm").style.display="block";
+  // listener conceito
+  document.getElementById("fAdicConceito").onchange=function(){
+    var v=this.value;
+    document.getElementById("fAdicDetalheWrap").style.display=v==="Outros"?"block":"none";
+    document.getElementById("fAdicValorWrap").style.display=v?"block":"none";
+    if(!v){document.getElementById("fAdicResumo").style.display="none";}
+    updateAdicResumo();
+  };
+  document.getElementById("fAdicValor").oninput=updateAdicResumo;
+  document.getElementById("fAdicPago").onchange=updateAdicResumo;
 }
 
 function resFillForm(r){
@@ -876,7 +898,9 @@ function resFillForm(r){
   document.getElementById("fObsCom").value=r.obs_comercial||"";document.getElementById("fSaldoCob").value=r.saldo_cobrado||"";document.getElementById("fPagoSaldo").value=r.pago_saldo||"";
   document.getElementById("fObsCheckin").value=r.obs_checkin||"";document.getElementById("fAdultos").value=r.adultos!=null?r.adultos:"2";document.getElementById("fCriancas").value=r.criancas!=null?r.criancas:"0";
   document.getElementById("fCafe").checked=r.cafe||false;document.getElementById("fCozinheira").checked=r.cozinheira||false;
-  calcNoites();calcSaldo();resPagoChange("anticipo");resPagoChange("saldo");
+  // adicionales
+  if(r.adic_conceito){document.getElementById("fAdicConceito").value=r.adic_conceito;document.getElementById("fAdicValorWrap").style.display="block";document.getElementById("fAdicDetalheWrap").style.display=r.adic_conceito==="Outros"?"block":"none";document.getElementById("fAdicValor").value=r.adic_valor||"";document.getElementById("fAdicPago").value=r.adic_pago||"";document.getElementById("fAdicDetalhe").value=r.adic_detalhe||"";}
+  calcNoites();calcSaldo();resPagoChange("anticipo");resPagoChange("saldo");updateAdicResumo();
 }
 
 function calcNoites(){
@@ -904,7 +928,7 @@ function getFxD(tipo){
 
 function resGetBaseData(){
   var fxA=getFxD("anticipo");
-  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,email:document.getElementById("fEmail").value,telefone:document.getElementById("fTelefone").value,nacionalidade:document.getElementById("fNacionalidade").value,canal:document.getElementById("fCanal").value,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked,cozinheira:document.getElementById("fCozinheira").checked};
+  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,email:document.getElementById("fEmail").value,telefone:document.getElementById("fTelefone").value,nacionalidade:document.getElementById("fNacionalidade").value,canal:document.getElementById("fCanal").value,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked,cozinheira:document.getElementById("fCozinheira").checked,adic_conceito:document.getElementById("fAdicConceito").value||null,adic_detalhe:document.getElementById("fAdicDetalhe").value||null,adic_valor:parseFloat(document.getElementById("fAdicValor").value)||null,adic_pago:document.getElementById("fAdicPago").value||null};
 }
 
 function checkSolap(apto,ci,co,exId){
@@ -914,7 +938,7 @@ function checkSolap(apto,ci,co,exId){
 
 function resOpenNew(){resEditingId=null;resResetForm();document.getElementById("resFormTitle").textContent="Nova Reserva";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResNew'>Salvar Reserva</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResNew").addEventListener("click",function(){resSaveNew("confirmada");});}
 function resEditForm(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Editar Reserva";if(r.status==="checkin"||r.status==="confirmada")document.getElementById("secCheckinForm").style.display="block";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResEdit'>Salvar Alteracoes</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResEdit").addEventListener("click",resUpdateRes);}
-function resOpenCheckin(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Registrar Check-in";document.getElementById("secCheckinForm").style.display="block";document.getElementById("secAdicionaisForm").style.display="block";document.getElementById("fAdicConceito").value="";document.getElementById("fAdicValor").value="";document.getElementById("fAdicDetalheWrap").style.display="none";document.getElementById("fAdicResumo").style.display="none";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResCheckin'>Confirmar Check-in</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResCheckin").addEventListener("click",resSaveCheckin);document.getElementById("fAdicConceito").addEventListener("change",function(){var v=this.value;document.getElementById("fAdicDetalheWrap").style.display=v==="Outros"?"block":"none";updateAdicResumo();});document.getElementById("fAdicValor").addEventListener("input",updateAdicResumo);}
+function resOpenCheckin(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Registrar Check-in";document.getElementById("secCheckinForm").style.display="block";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResCheckin'>Confirmar Check-in</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResCheckin").addEventListener("click",resSaveCheckin);}
 
 async function syncAnticipo(rid,reserva){
   if(!reserva.anticipo||reserva.anticipo<=0)return;
@@ -939,14 +963,17 @@ async function resSaveNew(status){
   if(checkSolap(d.apto,d.checkin,d.checkout,null)){showToast("Conflito: "+d.apto+" ja tem reserva nessas datas");return;}
   d.status=status;
   var res=await api("reservas","POST",d);
-  if(res&&res[0]){await syncAnticipo(res[0].id,res[0]);document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Reserva salva!");}
+  if(res&&res[0]){await syncAnticipo(res[0].id,res[0]);await syncAdicionais(res[0].id,res[0]);document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Reserva salva!");}
   else showToast("Erro ao salvar");
 }
-function updateAdicResumo(){var c=document.getElementById("fAdicConceito").value,v=parseFloat(document.getElementById("fAdicValor").value)||0,box=document.getElementById("fAdicResumo"),txt=document.getElementById("fAdicResumoTxt");if(c&&v>0){txt.textContent=c+(c==="Outros"&&document.getElementById("fAdicDetalhe").value?" — "+document.getElementById("fAdicDetalhe").value:"")+": "+fmt(v);box.style.display="flex";}else{box.style.display="none";}}
-async function syncAdicionais(rid,reserva,conceito,detalhe,valor){
-  if(!conceito||!valor||valor<=0)return;
+function updateAdicResumo(){var c=document.getElementById("fAdicConceito").value,v=parseFloat(document.getElementById("fAdicValor").value)||0,p=document.getElementById("fAdicPago").value,box=document.getElementById("fAdicResumo"),txt=document.getElementById("fAdicResumoTxt");if(c&&v>0){var label=c+(c==="Outros"&&document.getElementById("fAdicDetalhe").value?" — "+document.getElementById("fAdicDetalhe").value:"");txt.textContent=label+": "+fmt(v)+(p?" · "+p:" · A cobrar no check-in");box.style.display="flex";}else{box.style.display="none";}}
+async function syncAdicionais(rid,reserva){
+  if(!reserva.adic_conceito||!reserva.adic_valor||reserva.adic_valor<=0)return;
+  var conceito=reserva.adic_conceito,detalhe=reserva.adic_detalhe,valor=reserva.adic_valor;
   var desc=conceito+(conceito==="Outros"&&detalhe?" — "+detalhe:"")+" — "+(reserva.nome||"")+" — "+(reserva.apto||"")+" ("+fmtD(reserva.checkin)+"->"+fmtD(reserva.checkout)+")";
-  await api("entries","POST",{type:"income",group_name:"Adicionais",category:"Vendas Adicionais",amount:valor,date:reserva.checkin||new Date().toISOString().slice(0,10),description:desc,reserva_id:rid,tipo_receita:"adicional"});
+  var ex=await api("entries?reserva_id=eq."+rid+"&tipo_receita=eq.adicional");
+  var e={type:"income",group_name:"Adicionais",category:"Vendas Adicionais",amount:valor,date:reserva.checkin||new Date().toISOString().slice(0,10),description:desc,reserva_id:rid,tipo_receita:"adicional"};
+  if(ex&&ex.length>0)await api("entries?id=eq."+ex[0].id,"PATCH",e);else await api("entries","POST",e);
 }
 async function resSaveCheckin(){
   var r=allRes.find(function(x){return x.id===resEditingId;});
@@ -959,8 +986,8 @@ async function resSaveCheckin(){
   if(res){
     var rCurr=allRes.find(function(x){return x.id===resEditingId;});
     await syncSaldo(resEditingId,Object.assign({},rCurr,patch));
-    var adicConceito=document.getElementById("fAdicConceito").value,adicDetalhe=document.getElementById("fAdicDetalhe").value,adicValor=parseFloat(document.getElementById("fAdicValor").value)||0;
-    if(adicConceito&&adicValor>0)await syncAdicionais(resEditingId,Object.assign({},rCurr,patch),adicConceito,adicDetalhe,adicValor);
+    var adicData=Object.assign({},rCurr,patch,{adic_conceito:document.getElementById("fAdicConceito").value||null,adic_detalhe:document.getElementById("fAdicDetalhe").value||null,adic_valor:parseFloat(document.getElementById("fAdicValor").value)||null});
+    await syncAdicionais(resEditingId,adicData);
     document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Check-in registrado!");
   }
   else showToast("Erro ao salvar");
@@ -974,7 +1001,7 @@ async function resUpdateRes(){
   d.saldo_cobrado=parseFloat(document.getElementById("fSaldoCob").value)||null;d.pago_saldo=document.getElementById("fPagoSaldo").value;d.obs_checkin=document.getElementById("fObsCheckin").value;
   d.fx_moeda_saldo=fxS?fxS.moeda:null;d.fx_valor_saldo=fxS?fxS.valor_fx:null;d.fx_taxa_saldo=fxS?fxS.taxa:null;
   var res=await api("reservas?id=eq."+resEditingId,"PATCH",d);
-  if(res){await syncAnticipo(resEditingId,Object.assign({},d,{id:resEditingId}));if(d.saldo_cobrado)await syncSaldo(resEditingId,Object.assign({},d,{id:resEditingId}));document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Atualizado!");}
+  if(res){await syncAnticipo(resEditingId,Object.assign({},d,{id:resEditingId}));await syncAdicionais(resEditingId,Object.assign({},d,{id:resEditingId}));if(d.saldo_cobrado)await syncSaldo(resEditingId,Object.assign({},d,{id:resEditingId}));document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Atualizado!");}
   else showToast("Erro ao atualizar");
 }
 
