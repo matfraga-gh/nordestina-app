@@ -386,14 +386,6 @@ canvas{max-width:100%}
         <div><label>Adultos</label><input type="number" id="fAdultos" min="0" max="20" placeholder="2"/></div>
         <div><label>Criancas</label><input type="number" id="fCriancas" min="0" max="20" placeholder="0"/></div>
       </div>
-      <div class="cafe-row">
-        <input type="checkbox" id="fCafe" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/>
-        <label for="fCafe" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Incluir cafe da manha</label>
-      </div>
-      <div class="cafe-row">
-        <input type="checkbox" id="fCozinheira" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/>
-        <label for="fCozinheira" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Servico de cozinheira</label>
-      </div>
     </div>
     <div class="form-section">
       <div class="fsec-title">&#128176; Anticipo</div>
@@ -425,25 +417,20 @@ canvas{max-width:100%}
       <label>Observacoes / Danos</label><textarea id="fObsCheckin" placeholder="Estado do apartamento, danos..."></textarea>
     </div>
     <div class="form-section" id="secAdicionaisForm">
-      <div class="fsec-title">➕ Servicos Adicionais</div>
-      <label>Conceito</label>
-      <select id="fAdicConceito">
-        <option value="">Nenhum adicional</option>
-        <option value="Cafe da manha">Cafe da manha</option>
-        <option value="Early check-in">Early check-in</option>
-        <option value="Late check-out">Late check-out</option>
-        <option value="Servico de cozinheira">Servico de cozinheira</option>
-        <option value="Outros">Outros</option>
-      </select>
-      <div id="fAdicDetalheWrap" style="display:none"><label>Detalhe</label><input type="text" id="fAdicDetalhe" placeholder="Descreva brevemente..."/></div>
-      <div id="fAdicValorWrap" style="display:none">
-        <label>Valor (R$)</label><input type="number" id="fAdicValor" placeholder="0,00"/>
+      <div class="fsec-title">&#10133; Servicos Adicionais</div>
+      <div class="cafe-row"><input type="checkbox" id="fCafe" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fCafe" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Cafe da manha</label></div>
+      <div class="cafe-row"><input type="checkbox" id="fAdicEarlyCI" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fAdicEarlyCI" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Early check-in</label></div>
+      <div class="cafe-row"><input type="checkbox" id="fAdicLateCO" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fAdicLateCO" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Late check-out</label></div>
+      <div class="cafe-row"><input type="checkbox" id="fCozinheira" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fCozinheira" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Servico de cozinheira</label></div>
+      <div class="cafe-row"><input type="checkbox" id="fAdicOutros" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="fAdicOutros" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Outros</label></div>
+      <div id="fAdicDetalheWrap" style="display:none;margin-top:4px"><label>Detalhe</label><input type="text" id="fAdicDetalhe" placeholder="Descreva brevemente..."/></div>
+      <div id="fAdicValorWrap" style="display:none;margin-top:4px">
+        <label>Valor Total Adicionais (R$)</label><input type="number" id="fAdicValor" placeholder="0,00"/>
         <label>Forma de Pagamento</label>
-        <select id="fAdicPago">
-          <option value="">A cobrar no check-in</option>
-        </select>
+        <select id="fAdicPago"><option value="">A cobrar no check-in</option></select>
         <div class="saldo-box" id="fAdicResumo" style="display:none"><span style="font-size:12px;color:var(--ocean)" id="fAdicResumoTxt"></span></div>
       </div>
+    </div>
     </div>
     <div id="resFormActions"></div>
   </div>
@@ -786,7 +773,8 @@ function openResDetail(id){
   h+="<div class='detail-row'><span class='detail-label'>Adultos</span><span class='detail-value'>"+(r.adultos||"—")+"</span></div>";
   if(r.criancas>0)h+="<div class='detail-row'><span class='detail-label'>Criancas</span><span class='detail-value'>"+r.criancas+"</span></div>";
   h+="<div class='detail-row'><span class='detail-label'>Cafe da manha</span><span class='detail-value'>"+(r.cafe?"Sim":"Nao")+"</span></div>";h+="<div class='detail-row'><span class='detail-label'>Servico de cozinheira</span><span class='detail-value'>"+(r.cozinheira?"Sim":"Nao")+"</span></div>";
-  if(r.adic_conceito&&r.adic_valor){var adicLabel=r.adic_conceito+(r.adic_conceito==="Outros"&&r.adic_detalhe?" — "+r.adic_detalhe:"");h+="<div class='detail-row'><span class='detail-label'>Adicional</span><span class='detail-value'>"+adicLabel+"<br><span style='color:var(--green);font-weight:600'>"+fmt(r.adic_valor)+"</span>"+(r.adic_pago?" <span class='pago-tag'>"+r.adic_pago+"</span>":" <span style='font-size:10px;color:var(--yellow)'>A cobrar no check-in</span>")+"</span></div>";}
+  var adicLabels=[];if(r.adic_cafe)adicLabels.push("Cafe da manha");if(r.adic_early_ci)adicLabels.push("Early check-in");if(r.adic_late_co)adicLabels.push("Late check-out");if(r.adic_cozinheira)adicLabels.push("Servico de cozinheira");if(r.adic_outros)adicLabels.push("Outros"+(r.adic_detalhe?" ("+r.adic_detalhe+")":""));
+  if(adicLabels.length){var adicVal=r.adic_valor?("<br><span style='color:var(--green);font-weight:600'>"+fmt(r.adic_valor)+"</span>"+(r.adic_pago?" <span class='pago-tag'>"+r.adic_pago+"</span>":" <span style='font-size:10px;color:var(--yellow)'>A cobrar no check-in</span>")):"";h+="<div class='detail-row'><span class='detail-label'>Adicionais</span><span class='detail-value'>"+adicLabels.join(", ")+adicVal+"</span></div>";}
   h+="</div>";
   h+="<div class='detail-section'><span class='sec-title'>Financeiro</span>";
   h+="<div class='detail-row'><span class='detail-label'>Total</span><span class='detail-value' style='font-weight:700;color:var(--ocean)'>"+fmt(r.total)+"</span></div>";
@@ -869,8 +857,9 @@ function resPopulateSelects(){
 function resResetForm(){
   resPopulateSelects();
   ["fCheckin","fCheckout","fNome","fDoc","fEmail","fTelefone","fNacionalidade","fTotal","fAnticipo","fObsCom","fSaldoCob","fObsCheckin","fValFxAnt","fTaxaAnt","fValFxSaldo","fTaxaSaldo","fAdicValor","fAdicDetalhe"].forEach(function(id){document.getElementById(id).value="";});
-  document.getElementById("fCanal").value="";document.getElementById("fAdultos").value="2";document.getElementById("fCriancas").value="0";document.getElementById("fCafe").checked=false;document.getElementById("fCozinheira").checked=false;
-  document.getElementById("fAdicConceito").value="";document.getElementById("fAdicDetalheWrap").style.display="none";document.getElementById("fAdicValorWrap").style.display="none";document.getElementById("fAdicResumo").style.display="none";
+  document.getElementById("fCanal").value="";document.getElementById("fAdultos").value="2";document.getElementById("fCriancas").value="0";// checkboxes reset via secAdicionaisForm
+  ["fCafe","fAdicEarlyCI","fAdicLateCO","fCozinheira","fAdicOutros"].forEach(function(id){document.getElementById(id).checked=false;});
+  document.getElementById("fAdicDetalheWrap").style.display="none";document.getElementById("fAdicValorWrap").style.display="none";document.getElementById("fAdicResumo").style.display="none";
   var pagOpts="<option value=''>A cobrar no check-in</option>";PAGOS.forEach(function(p){if(p!=="Pendente")pagOpts+="<option>"+p+"</option>";});document.getElementById("fAdicPago").innerHTML=pagOpts;
   document.getElementById("noitesCalc").textContent="—";document.getElementById("saldoCalc").textContent="R$ 0,00";
   document.getElementById("fxAnticipo").style.display="none";document.getElementById("fxSaldo").style.display="none";
@@ -879,13 +868,15 @@ function resResetForm(){
   // adicionales siempre visibles
   document.getElementById("secAdicionaisForm").style.display="block";
   // listener conceito
-  document.getElementById("fAdicConceito").onchange=function(){
-    var v=this.value;
-    document.getElementById("fAdicDetalheWrap").style.display=v==="Outros"?"block":"none";
-    document.getElementById("fAdicValorWrap").style.display=v?"block":"none";
-    if(!v){document.getElementById("fAdicResumo").style.display="none";}
-    updateAdicResumo();
-  };
+  ["fCafe","fAdicEarlyCI","fAdicLateCO","fCozinheira","fAdicOutros"].forEach(function(id){
+    document.getElementById(id).onchange=function(){
+      var anyChecked=["fCafe","fAdicEarlyCI","fAdicLateCO","fCozinheira","fAdicOutros"].some(function(x){return document.getElementById(x).checked;});
+      document.getElementById("fAdicDetalheWrap").style.display=document.getElementById("fAdicOutros").checked?"block":"none";
+      document.getElementById("fAdicValorWrap").style.display=anyChecked?"block":"none";
+      if(!anyChecked){document.getElementById("fAdicResumo").style.display="none";}
+      updateAdicResumo();
+    };
+  });
   document.getElementById("fAdicValor").oninput=updateAdicResumo;
   document.getElementById("fAdicPago").onchange=updateAdicResumo;
 }
@@ -899,7 +890,13 @@ function resFillForm(r){
   document.getElementById("fObsCheckin").value=r.obs_checkin||"";document.getElementById("fAdultos").value=r.adultos!=null?r.adultos:"2";document.getElementById("fCriancas").value=r.criancas!=null?r.criancas:"0";
   document.getElementById("fCafe").checked=r.cafe||false;document.getElementById("fCozinheira").checked=r.cozinheira||false;
   // adicionales
-  if(r.adic_conceito){document.getElementById("fAdicConceito").value=r.adic_conceito;document.getElementById("fAdicValorWrap").style.display="block";document.getElementById("fAdicDetalheWrap").style.display=r.adic_conceito==="Outros"?"block":"none";document.getElementById("fAdicValor").value=r.adic_valor||"";document.getElementById("fAdicPago").value=r.adic_pago||"";document.getElementById("fAdicDetalhe").value=r.adic_detalhe||"";}
+  if(r.adic_cafe)document.getElementById("fCafe").checked=true;
+  if(r.adic_early_ci)document.getElementById("fAdicEarlyCI").checked=true;
+  if(r.adic_late_co)document.getElementById("fAdicLateCO").checked=true;
+  if(r.adic_cozinheira)document.getElementById("fCozinheira").checked=true;
+  if(r.adic_outros)document.getElementById("fAdicOutros").checked=true;
+  var anyAd=r.adic_cafe||r.adic_early_ci||r.adic_late_co||r.adic_cozinheira||r.adic_outros;
+  if(anyAd){document.getElementById("fAdicValorWrap").style.display="block";document.getElementById("fAdicDetalheWrap").style.display=r.adic_outros?"block":"none";document.getElementById("fAdicValor").value=r.adic_valor||"";document.getElementById("fAdicPago").value=r.adic_pago||"";document.getElementById("fAdicDetalhe").value=r.adic_detalhe||"";}
   calcNoites();calcSaldo();resPagoChange("anticipo");resPagoChange("saldo");updateAdicResumo();
 }
 
@@ -928,7 +925,7 @@ function getFxD(tipo){
 
 function resGetBaseData(){
   var fxA=getFxD("anticipo");
-  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,email:document.getElementById("fEmail").value,telefone:document.getElementById("fTelefone").value,nacionalidade:document.getElementById("fNacionalidade").value,canal:document.getElementById("fCanal").value,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked,cozinheira:document.getElementById("fCozinheira").checked,adic_conceito:document.getElementById("fAdicConceito").value||null,adic_detalhe:document.getElementById("fAdicDetalhe").value||null,adic_valor:parseFloat(document.getElementById("fAdicValor").value)||null,adic_pago:document.getElementById("fAdicPago").value||null};
+  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,email:document.getElementById("fEmail").value,telefone:document.getElementById("fTelefone").value,nacionalidade:document.getElementById("fNacionalidade").value,canal:document.getElementById("fCanal").value,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked,cozinheira:document.getElementById("fCozinheira").checked,adic_cafe:document.getElementById("fCafe").checked,adic_early_ci:document.getElementById("fAdicEarlyCI").checked,adic_late_co:document.getElementById("fAdicLateCO").checked,adic_cozinheira:document.getElementById("fCozinheira").checked,adic_outros:document.getElementById("fAdicOutros").checked,adic_detalhe:document.getElementById("fAdicDetalhe").value||null,adic_valor:parseFloat(document.getElementById("fAdicValor").value)||null,adic_pago:document.getElementById("fAdicPago").value||null};
 }
 
 function checkSolap(apto,ci,co,exId){
@@ -966,11 +963,27 @@ async function resSaveNew(status){
   if(res&&res[0]){await syncAnticipo(res[0].id,res[0]);await syncAdicionais(res[0].id,res[0]);document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Reserva salva!");}
   else showToast("Erro ao salvar");
 }
-function updateAdicResumo(){var c=document.getElementById("fAdicConceito").value,v=parseFloat(document.getElementById("fAdicValor").value)||0,p=document.getElementById("fAdicPago").value,box=document.getElementById("fAdicResumo"),txt=document.getElementById("fAdicResumoTxt");if(c&&v>0){var label=c+(c==="Outros"&&document.getElementById("fAdicDetalhe").value?" — "+document.getElementById("fAdicDetalhe").value:"");txt.textContent=label+": "+fmt(v)+(p?" · "+p:" · A cobrar no check-in");box.style.display="flex";}else{box.style.display="none";}}
+function updateAdicResumo(){
+  var labels=[];
+  if(document.getElementById("fCafe").checked)labels.push("Cafe da manha");
+  if(document.getElementById("fAdicEarlyCI").checked)labels.push("Early check-in");
+  if(document.getElementById("fAdicLateCO").checked)labels.push("Late check-out");
+  if(document.getElementById("fCozinheira").checked)labels.push("Servico de cozinheira");
+  if(document.getElementById("fAdicOutros").checked){var d=document.getElementById("fAdicDetalhe").value;labels.push("Outros"+(d?" ("+d+")":""));}
+  var v=parseFloat(document.getElementById("fAdicValor").value)||0,p=document.getElementById("fAdicPago").value;
+  var box=document.getElementById("fAdicResumo"),txt=document.getElementById("fAdicResumoTxt");
+  if(labels.length&&v>0){txt.textContent=labels.join(", ")+": "+fmt(v)+(p?" · "+p:" · A cobrar no check-in");box.style.display="flex";}
+  else{box.style.display="none";}
+}
 async function syncAdicionais(rid,reserva){
-  if(!reserva.adic_conceito||!reserva.adic_valor||reserva.adic_valor<=0)return;
-  var conceito=reserva.adic_conceito,detalhe=reserva.adic_detalhe,valor=reserva.adic_valor;
-  var desc=conceito+(conceito==="Outros"&&detalhe?" — "+detalhe:"")+" — "+(reserva.nome||"")+" — "+(reserva.apto||"")+" ("+fmtD(reserva.checkin)+"->"+fmtD(reserva.checkout)+")";
+  var labels=[];
+  if(reserva.adic_cafe)labels.push("Cafe da manha");
+  if(reserva.adic_early_ci)labels.push("Early check-in");
+  if(reserva.adic_late_co)labels.push("Late check-out");
+  if(reserva.adic_cozinheira)labels.push("Servico de cozinheira");
+  if(reserva.adic_outros)labels.push("Outros"+(reserva.adic_detalhe?" ("+reserva.adic_detalhe+")":""));
+  if(!labels.length||!reserva.adic_valor||reserva.adic_valor<=0)return;
+  var desc=labels.join(", ")+" — "+(reserva.nome||"")+" — "+(reserva.apto||"")+" ("+fmtD(reserva.checkin)+"->"+fmtD(reserva.checkout)+")";
   var ex=await api("entries?reserva_id=eq."+rid+"&tipo_receita=eq.adicional");
   var e={type:"income",group_name:"Adicionais",category:"Vendas Adicionais",amount:valor,date:reserva.checkin||new Date().toISOString().slice(0,10),description:desc,reserva_id:rid,tipo_receita:"adicional"};
   if(ex&&ex.length>0)await api("entries?id=eq."+ex[0].id,"PATCH",e);else await api("entries","POST",e);
@@ -986,7 +999,7 @@ async function resSaveCheckin(){
   if(res){
     var rCurr=allRes.find(function(x){return x.id===resEditingId;});
     await syncSaldo(resEditingId,Object.assign({},rCurr,patch));
-    var adicData=Object.assign({},rCurr,patch,{adic_conceito:document.getElementById("fAdicConceito").value||null,adic_detalhe:document.getElementById("fAdicDetalhe").value||null,adic_valor:parseFloat(document.getElementById("fAdicValor").value)||null});
+    var adicData=Object.assign({},rCurr,patch,{adic_cafe:document.getElementById("fCafe").checked,adic_early_ci:document.getElementById("fAdicEarlyCI").checked,adic_late_co:document.getElementById("fAdicLateCO").checked,adic_cozinheira:document.getElementById("fCozinheira").checked,adic_outros:document.getElementById("fAdicOutros").checked,adic_detalhe:document.getElementById("fAdicDetalhe").value||null,adic_valor:parseFloat(document.getElementById("fAdicValor").value)||null});
     await syncAdicionais(resEditingId,adicData);
     document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Check-in registrado!");
   }
