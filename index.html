@@ -371,7 +371,11 @@ canvas{max-width:100%}
         <div><label>Email</label><input type="email" id="fEmail" placeholder="email@exemplo.com"/></div>
         <div><label>Telefone</label><input type="text" id="fTelefone" placeholder="+55 11 99999-9999"/></div>
       </div>
-      <label>Nacionalidade</label><input type="text" id="fNacionalidade" placeholder="Ex: Brasileira, Argentina..."/>
+      <label>Nacionalidade</label>
+      <div style="position:relative">
+      <input type="text" id="fNacionalidade" placeholder="Ex: Brasileira, Argentina..." autocomplete="off" oninput="filterNacionalidade(this.value)" onfocus="filterNacionalidade(this.value)" onblur="setTimeout(function(){document.getElementById('nacList').style.display='none'},200)"/>
+      <div id="nacList" style="display:none;position:absolute;background:var(--white);border:1px solid var(--sand-dark);border-radius:8px;max-height:160px;overflow-y:auto;z-index:999;width:100%;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.1)"></div>
+      </div>
       <label>Canal de Venda</label>
       <select id="fCanal"><option value="">Selecionar...</option><option>WhatsApp</option><option>Booking.com</option><option>Walk-in</option><option>Indicacao</option><option>Instagram</option><option>Outro</option></select>
       <label>Valor Total (R$)</label><input type="number" id="fTotal" placeholder="0,00"/>
@@ -420,6 +424,21 @@ canvas{max-width:100%}
       </div>
       <label>Observacoes / Danos</label><textarea id="fObsCheckin" placeholder="Estado do apartamento, danos..."></textarea>
     </div>
+    <div class="form-section" id="secAdicionaisForm" style="display:none">
+      <div class="fsec-title">➕ Cobros Adicionais</div>
+      <label>Conceito</label>
+      <select id="fAdicConceito">
+        <option value="">Selecionar...</option>
+        <option value="Desayuno">Desayuno</option>
+        <option value="Early check-in">Early check-in</option>
+        <option value="Late check-out">Late check-out</option>
+        <option value="Servico de cozinheira">Servico de cozinheira</option>
+        <option value="Outros">Outros</option>
+      </select>
+      <div id="fAdicDetalheWrap" style="display:none"><label>Detalhe</label><input type="text" id="fAdicDetalhe" placeholder="Descreva brevemente..."/></div>
+      <label>Valor (R$)</label><input type="number" id="fAdicValor" placeholder="0,00"/>
+      <div class="saldo-box" id="fAdicResumo" style="display:none"><span style="font-size:12px;color:var(--ocean)" id="fAdicResumoTxt"></span></div>
+    </div>
     <div id="resFormActions"></div>
   </div>
 </div>
@@ -454,7 +473,7 @@ canvas{max-width:100%}
       <button class="type-btn income-active" id="gBtnIncome">Receita</button>
       <button class="type-btn" id="gBtnExpense">Despesa</button>
     </div>
-    <div id="gIncomeGroupWrap" style="display:none"><label>Tipo de Receita</label><select id="gFormIncomeGroup"><option value="">Selecionar...</option><option value="reservas">Vendas de Reservas</option><option value="outros">Outras Receitas</option></select></div>
+    <div id="gIncomeGroupWrap" style="display:none"><label>Tipo de Receita</label><select id="gFormIncomeGroup"><option value="">Selecionar...</option><option value="reservas">Vendas de Reservas</option><option value="adicionais">Vendas Adicionais</option><option value="outros">Outras Receitas</option></select></div>
     <div id="gExpenseGroupWrap" style="display:none"><label>Grupo de Despesa</label><select id="gFormGroup"><option value="">Selecionar...</option></select></div>
     <label>Categoria</label><select id="gFormCategory"><option value="">Categoria...</option></select>
     <div id="gProvWrap" style="display:none"><label>Fornecedor</label><select id="gFormProv"><option value="">Selecionar...</option></select></div>
@@ -517,7 +536,7 @@ var H={"Content-Type":"application/json","apikey":SB_KEY,"Authorization":"Bearer
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
 var APTOS=["Apto 4","Apto 9","Apto 1","Apto 7","Apto 8","Apto 10","Apto 5","Apto 11","Casa Nordestina"];
 var MONTHS=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-var PAGOS=["Pendente","Contado em R$","Contado em USD","Contado em EU$","Contado em USD (Arg)","Contado em AR$ (Arg)","Cartao de Credito","Link Stripe","KamiPay","Pix"];
+var PAGOS=["Pendente","Contado em R$","Contado em USD","Contado em EU$","Contado em USD (Arg)","Contado em AR$ (Arg)","Cartao de Credito","Link Stripe","KamiPay","Pix","Booking Pagamentos"];
 var PAGOS_FX={"Contado em USD":{moeda:"USD",label:"Cotacao USD -> R$"},"Contado em EU$":{moeda:"EUR",label:"Cotacao EUR -> R$"},"Contado em USD (Arg)":{moeda:"USD",label:"Cotacao USD (Arg) -> R$"},"Contado em AR$ (Arg)":{moeda:"ARS",label:"Cotacao ARS -> R$"}};
 var RES_SL={pendiente:"Pendente",confirmada:"Confirmada",checkin:"Check-in feito",checkout:"Checkout feito",cancelada:"Cancelada"};
 var RES_SC={pendiente:"chip-pendiente",confirmada:"chip-confirmada",checkin:"chip-checkin",checkout:"chip-checkout",cancelada:"chip-cancelada"};
@@ -525,7 +544,17 @@ var CAL_COLORS=["#1a4a6b","#2e6e9e","#c9b48a","#8b6340","#5a9ec9","#1a6b3a","#4a
 var CO_ITEMS=[{id:"roupas",label:"Roupas de cama e toalhas verificadas"},{id:"eletro",label:"Eletrodomesticos funcionando"},{id:"inventario",label:"Inventario completo (louca, controles, etc)"},{id:"chave",label:"Chave / acesso entregado"}];
 var ROL_ICONS={master:"👑",administrativa:"💼",comercial:"📋",checkin:"🏠",housekeeping:"🧹",auditor:"👁"};
 var ROL_LABELS={master:"Master",administrativa:"Administrativa",comercial:"Comercial",checkin:"Check-in",housekeeping:"Housekeeping",auditor:"Auditor"};
+var NACIONALIDADES=["Afghã","Albanesa","Alemã","Andorrana","Angolana","Antiguense","Árabe","Argentina","Armênia","Australiana","Austríaca","Azerbaijana","Bahamense","Bangladeshiana","Barbadiana","Belga","Belizenha","Beninesa","Bielorrussa","Boliviana","Bósnia","Botswanesa","Brasileira","Bruneiana","Búlgara","Burkinesa","Burundinesa","Cabo-verdiana","Camaronesa","Canadense","Catarense","Cazaque","Chadiana","Chilena","Chinesa","Cipriota","Colombiana","Comorense","Congolesa","Costarriquenha","Croata","Cubana","Dinamarquesa","Djiboutiana","Dominicana","Egípcia","Salvadorenha","Emiradense","Equatoriana","Eritreia","Eslovaca","Eslovena","Espanhola","Estadunidense","Estoniana","Etíope","Fijiana","Filipina","Finlandesa","Francesa","Gabonesa","Gambiana","Ganesa","Georgiana","Granadina","Grega","Guatemalteca","Guineense","Guineense-equatorial","Haitiana","Hondurenha","Húngara","Iemenita","Indiana","Indonésia","Iraniana","Iraquiana","Irlandesa","Islandesa","Israelense","Italiana","Jamaicana","Japonesa","Jordaniana","Keniana","Kosovar","Kuwaitiana","Laosiana","Lesotiana","Letã","Libanesa","Liberiana","Líbia","Liechtensteiniana","Lituana","Luxemburguesa","Macedônia","Malgaxe","Malaiana","Malauiana","Maldívia","Maliana","Maltesa","Marroquina","Mauriciana","Mauritana","Mexicana","Moçambicana","Moldávia","Monegasca","Mongol","Montenegrina","Moçambicana","Namibiana","Nepalesa","Nicaraguense","Nigeriana","Nigerina","Norueguesa","Neozelandesa","Omani","Paquistanesa","Palestina","Panamenha","Papua-nova-guineense","Paraguaia","Peruana","Polaca","Portuguesa","Queniana","Quirguiz","Romena","Ruandesa","Russa","Samoana","Santa-lucense","São-tomense","Saudita","Senegalesa","Sérvia","Seychellense","Serra-leonesa","Singapuriana","Somali","Sri-lankesa","Sudanesa","Sueca","Suíça","Surinamesa","Suazi","Síria","Taiwanesa","Tajique","Tanzaniana","Tailandesa","Timorense","Togolesa","Trinidadense","Tunisiana","Turca","Turcomana","Ugandesa","Ucraniana","Uruguaia","Uzbeque","Vanuatuana","Venezuelana","Vietnamita","Zambiana","Zimbabuense"];
+function filterNacionalidade(v){
+  var list=document.getElementById("nacList");
+  if(!v){list.style.display="none";return;}
+  var matches=NACIONALIDADES.filter(function(n){return n.toLowerCase().startsWith(v.toLowerCase());});
+  if(!matches.length){list.style.display="none";return;}
+  list.innerHTML=matches.slice(0,8).map(function(n){return "<div style='padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--sand-mid)' onmousedown=\"document.getElementById('fNacionalidade').value='"+n+"';document.getElementById('nacList').style.display='none'\">"+n+"</div>";}).join("");
+  list.style.display="block";
+}
 var INCOME_CATS_RES=["Vendas WhatsApp","Vendas Walk Inn","Vendas Booking","Vendas Cafe da Manha","Vendas Outras"];
+var INCOME_CATS_ADIC=["Vendas Adicionais"];
 var INCOME_CATS_OUT=["Aluguel de Espaco para Evento","Venda Avulsa","Outros Ingressos"];
 var EXP_CATS={"Salarios e Remuneracoes":["Salarios pessoal permanente","Salarios diarios funcionarios","Salarios pessoal part-time"],"Honorarios Profissionais":["Contador","Outros honorarios"],"Honorarios de Servicos":["Servico de Lavanderia","Servicos de Manutencao","Servico de Cafe da Manha","Outros servicos"],"Consorcio":["Despesas ordinarias","Despesas extraordinarias"],"Impostos":["Simples Nacional","FGTS Funcionarios","Receita Federal","Parcelamento Simples"],"Servicos":["Energia","Gas","Servico de Internet","Telefone","Sistema de Gestao","Hosting Web"],"Comissoes de Venda":["Gestao de Vendas - Agustina","Comissoes Booking","Carol","Outras Comissoes"],"Bens de Uso":["Produtos de Limpeza","Produtos Jardim e Piscina","Suprimentos de Manutencao","Substituicao Roupas de Cama","Substituicao de Louca","Substituicao de Mobiliario","Substituicao de Fardamentos"],"Outros Gastos":["Comissoes Cartao de Credito","Comissoes Bancarias","Publicidade e Propaganda","Frete e Correio","Devolucao de Valores","Lanche Funcionarios","Parcela Emprestimo","Outros"]};
 var EXP_GROUPS=Object.keys(EXP_CATS);
@@ -884,7 +913,7 @@ function checkSolap(apto,ci,co,exId){
 
 function resOpenNew(){resEditingId=null;resResetForm();document.getElementById("resFormTitle").textContent="Nova Reserva";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResNew'>Salvar Reserva</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResNew").addEventListener("click",function(){resSaveNew("confirmada");});}
 function resEditForm(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Editar Reserva";if(r.status==="checkin"||r.status==="confirmada")document.getElementById("secCheckinForm").style.display="block";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResEdit'>Salvar Alteracoes</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResEdit").addEventListener("click",resUpdateRes);}
-function resOpenCheckin(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Registrar Check-in";document.getElementById("secCheckinForm").style.display="block";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResCheckin'>Confirmar Check-in</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResCheckin").addEventListener("click",resSaveCheckin);}
+function resOpenCheckin(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Registrar Check-in";document.getElementById("secCheckinForm").style.display="block";document.getElementById("secAdicionaisForm").style.display="block";document.getElementById("fAdicConceito").value="";document.getElementById("fAdicValor").value="";document.getElementById("fAdicDetalheWrap").style.display="none";document.getElementById("fAdicResumo").style.display="none";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResCheckin'>Confirmar Check-in</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResCheckin").addEventListener("click",resSaveCheckin);document.getElementById("fAdicConceito").addEventListener("change",function(){var v=this.value;document.getElementById("fAdicDetalheWrap").style.display=v==="Outros"?"block":"none";updateAdicResumo();});document.getElementById("fAdicValor").addEventListener("input",updateAdicResumo);}
 
 async function syncAnticipo(rid,reserva){
   if(!reserva.anticipo||reserva.anticipo<=0)return;
@@ -912,13 +941,27 @@ async function resSaveNew(status){
   if(res&&res[0]){await syncAnticipo(res[0].id,res[0]);document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Reserva salva!");}
   else showToast("Erro ao salvar");
 }
+function updateAdicResumo(){var c=document.getElementById("fAdicConceito").value,v=parseFloat(document.getElementById("fAdicValor").value)||0,box=document.getElementById("fAdicResumo"),txt=document.getElementById("fAdicResumoTxt");if(c&&v>0){txt.textContent=c+(c==="Outros"&&document.getElementById("fAdicDetalhe").value?" — "+document.getElementById("fAdicDetalhe").value:"")+": "+fmt(v);box.style.display="flex";}else{box.style.display="none";}}
+async function syncAdicionais(rid,reserva,conceito,detalhe,valor){
+  if(!conceito||!valor||valor<=0)return;
+  var desc=conceito+(conceito==="Outros"&&detalhe?" — "+detalhe:"")+" — "+(reserva.nome||"")+" — "+(reserva.apto||"")+" ("+fmtD(reserva.checkin)+"->"+fmtD(reserva.checkout)+")";
+  await api("entries","POST",{type:"income",group_name:"Adicionais",category:"Vendas Adicionais",amount:valor,date:reserva.checkin||new Date().toISOString().slice(0,10),description:desc,reserva_id:rid,tipo_receita:"adicional"});
+}
 async function resSaveCheckin(){
   var r=allRes.find(function(x){return x.id===resEditingId;});
   if(r&&r.checkin){var today=new Date();today.setHours(0,0,0,0);var ci=new Date(r.checkin+"T12:00:00");ci.setHours(0,0,0,0);if(today<ci){showToast("Check-in nao pode ser feito antes da data prevista ("+fmtD(r.checkin)+")");return;}}
-  var saldo=parseFloat(document.getElementById("fSaldoCob").value)||0,fxS=getFxD("saldo");
+  var saldo=parseFloat(document.getElementById("fSaldoCob").value)||0;
+  if(r){var pendente=Number(r.total||0)-Number(r.anticipo||0);if(saldo>pendente&&pendente>=0){showToast("Saldo cobrado nao pode superar o saldo pendente ("+fmt(pendente)+")");return;}}
+  var fxS=getFxD("saldo");
   var patch={saldo_cobrado:saldo,pago_saldo:document.getElementById("fPagoSaldo").value,obs_checkin:document.getElementById("fObsCheckin").value,status:"checkin",fx_moeda_saldo:fxS?fxS.moeda:null,fx_valor_saldo:fxS?fxS.valor_fx:null,fx_taxa_saldo:fxS?fxS.taxa:null};
   var res=await api("reservas?id=eq."+resEditingId,"PATCH",patch);
-  if(res){var r=allRes.find(function(x){return x.id===resEditingId;});await syncSaldo(resEditingId,Object.assign({},r,patch));document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Check-in registrado!");}
+  if(res){
+    var rCurr=allRes.find(function(x){return x.id===resEditingId;});
+    await syncSaldo(resEditingId,Object.assign({},rCurr,patch));
+    var adicConceito=document.getElementById("fAdicConceito").value,adicDetalhe=document.getElementById("fAdicDetalhe").value,adicValor=parseFloat(document.getElementById("fAdicValor").value)||0;
+    if(adicConceito&&adicValor>0)await syncAdicionais(resEditingId,Object.assign({},rCurr,patch),adicConceito,adicDetalhe,adicValor);
+    document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Check-in registrado!");
+  }
   else showToast("Erro ao salvar");
 }
 async function resUpdateRes(){
@@ -1002,7 +1045,7 @@ function renderGestList(f){
 
 function renderGestReport(f,tI,tE,bal,ren,cm){
   var sc=[];f.filter(function(e){return e.type==="income"&&e.reserva_id;}).forEach(function(e){if(sc.indexOf(e.category)<0)sc.push(e.category);});
-  var ac=INCOME_CATS_RES.concat(INCOME_CATS_OUT);sc.forEach(function(c){if(ac.indexOf(c)<0)ac.push(c);});
+  var ac=INCOME_CATS_RES.concat(INCOME_CATS_ADIC).concat(INCOME_CATS_OUT);sc.forEach(function(c){if(ac.indexOf(c)<0)ac.push(c);});
   var rH="<span class='sec-title'>Receita</span>";
   ac.forEach(function(cat){var t=f.filter(function(e){return e.type==="income"&&e.category===cat;}).reduce(function(s,e){return s+Number(e.amount);},0);if(t>0)rH+=rRow(cat,fmt(t),(tI>0?(t/tI*100).toFixed(1):0)+"%",false,false);});
   rH+=rRow("TOTAL RECEITAS",fmt(tI),"100%",true,false);
@@ -1045,7 +1088,7 @@ function setGFormType(t){
   else{document.getElementById("gIncomeGroupWrap").style.display="none";document.getElementById("gExpenseGroupWrap").style.display="block";var h="<option value=''>Selecionar...</option>";EXP_GROUPS.forEach(function(g){h+="<option value='"+g+"'>"+g+"</option>";});document.getElementById("gFormGroup").innerHTML=h;document.getElementById("gFormCategory").innerHTML="<option value=''>Selecionar grupo primeiro...</option>";document.getElementById("gProvWrap").style.display="none";}
 }
 
-function gUpdateIncomeCats(){var g=document.getElementById("gFormIncomeGroup").value,cats=g==="reservas"?INCOME_CATS_RES:g==="outros"?INCOME_CATS_OUT:[];var h="<option value=''>Categoria...</option>";cats.forEach(function(c){h+="<option>"+c+"</option>";});document.getElementById("gFormCategory").innerHTML=h;document.getElementById("gProvWrap").style.display="none";}
+function gUpdateIncomeCats(){var g=document.getElementById("gFormIncomeGroup").value,cats=g==="reservas"?INCOME_CATS_RES:g==="adicionais"?INCOME_CATS_ADIC:g==="outros"?INCOME_CATS_OUT:[];var h="<option value=''>Categoria...</option>";cats.forEach(function(c){h+="<option>"+c+"</option>";});document.getElementById("gFormCategory").innerHTML=h;document.getElementById("gProvWrap").style.display="none";}
 function gUpdateSubcats(){
   var g=document.getElementById("gFormGroup").value;
   var cats=g?EXP_CATS[g]||[]:[];
@@ -1187,7 +1230,6 @@ async function deleteUser(id){
 // Login
 document.getElementById("confirmCancel").addEventListener("click",function(){document.getElementById("confirmOverlay").classList.remove("open");});
 // Login
-document.getElementById("btnLogin").addEventListener("click",doLogin);
 document.getElementById("loginPass").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
 document.getElementById("btnLogoutDash").addEventListener("click",doLogout);
 
