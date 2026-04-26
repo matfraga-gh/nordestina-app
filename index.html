@@ -363,8 +363,15 @@ canvas{max-width:100%}
         <div><label>Check-out</label><input type="date" id="fCheckout"/></div>
       </div>
       <div style="font-size:12px;color:var(--text-soft);margin-bottom:11px">Noites: <strong id="noitesCalc" style="color:var(--ocean)">&#8212;</strong></div>
-      <label>Nome do Hospede</label><input type="text" id="fNome" placeholder="Nome completo"/>
-      <label>CPF / Passaporte</label><input type="text" id="fDoc" placeholder="Ex: 123.456.789-00"/>
+      <div class="row2">
+        <div><label>Nome do Hospede</label><input type="text" id="fNome" placeholder="Nome completo"/></div>
+        <div><label>CPF / Passaporte</label><input type="text" id="fDoc" placeholder="Ex: 123.456.789-00"/></div>
+      </div>
+      <div class="row2">
+        <div><label>Email</label><input type="email" id="fEmail" placeholder="email@exemplo.com"/></div>
+        <div><label>Telefone</label><input type="text" id="fTelefone" placeholder="+55 11 99999-9999"/></div>
+      </div>
+      <label>Nacionalidade</label><input type="text" id="fNacionalidade" placeholder="Ex: Brasileira, Argentina..."/>
       <label>Canal de Venda</label>
       <select id="fCanal"><option value="">Selecionar...</option><option>WhatsApp</option><option>Booking.com</option><option>Walk-in</option><option>Indicacao</option><option>Instagram</option><option>Outro</option></select>
       <label>Valor Total (R$)</label><input type="number" id="fTotal" placeholder="0,00"/>
@@ -378,6 +385,10 @@ canvas{max-width:100%}
       <div class="cafe-row">
         <input type="checkbox" id="fCafe" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/>
         <label for="fCafe" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Incluir cafe da manha</label>
+      </div>
+      <div class="cafe-row">
+        <input type="checkbox" id="fCozinheira" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/>
+        <label for="fCozinheira" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Servico de cozinheira</label>
       </div>
     </div>
     <div class="form-section">
@@ -504,7 +515,7 @@ var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 var H={"Content-Type":"application/json","apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Prefer":"return=representation"};
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
-var APTOS=["Loft 01","Loft 02","Loft 03","Loft 04","Loft 05","Loft 06","Loft 07","Loft 08","Loft 09","Casa Nordestina"];
+var APTOS=["Apto 4","Apto 9","Apto 1","Apto 7","Apto 8","Apto 10","Apto 5","Apto 11","Casa Nordestina"];
 var MONTHS=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 var PAGOS=["Pendente","Contado em R$","Contado em USD","Contado em EU$","Contado em USD (Arg)","Contado em AR$ (Arg)","Cartao de Credito","Link Stripe","KamiPay","Pix"];
 var PAGOS_FX={"Contado em USD":{moeda:"USD",label:"Cotacao USD -> R$"},"Contado em EU$":{moeda:"EUR",label:"Cotacao EUR -> R$"},"Contado em USD (Arg)":{moeda:"USD",label:"Cotacao USD (Arg) -> R$"},"Contado em AR$ (Arg)":{moeda:"ARS",label:"Cotacao ARS -> R$"}};
@@ -729,13 +740,16 @@ function openResDetail(id){
   h+="<div class='detail-row'><span class='detail-label'>Apartamento</span><span class='detail-value'>"+(r.apto||"—")+"</span></div>";
   h+="<div class='detail-row'><span class='detail-label'>Hospede</span><span class='detail-value'>"+(r.nome||"—")+"</span></div>";
   h+="<div class='detail-row'><span class='detail-label'>Documento</span><span class='detail-value'>"+(r.documento||"—")+"</span></div>";
+  if(r.email)h+="<div class='detail-row'><span class='detail-label'>Email</span><span class='detail-value'>"+r.email+"</span></div>";
+  if(r.telefone)h+="<div class='detail-row'><span class='detail-label'>Telefone</span><span class='detail-value'>"+r.telefone+"</span></div>";
+  if(r.nacionalidade)h+="<div class='detail-row'><span class='detail-label'>Nacionalidade</span><span class='detail-value'>"+r.nacionalidade+"</span></div>";
   h+="<div class='detail-row'><span class='detail-label'>Canal</span><span class='detail-value'>"+(r.canal||"—")+"</span></div>";
   h+="<div class='detail-row'><span class='detail-label'>Check-in</span><span class='detail-value'>"+fmtD(r.checkin)+"</span></div>";
   h+="<div class='detail-row'><span class='detail-label'>Check-out</span><span class='detail-value'>"+fmtD(r.checkout)+"</span></div>";
   h+="<div class='detail-row'><span class='detail-label'>Noites</span><span class='detail-value'>"+n+"</span></div>";
   h+="<div class='detail-row'><span class='detail-label'>Adultos</span><span class='detail-value'>"+(r.adultos||"—")+"</span></div>";
   if(r.criancas>0)h+="<div class='detail-row'><span class='detail-label'>Criancas</span><span class='detail-value'>"+r.criancas+"</span></div>";
-  h+="<div class='detail-row'><span class='detail-label'>Cafe da manha</span><span class='detail-value'>"+(r.cafe?"Sim":"Nao")+"</span></div></div>";
+  h+="<div class='detail-row'><span class='detail-label'>Cafe da manha</span><span class='detail-value'>"+(r.cafe?"Sim":"Nao")+"</span></div>";h+="<div class='detail-row'><span class='detail-label'>Servico de cozinheira</span><span class='detail-value'>"+(r.cozinheira?"Sim":"Nao")+"</span></div></div>";
   h+="<div class='detail-section'><span class='sec-title'>Financeiro</span>";
   h+="<div class='detail-row'><span class='detail-label'>Total</span><span class='detail-value' style='font-weight:700;color:var(--ocean)'>"+fmt(r.total)+"</span></div>";
   h+="<div class='detail-row'><span class='detail-label'>Anticipo</span><span class='detail-value'>"+fmt(r.anticipo)+(r.pago_anticipo?" <span class='pago-tag'>"+r.pago_anticipo+"</span>":"")+(r.fx_moeda_anticipo?"<br><span style='font-size:10px;color:var(--text-soft)'>"+r.fx_moeda_anticipo+" "+r.fx_valor_anticipo+" x "+r.fx_taxa_anticipo+"</span>":"")+"</span></div>";
@@ -816,8 +830,8 @@ function resPopulateSelects(){
 
 function resResetForm(){
   resPopulateSelects();
-  ["fCheckin","fCheckout","fNome","fDoc","fTotal","fAnticipo","fObsCom","fSaldoCob","fObsCheckin","fValFxAnt","fTaxaAnt","fValFxSaldo","fTaxaSaldo"].forEach(function(id){document.getElementById(id).value="";});
-  document.getElementById("fCanal").value="";document.getElementById("fAdultos").value="2";document.getElementById("fCriancas").value="0";document.getElementById("fCafe").checked=false;
+  ["fCheckin","fCheckout","fNome","fDoc","fEmail","fTelefone","fNacionalidade","fTotal","fAnticipo","fObsCom","fSaldoCob","fObsCheckin","fValFxAnt","fTaxaAnt","fValFxSaldo","fTaxaSaldo"].forEach(function(id){document.getElementById(id).value="";});
+  document.getElementById("fCanal").value="";document.getElementById("fAdultos").value="2";document.getElementById("fCriancas").value="0";document.getElementById("fCafe").checked=false;document.getElementById("fCozinheira").checked=false;
   document.getElementById("noitesCalc").textContent="—";document.getElementById("saldoCalc").textContent="R$ 0,00";
   document.getElementById("fxAnticipo").style.display="none";document.getElementById("fxSaldo").style.display="none";
   document.getElementById("fxAntResult").textContent="—";document.getElementById("fxSaldoResult").textContent="—";
@@ -827,11 +841,11 @@ function resResetForm(){
 function resFillForm(r){
   resResetForm();
   document.getElementById("fApto").value=r.apto||"";document.getElementById("fCheckin").value=r.checkin||"";document.getElementById("fCheckout").value=r.checkout||"";
-  document.getElementById("fNome").value=r.nome||"";document.getElementById("fDoc").value=r.documento||"";document.getElementById("fCanal").value=r.canal||"";
+  document.getElementById("fNome").value=r.nome||"";document.getElementById("fDoc").value=r.documento||"";document.getElementById("fEmail").value=r.email||"";document.getElementById("fTelefone").value=r.telefone||"";document.getElementById("fNacionalidade").value=r.nacionalidade||"";document.getElementById("fCanal").value=r.canal||"";
   document.getElementById("fTotal").value=r.total||"";document.getElementById("fAnticipo").value=r.anticipo||"";document.getElementById("fPagoAnticipo").value=r.pago_anticipo||"";
   document.getElementById("fObsCom").value=r.obs_comercial||"";document.getElementById("fSaldoCob").value=r.saldo_cobrado||"";document.getElementById("fPagoSaldo").value=r.pago_saldo||"";
   document.getElementById("fObsCheckin").value=r.obs_checkin||"";document.getElementById("fAdultos").value=r.adultos!=null?r.adultos:"2";document.getElementById("fCriancas").value=r.criancas!=null?r.criancas:"0";
-  document.getElementById("fCafe").checked=r.cafe||false;
+  document.getElementById("fCafe").checked=r.cafe||false;document.getElementById("fCozinheira").checked=r.cozinheira||false;
   calcNoites();calcSaldo();resPagoChange("anticipo");resPagoChange("saldo");
 }
 
@@ -860,12 +874,12 @@ function getFxD(tipo){
 
 function resGetBaseData(){
   var fxA=getFxD("anticipo");
-  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,canal:document.getElementById("fCanal").value,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked};
+  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,email:document.getElementById("fEmail").value,telefone:document.getElementById("fTelefone").value,nacionalidade:document.getElementById("fNacionalidade").value,canal:document.getElementById("fCanal").value,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked,cozinheira:document.getElementById("fCozinheira").checked};
 }
 
 function checkSolap(apto,ci,co,exId){
   var c1=new Date(ci+"T12:00:00"),c2=new Date(co+"T12:00:00");
-  return allRes.some(function(r){if(r.status==="cancelada"||r.status==="checkout")return false;if(r.apto!==apto)return false;if(exId&&r.id===exId)return false;return c1<new Date(r.checkout+"T12:00:00")&&c2>new Date(r.checkin+"T12:00:00");});
+  return allRes.some(function(r){if(r.status==="cancelada"||r.status==="checkout")return false;if(r.apto!==apto)return false;if(exId!=null&&String(r.id)===String(exId))return false;return c1<new Date(r.checkout+"T12:00:00")&&c2>new Date(r.checkin+"T12:00:00");});
 }
 
 function resOpenNew(){resEditingId=null;resResetForm();document.getElementById("resFormTitle").textContent="Nova Reserva";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResNew'>Salvar Reserva</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResNew").addEventListener("click",function(){resSaveNew("confirmada");});}
@@ -891,6 +905,7 @@ async function resSaveNew(status){
   var d=resGetBaseData();
   if(!d.apto||!d.checkin||!d.checkout||!d.nome){showToast("Preencha os campos obrigatorios");return;}
   if(new Date(d.checkout+"T12:00:00")<=new Date(d.checkin+"T12:00:00")){showToast("Check-out deve ser posterior ao check-in");return;}
+  if(d.total>0&&d.anticipo>d.total){showToast("O anticipo nao pode ser maior que o total");return;}
   if(checkSolap(d.apto,d.checkin,d.checkout,null)){showToast("Conflito: "+d.apto+" ja tem reserva nessas datas");return;}
   d.status=status;
   var res=await api("reservas","POST",d);
@@ -898,6 +913,8 @@ async function resSaveNew(status){
   else showToast("Erro ao salvar");
 }
 async function resSaveCheckin(){
+  var r=allRes.find(function(x){return x.id===resEditingId;});
+  if(r&&r.checkin){var today=new Date();today.setHours(0,0,0,0);var ci=new Date(r.checkin+"T12:00:00");ci.setHours(0,0,0,0);if(today<ci){showToast("Check-in nao pode ser feito antes da data prevista ("+fmtD(r.checkin)+")");return;}}
   var saldo=parseFloat(document.getElementById("fSaldoCob").value)||0,fxS=getFxD("saldo");
   var patch={saldo_cobrado:saldo,pago_saldo:document.getElementById("fPagoSaldo").value,obs_checkin:document.getElementById("fObsCheckin").value,status:"checkin",fx_moeda_saldo:fxS?fxS.moeda:null,fx_valor_saldo:fxS?fxS.valor_fx:null,fx_taxa_saldo:fxS?fxS.taxa:null};
   var res=await api("reservas?id=eq."+resEditingId,"PATCH",patch);
@@ -907,6 +924,7 @@ async function resSaveCheckin(){
 async function resUpdateRes(){
   var d=resGetBaseData();
   if(new Date(d.checkout+"T12:00:00")<=new Date(d.checkin+"T12:00:00")){showToast("Check-out deve ser posterior ao check-in");return;}
+  if(d.total>0&&d.anticipo>d.total){showToast("O anticipo nao pode ser maior que o total");return;}
   if(checkSolap(d.apto,d.checkin,d.checkout,resEditingId)){showToast("Conflito: "+d.apto+" ja tem reserva nessas datas");return;}
   var fxS=getFxD("saldo");
   d.saldo_cobrado=parseFloat(document.getElementById("fSaldoCob").value)||null;d.pago_saldo=document.getElementById("fPagoSaldo").value;d.obs_checkin=document.getElementById("fObsCheckin").value;
@@ -1169,8 +1187,6 @@ async function deleteUser(id){
 // Login
 document.getElementById("confirmCancel").addEventListener("click",function(){document.getElementById("confirmOverlay").classList.remove("open");});
 // Login
-document.getElementById("btnLogin").addEventListener("click",doLogin);
-document.getElementById("loginUser").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
 document.getElementById("loginPass").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
 document.getElementById("btnLogoutDash").addEventListener("click",doLogout);
 
