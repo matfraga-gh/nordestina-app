@@ -1,0 +1,18 @@
+{
+  "name": "Nordestina",
+  "short_name": "Nordestina",
+  "description": "Gestao de reservas e financas - Icaraizinho",
+  "start_url": "/nordestina-app/",
+  "display": "standalone",
+  "background_color": "#1a4a6b",
+  "theme_color": "#1a4a6b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
