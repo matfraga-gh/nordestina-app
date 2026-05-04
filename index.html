@@ -912,7 +912,10 @@ function resFillForm(r){
   el("fNome").value=r.nome||"";el("fDoc").value=r.documento||"";el("fEmail").value=r.email||"";
   el("fTelefone").value=r.telefone||"";el("fNacionalidade").value=r.nacionalidade||"";el("fCanal").value=r.canal||"";
   el("fTotal").value=r.total||"";el("fAnticipo").value=r.anticipo||"";el("fPagoAnticipo").value=r.pago_anticipo||"";
-  el("fObsCom").value=r.obs_comercial||"";el("fSaldoCob").value=r.saldo_cobrado||"";el("fPagoSaldo").value=r.pago_saldo||"";
+  el("fObsCom").value=r.obs_comercial||"";
+  // Solo cargamos saldo_cobrado si estamos en modo checkin (se sobreescribe en resOpenCheckin)
+  el("fSaldoCob").value="";
+  el("fPagoSaldo").value=r.pago_saldo||"";
   el("fObsCheckin").value=r.obs_checkin||"";el("fAdultos").value=r.adultos!=null?r.adultos:"2";el("fCriancas").value=r.criancas!=null?r.criancas:"0";
   // adicionais checkboxes
   if(r.adic_cafe)el("fCafe").checked=true;
@@ -1025,6 +1028,8 @@ function resOpenCheckin(id){
   el("resDetailOverlay").classList.remove("open");
   var r=allRes.find(function(x){return x.id===id;});if(!r)return;
   resFillForm(r);
+  // En checkin, cargamos el saldo cobrado real si ya existe
+  if(r.saldo_cobrado&&r.saldo_cobrado>0)el("fSaldoCob").value=r.saldo_cobrado;
   el("resFormTitle").textContent="Registrar Check-in";
   el("btnResAction").textContent="Confirmar Check-in";
   el("btnResAction").disabled=false;
@@ -1068,13 +1073,15 @@ async function resUpdateRes(){
     if(d.total>0&&d.anticipo>d.total){showToast("O anticipo nao pode ser maior que o total");btn.disabled=false;btn.textContent="Salvar Alteracoes";return;}
     if(checkSolap(d.apto,d.checkin,d.checkout,resEditingId)){showToast("Conflito: "+d.apto+" ja tem reserva nessas datas");btn.disabled=false;btn.textContent="Salvar Alteracoes";return;}
     var fxS=getFxD("saldo");
-    d.saldo_cobrado=parseFloat(el("fSaldoCob").value)||null;d.pago_saldo=el("fPagoSaldo").value;d.obs_checkin=el("fObsCheckin").value;
-    d.fx_moeda_saldo=fxS?fxS.moeda:null;d.fx_valor_saldo=fxS?fxS.valor_fx:null;d.fx_taxa_saldo=fxS?fxS.taxa:null;
+    // Solo actualizamos saldo si el usuario ingresó un valor nuevo en este formulario
+    var nuevoSaldo=parseFloat(el("fSaldoCob").value)||null;
+    if(nuevoSaldo){d.saldo_cobrado=nuevoSaldo;d.pago_saldo=el("fPagoSaldo").value;d.obs_checkin=el("fObsCheckin").value;d.fx_moeda_saldo=fxS?fxS.moeda:null;d.fx_valor_saldo=fxS?fxS.valor_fx:null;d.fx_taxa_saldo=fxS?fxS.taxa:null;}
+    else{d.obs_checkin=el("fObsCheckin").value;}
     var res=await api("reservas?id=eq."+resEditingId,"PATCH",d);
     if(res){
       await syncAnticipo(resEditingId,Object.assign({},d,{id:resEditingId}));
       await syncAdicionais(resEditingId,Object.assign({},d,{id:resEditingId}));
-      if(d.saldo_cobrado)await syncSaldo(resEditingId,Object.assign({},d,{id:resEditingId}));
+      if(nuevoSaldo)await syncSaldo(resEditingId,Object.assign({},d,{id:resEditingId}));
       el("resFormOverlay").classList.remove("open");await loadReservas();showToast("Atualizado!");
     }else{showToast("Erro ao atualizar");btn.disabled=false;btn.textContent="Salvar Alteracoes";}
   }catch(e){console.error(e);showToast("Erro inesperado");btn.disabled=false;btn.textContent="Salvar Alteracoes";}
