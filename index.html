@@ -319,6 +319,11 @@ canvas{max-width:100%}
     <div id="gestViewList" style="display:none">
       <div class="card">
         <span class="sec-title" id="gestListTitle">Movimentos</span>
+        <div style="display:flex;gap:6px;margin-bottom:10px">
+          <button class="fbtn active" id="gfBtnTodas">Todas</button>
+          <button class="fbtn" id="gfBtnReceitas">&#128200; Receitas</button>
+          <button class="fbtn" id="gfBtnDespesas">&#128203; Despesas</button>
+        </div>
         <div class="sync-badge">&#128279; Receitas de reservas sincronizadas</div>
         <div id="gestListContent"><div class="empty">Carregando...</div></div>
       </div>
@@ -554,7 +559,7 @@ var resTab="lista", resFilter="todas", resMetricsOpen=false, resMetricsPeriod="m
 var resEditingId=null, coResId=null;
 var allEntries=[], allMetrics={}, allProvs=[];
 var gestMonth=new Date().getMonth(), gestYear=new Date().getFullYear();
-var gestTab="dashboard", gestFormType="income";
+var gestTab="dashboard", gestFormType="income", gestListFilter="todas";
 var barChartInst=null, pieChartInst=null;
 var resFormMode="new"; // "new" | "edit" | "checkin"
 
@@ -874,6 +879,13 @@ function openCheckout(id){
 }
 
 async function confirmCheckout(){
+  var r=allRes.find(function(x){return x.id===coResId;});
+  if(r){
+    var pendente=Number(r.total||0)-Number(r.anticipo||0)-(Number(r.saldo_cobrado||0));
+    if(pendente>0){
+      if(!window.confirm("Atenção: ainda há saldo pendente de "+fmt(pendente)+" nesta reserva. Confirmar checkout mesmo assim?")){return;}
+    }
+  }
   var patch={status:"checkout",co_obs:el("coObs").value};
   CO_ITEMS.forEach(function(i){var e=el("co_"+i.id);patch["co_"+i.id]=e?e.checked:false;});
   var res=await api("reservas?id=eq."+coResId,"PATCH",patch);
@@ -1188,6 +1200,8 @@ function renderGestDash(f,tI,tE){
 
 function renderGestList(f){
   el("gestListTitle").textContent="Movimentos - "+MONTHS[gestMonth]+" "+gestYear;
+  if(gestListFilter==="receitas")f=f.filter(function(e){return e.type==="income";});
+  else if(gestListFilter==="despesas")f=f.filter(function(e){return e.type==="expense";});
   var elL=el("gestListContent");
   if(!f.length){elL.innerHTML="<div class='empty'>Nenhum movimento neste mes.</div>";return;}
   var h="";
@@ -1196,14 +1210,17 @@ function renderGestList(f){
     h+="<div class='entry-row'><div class='entry-dot' style='background:"+(isI?"#2e6e9e":"#c9b48a")+"'></div><div class='entry-info'><div class='entry-cat'>"+e.category+"</div>";
     if(e.group_name)h+="<div class='entry-group'>"+e.group_name+"</div>";
     if(e.description)h+="<div class='entry-desc'>"+e.description+"</div>";
-    h+="<div class='entry-date'>"+e.date+"</div>";
+    h+="<div class='entry-date'>"+fmtD(e.date)+"</div>";
     if(e.reserva_id)h+="<span class='entry-source'>&#128279; Reservas</span>";
     h+="</div><div class='entry-amt' style='color:"+(isI?"var(--green)":"var(--red)")+"'>"+(isI?"+":"-")+fmt(e.amount)+"</div>";
+    if(!isReadonly())h+="<button class='btn-edit-e' data-eid='"+e.id+"' data-amt='"+e.amount+"' data-desc='"+(e.description||"").replace(/'/g,"&#39;")+"' style='background:none;border:none;cursor:pointer;color:var(--ocean-mid);font-size:14px;margin-right:2px'>&#9998;</button>";
     if(!e.reserva_id&&!isReadonly())h+="<button class='btn-del-e' data-eid='"+e.id+"' style='background:none;border:none;cursor:pointer;color:#c8a0a0;font-size:16px'>&#128465;</button>";
-    else h+="<div style='width:24px'></div>";
+    else if(!isReadonly())h+="<div style='width:24px'></div>";
+
     h+="</div>";
   });
   elL.innerHTML=h;
+  document.querySelectorAll(".btn-edit-e").forEach(function(btn){btn.addEventListener("click",function(){editEntry(parseInt(btn.dataset.eid),btn.dataset.amt,btn.dataset.desc);});});
   document.querySelectorAll(".btn-del-e").forEach(function(btn){btn.addEventListener("click",function(){delEntry(parseInt(btn.dataset.eid));});});
 }
 
@@ -1298,6 +1315,18 @@ async function saveGestEntry(){
   if(res){el("gestFormOverlay").classList.remove("open");await loadGestao();showToast("Salvo!");}else showToast("Erro ao salvar");
 }
 
+async function editEntry(id,currentAmt,currentDesc){
+  var novoAmt=window.prompt("Novo valor (R$):",currentAmt);
+  if(novoAmt===null)return;
+  novoAmt=parseFloat(novoAmt.replace(",","."));
+  if(isNaN(novoAmt)||novoAmt<=0){showToast("Valor inválido");return;}
+  var novaDesc=window.prompt("Descrição:",currentDesc);
+  if(novaDesc===null)return;
+  var res=await api("entries?id=eq."+id,"PATCH",{amount:novoAmt,description:novaDesc});
+  if(res){await loadGestao();showToast("Movimento atualizado!");}
+  else showToast("Erro ao atualizar");
+}
+
 async function delEntry(id){
   if(!window.confirm("Apagar este movimento?"))return;
   await api("entries?id=eq."+id,"DELETE");
@@ -1327,12 +1356,79 @@ async function exportExcel(){
   showToast("Gerando exportacao...");
   var res=await Promise.all([api("entries?select=*&order=date.desc"),api("reservas?select=*&order=checkin.desc"),api("fornecedores?select=*&order=categoria.asc")]);
   var stamp=new Date().toLocaleDateString("pt-BR").replace(/\//g,"-");
-  function esc(v){if(v===null||v===undefined)return "";var s=String(v).replace(/"/g,'""');return(s.includes(",")||s.includes("\n")||s.includes('"'))?'"'+s+'"':s;}
-  function toCSV(rows,cols){var lines=[cols.map(function(c){return esc(c.l);}).join(",")];rows.forEach(function(r){lines.push(cols.map(function(c){return esc(r[c.k]);}).join(","));});return lines.join("\n");}
-  function dl(content,filename){var blob=new Blob(["\uFEFF"+content],{type:"text/csv;charset=utf-8"});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
-  dl(toCSV(res[0]||[],[{k:"date",l:"Data"},{k:"type",l:"Tipo"},{k:"group_name",l:"Grupo"},{k:"category",l:"Categoria"},{k:"amount",l:"Valor (R$)"},{k:"description",l:"Descricao"},{k:"reserva_id",l:"ID Reserva"}]),"nordestina_movimentos_"+stamp+".csv");
-  setTimeout(function(){dl(toCSV(res[1]||[],[{k:"id",l:"ID"},{k:"apto",l:"Apto"},{k:"nome",l:"Hospede"},{k:"canal",l:"Canal"},{k:"checkin",l:"Check-in"},{k:"checkout",l:"Check-out"},{k:"total",l:"Total"},{k:"anticipo",l:"Anticipo"},{k:"saldo_cobrado",l:"Saldo"},{k:"status",l:"Status"}]),"nordestina_reservas_"+stamp+".csv");},400);
-  setTimeout(function(){dl(toCSV(res[2]||[],[{k:"categoria",l:"Categoria"},{k:"nome",l:"Fornecedor"}]),"nordestina_fornecedores_"+stamp+".csv");showToast("3 arquivos exportados!");},800);
+  
+  function esc(v){
+    if(v===null||v===undefined)return "";
+    var s=String(v).replace(/"/g,'""');
+    return(s.includes(",")||s.includes("\n")||s.includes('"'))?'"'+s+'"':s;
+  }
+  function fmtNum(v){return v!=null&&v!==""?Number(v).toFixed(2).replace(".",","):""}
+  function fmtDate(s){return s?s.split("-").reverse().join("/"):""}
+  
+  function toCSV(rows,cols){
+    var lines=[cols.map(function(c){return esc(c.l);}).join(";")];
+    rows.forEach(function(r){
+      lines.push(cols.map(function(c){
+        var v=r[c.k];
+        if(c.fmt==="num")return fmtNum(v);
+        if(c.fmt==="date")return fmtDate(v);
+        return esc(v);
+      }).join(";"));
+    });
+    return lines.join("\n");
+  }
+  
+  function dl(content,filename){
+    var blob=new Blob(["\uFEFF"+content],{type:"text/csv;charset=utf-8"});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a");
+    a.href=url;a.download=filename;
+    document.body.appendChild(a);a.click();
+    document.body.removeChild(a);URL.revokeObjectURL(url);
+  }
+  
+  // Movimentos
+  dl(toCSV(res[0]||[],[
+    {k:"date",l:"Data",fmt:"date"},
+    {k:"type",l:"Tipo"},
+    {k:"group_name",l:"Grupo"},
+    {k:"category",l:"Categoria"},
+    {k:"amount",l:"Valor (R$)",fmt:"num"},
+    {k:"description",l:"Descricao"},
+    {k:"reserva_id",l:"ID Reserva"}
+  ]),"nordestina_movimentos_"+stamp+".csv");
+  
+  // Reservas
+  setTimeout(function(){
+    dl(toCSV(res[1]||[],[
+      {k:"id",l:"ID"},
+      {k:"apto",l:"Apartamento"},
+      {k:"nome",l:"Hospede"},
+      {k:"documento",l:"Documento"},
+      {k:"nacionalidade",l:"Nacionalidade"},
+      {k:"canal",l:"Canal"},
+      {k:"checkin",l:"Check-in",fmt:"date"},
+      {k:"checkout",l:"Check-out",fmt:"date"},
+      {k:"adultos",l:"Adultos"},
+      {k:"criancas",l:"Criancas"},
+      {k:"total",l:"Total (R$)",fmt:"num"},
+      {k:"anticipo",l:"Anticipo (R$)",fmt:"num"},
+      {k:"saldo_cobrado",l:"Saldo Cobrado (R$)",fmt:"num"},
+      {k:"pago_anticipo",l:"Forma Pago Anticipo"},
+      {k:"pago_saldo",l:"Forma Pago Saldo"},
+      {k:"status",l:"Status"},
+      {k:"obs_comercial",l:"Observacoes"}
+    ]),"nordestina_reservas_"+stamp+".csv");
+  },400);
+  
+  // Fornecedores
+  setTimeout(function(){
+    dl(toCSV(res[2]||[],[
+      {k:"categoria",l:"Categoria"},
+      {k:"nome",l:"Fornecedor"}
+    ]),"nordestina_fornecedores_"+stamp+".csv");
+    showToast("3 arquivos exportados!");
+  },800);
 }
 
 // ── USUARIOS ──────────────────────────────────────────────────────────────────
@@ -1424,6 +1520,9 @@ el("gestTab0").addEventListener("click",function(){setGestView("dashboard");});
 el("gestTab1").addEventListener("click",function(){setGestView("list");});
 el("gestTab2").addEventListener("click",function(){setGestView("report");});
 el("gestCloseForm").addEventListener("click",function(){el("gestFormOverlay").classList.remove("open");});
+el("gfBtnTodas").addEventListener("click",function(){gestListFilter="todas";el("gfBtnTodas").className="fbtn active";el("gfBtnReceitas").className="fbtn";el("gfBtnDespesas").className="fbtn";renderGestao();});
+el("gfBtnReceitas").addEventListener("click",function(){gestListFilter="receitas";el("gfBtnTodas").className="fbtn";el("gfBtnReceitas").className="fbtn active";el("gfBtnDespesas").className="fbtn";renderGestao();});
+el("gfBtnDespesas").addEventListener("click",function(){gestListFilter="despesas";el("gfBtnTodas").className="fbtn";el("gfBtnReceitas").className="fbtn";el("gfBtnDespesas").className="fbtn active";renderGestao();});
 el("gBtnIncome").addEventListener("click",function(){setGFormType("income");});
 el("gBtnExpense").addEventListener("click",function(){setGFormType("expense");});
 el("gFormIncomeGroup").addEventListener("change",gUpdateIncomeCats);
