@@ -700,7 +700,7 @@ function renderResList(){
   h+="</div>";
   if(!f.length){h+="<div class='empty'>Nenhuma reserva neste mes.</div>";}
   else f.forEach(function(r){
-    var n=nights(r.checkin,r.checkout),saldo=Number(r.total||0)+Number(r.adic_valor||0)-Number(r.anticipo||0);
+    var n=nights(r.checkin,r.checkout),saldo=Number(r.total||0)-Number(r.anticipo||0);
     var sH="";
     if(r.status!=="checkin"&&r.status!=="cancelada"&&r.status!=="checkout"&&saldo>0)sH="<div style='font-size:11px;font-weight:600;color:var(--yellow)'>Saldo: "+fmt(saldo)+"</div>";
     if(r.status==="checkin")sH="<div style='font-size:11px;font-weight:600;color:var(--green)'>Pago completo</div>";
@@ -749,7 +749,7 @@ function renderResCal(){
 
 // ── RES METRICS ───────────────────────────────────────────────────────────────
 function renderResMetrics(){
-  var active=allRes.filter(function(r){return r.status==="confirmada"||r.status==="checkin";});
+  var active=allRes.filter(function(r){return r.status==="confirmada"||r.status==="checkin"||r.status==="checkout";});
   var periodRes,diasP,label;
   if(resMetricsPeriod==="mes"){
     periodRes=active.filter(function(r){if(!r.checkin)return false;var ci=parseDate(r.checkin),co=parseDate(r.checkout);return ci<=new Date(resYear,resMonth+1,0)&&co>new Date(resYear,resMonth,1);});
@@ -780,7 +780,7 @@ async function syncMetrics(noites,cap){
 // ── RES DETAIL ────────────────────────────────────────────────────────────────
 function openResDetail(id){
   var r=allRes.find(function(x){return x.id===id;});if(!r)return;
-  var n=nights(r.checkin,r.checkout),saldo=Number(r.total||0)+Number(r.adic_valor||0)-Number(r.anticipo||0);
+  var n=nights(r.checkin,r.checkout),saldo=Number(r.total||0)-Number(r.anticipo||0);
   el("resDetailTitle").textContent=r.apto||"Reserva";
   var step={pendiente:1,confirmada:2,checkin:3,checkout:4}[r.status]||0;
   var h="<div class='status-bar'><div class='s-step"+(step>=1?" done":"")+"'></div><div class='s-step"+(step>=2?" done":step===1?" current":"")+"'></div><div class='s-step"+(step>=3?" done":step===2?" current":"")+"'></div><div class='s-step"+(step>=4?" done":step===3?" current":"")+"'></div></div>";
@@ -960,7 +960,7 @@ function calcNoites(){
   if(ci){var m=new Date(ci+"T12:00:00");m.setDate(m.getDate()+1);el("fCheckout").min=m.toISOString().slice(0,10);if(co&&new Date(co+"T12:00:00")<=new Date(ci+"T12:00:00")){el("fCheckout").value="";el("noitesCalc").textContent="—";return;}}
   el("noitesCalc").textContent=nights(ci,co)||"—";
 }
-function calcSaldo(){var t=parseFloat(el("fTotal").value)||0,a=parseFloat(el("fAnticipo").value)||0,adic=parseFloat(el("fAdicValor").value)||0;el("saldoCalc").textContent=fmt(Math.max(0,t+adic-a));}
+function calcSaldo(){var t=parseFloat(el("fTotal").value)||0,a=parseFloat(el("fAnticipo").value)||0;el("saldoCalc").textContent=fmt(Math.max(0,t-a));}
 
 function resPagoChange(tipo){
   var sId=tipo==="anticipo"?"fPagoAnticipo":"fPagoSaldo",bId=tipo==="anticipo"?"fxAnticipo":"fxSaldo",lId=tipo==="anticipo"?"fxAntLabel":"fxSaldoLabel";
