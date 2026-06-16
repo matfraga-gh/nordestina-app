@@ -509,7 +509,7 @@ var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 var H={"Content-Type":"application/json","apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Prefer":"return=representation"};
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
-var APTOS=["Loft 01","Loft 02","Loft 03","Loft 04","Loft 05","Loft 06","Loft 07","Loft 08","Loft 09","Casa Nordestina"];
+var APTOS=["Loft 01","Loft 02","Loft 03","Loft 04","Loft 05","Loft 06","Loft 07","Loft 08","Loft 09","Loft 10","Loft 11","Casa Nordestina"];
 var MONTHS=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 var PAGOS=["Pendente","Contado em R$","Contado em USD","Contado em EU$","Contado em USD (Arg)","Contado em AR$ (Arg)","Cartao de Credito","Link Stripe","KamiPay","Pix"];
 var PAGOS_FX={"Contado em USD":{moeda:"USD",label:"Cotacao USD -> R$"},"Contado em EU$":{moeda:"EUR",label:"Cotacao EUR -> R$"},"Contado em USD (Arg)":{moeda:"USD",label:"Cotacao USD (Arg) -> R$"},"Contado em AR$ (Arg)":{moeda:"ARS",label:"Cotacao ARS -> R$"}};
@@ -539,7 +539,7 @@ var barChartInst=null, pieChartInst=null;
 // ── UTILS ────────────────────────────────────────────────────────────────────
 function fmt(n){return "R$\u00a0"+Number(n||0).toLocaleString("pt-BR",{minimumFractionDigits:2});}
 function fmtD(s){return s?s.split("-").reverse().join("/"):"—";}
-function normApto(x){return (x==null?"":String(x)).trim().toLowerCase().replace(/\s+/g," ").replace(/(\D)0+(\d)/g,"$1$2");}
+function normApto(x){return (x==null?"":String(x)).trim().toLowerCase().replace(/\s+/g," ").replace(/([a-zaaiou\u00e1\u00e9\u00ed\u00f3\u00fa\u00f1])(\d)/g,"$1 $2").replace(/(\D)0+(\d)/g,"$1$2").replace(/^(apto|apartamento|loft|departamento|depto|dep|apt)\s+/,"");}
 function nights(a,b){if(!a||!b)return 0;var d=(new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/86400000;return d>0?d:0;}
 function dim(y,m){return new Date(y,m+1,0).getDate();}
 function mk(y,m){return y+"-"+(m+1<10?"0":"")+(m+1);}
