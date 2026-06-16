@@ -539,6 +539,7 @@ var barChartInst=null, pieChartInst=null;
 // ── UTILS ────────────────────────────────────────────────────────────────────
 function fmt(n){return "R$\u00a0"+Number(n||0).toLocaleString("pt-BR",{minimumFractionDigits:2});}
 function fmtD(s){return s?s.split("-").reverse().join("/"):"—";}
+function normApto(x){return (x==null?"":String(x)).trim().toLowerCase().replace(/\s+/g," ").replace(/(\D)0+(\d)/g,"$1$2");}
 function nights(a,b){if(!a||!b)return 0;var d=(new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/86400000;return d>0?d:0;}
 function dim(y,m){return new Date(y,m+1,0).getDate();}
 function mk(y,m){return y+"-"+(m+1<10?"0":"")+(m+1);}
@@ -669,25 +670,32 @@ function renderResList(){
 function renderResCal(){
   var d2=dim(resYear,resMonth),today=new Date();
   var mrs=allRes.filter(function(r){if(!r.checkin||r.status==="cancelada")return false;var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");return ci<=new Date(resYear,resMonth+1,0)&&co>=new Date(resYear,resMonth,1);});
+  // Build aptos list: APTOS + any "orphans" from reservations not matching APTOS via normalized comparison
+  var aptosList=APTOS.slice();
+  var aptosNorm=APTOS.map(normApto);
+  var seenOrph={};
+  mrs.forEach(function(r){var na=normApto(r.apto);if(!na)return;if(aptosNorm.indexOf(na)<0&&!seenOrph[na]){seenOrph[na]=true;aptosList.push(r.apto);}});
   var dow0=["D","S","T","Q","Q","S","S"];
-  var h="<div style='background:var(--white);border-bottom:1px solid var(--sand-mid);padding:10px 12px 6px;display:flex;justify-content:space-between'><span style='font-size:11px;font-weight:600;color:var(--ocean);text-transform:uppercase;letter-spacing:1px'>"+MONTHS[resMonth]+" "+resYear+"</span><span style='font-size:10px;color:var(--text-soft)'>"+APTOS.length+" unidades</span></div>";
+  var h="<div style='background:var(--white);border-bottom:1px solid var(--sand-mid);padding:10px 12px 6px;display:flex;justify-content:space-between'><span style='font-size:11px;font-weight:600;color:var(--ocean);text-transform:uppercase;letter-spacing:1px'>"+MONTHS[resMonth]+" "+resYear+"</span><span style='font-size:10px;color:var(--text-soft)'>"+aptosList.length+" unidades</span></div>";
   h+="<div class='cal-wrap'><table class='cal-table'><thead><tr><th class='cal-head-apto'>Unidade</th>";
   for(var d=1;d<=d2;d++){var dt=new Date(resYear,resMonth,d),dw=dt.getDay(),isT=dt.getDate()===today.getDate()&&dt.getMonth()===today.getMonth()&&dt.getFullYear()===today.getFullYear();h+="<th><div class='cal-head-day"+(isT?" today":"")+"'>"+d+"</div><div class='cal-head-dow'>"+dow0[dw]+"</div></th>";}
   h+="</tr></thead><tbody>";
-  for(var ai=0;ai<APTOS.length;ai++){
-    h+="<tr><td class='cal-apto-label'>"+APTOS[ai]+"</td>";
+  for(var ai=0;ai<aptosList.length;ai++){
+    var rowNorm=normApto(aptosList[ai]);
+    var isOrphan=aptosNorm.indexOf(rowNorm)<0;
+    h+="<tr><td class='cal-apto-label'"+(isOrphan?" style='color:var(--yellow);font-style:italic' title='Nome nao bate com APTOS padrao'":"")+">"+aptosList[ai]+(isOrphan?" *":"")+"</td>";
     for(var d=1;d<=d2;d++){
       var dt=new Date(resYear,resMonth,d),dw=dt.getDay(),isT=dt.getDate()===today.getDate()&&dt.getMonth()===today.getMonth()&&dt.getFullYear()===today.getFullYear();
       var cc="cal-cell"+(dw===0||dw===6?" weekend":"")+(isT?" today-col":"");
-      var res=null;for(var ri=0;ri<mrs.length;ri++){if(mrs[ri].apto!==APTOS[ai])continue;var ci2=new Date(mrs[ri].checkin+"T12:00:00"),co2=new Date(mrs[ri].checkout+"T12:00:00");if(dt>=ci2&&dt<co2){res=mrs[ri];break;}}
+      var res=null;for(var ri=0;ri<mrs.length;ri++){if(normApto(mrs[ri].apto)!==rowNorm)continue;var ci2=new Date(mrs[ri].checkin+"T12:00:00"),co2=new Date(mrs[ri].checkout+"T12:00:00");if(dt>=ci2&&dt<co2){res=mrs[ri];break;}}
       var bar="";
       if(res){var isS=dt.getTime()===new Date(res.checkin+"T12:00:00").getTime(),isE=new Date(new Date(res.checkout+"T12:00:00").getTime()-86400000).getTime()===dt.getTime();var cls="occ"+(isS&&isE?" occ-single":isS?" occ-start":isE?" occ-end":"");bar="<div class='"+cls+"' style='background:"+CAL_COLORS[ai%CAL_COLORS.length]+"' data-calrid='"+res.id+"'></div>";}
       h+="<td class='"+cc+"'><div class='cal-bar'>"+bar+"</div></td>";
     }
     h+="</tr>";
   }
-  var ocu=APTOS.filter(function(a){return mrs.some(function(r){return r.apto===a;});}).length;
-  h+="</tbody></table></div><div class='cal-stats'><div><div class='cal-stat-val' style='color:var(--ocean)'>"+mrs.length+"</div><div class='cal-stat-lbl'>Reservas</div></div><div><div class='cal-stat-val' style='color:var(--green)'>"+ocu+"</div><div class='cal-stat-lbl'>Com reserva</div></div><div><div class='cal-stat-val' style='color:var(--sand-dark)'>"+(APTOS.length-ocu)+"</div><div class='cal-stat-lbl'>Livres</div></div></div>";
+  var ocu=aptosList.filter(function(a){var na=normApto(a);return mrs.some(function(r){return normApto(r.apto)===na;});}).length;
+  h+="</tbody></table></div><div class='cal-stats'><div><div class='cal-stat-val' style='color:var(--ocean)'>"+mrs.length+"</div><div class='cal-stat-lbl'>Reservas</div></div><div><div class='cal-stat-val' style='color:var(--green)'>"+ocu+"</div><div class='cal-stat-lbl'>Com reserva</div></div><div><div class='cal-stat-val' style='color:var(--sand-dark)'>"+(aptosList.length-ocu)+"</div><div class='cal-stat-lbl'>Livres</div></div></div>";
   document.getElementById("resCalContent").innerHTML=h;
   document.querySelectorAll("[data-calrid]").forEach(function(el){el.addEventListener("click",function(){openResDetail(parseInt(el.dataset.calrid));});});
 }
@@ -703,8 +711,8 @@ function renderResMetrics(){
     periodRes=active.filter(function(r){return r.checkin&&new Date(r.checkin+"T12:00:00").getFullYear()===resYear;});
     diasP=365;label="Ano "+resYear;
   }
-  function nA(a){var t=0;periodRes.filter(function(r){return r.apto===a;}).forEach(function(r){var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");if(resMetricsPeriod==="mes"){var s=ci<new Date(resYear,resMonth,1)?new Date(resYear,resMonth,1):ci,e=co>new Date(resYear,resMonth+1,0,23,59)?new Date(resYear,resMonth+1,0,23,59):co,dd=(e-s)/86400000;if(dd>0)t+=dd;}else{t+=(co-ci)/86400000;}});return Math.round(t);}
-  function iA(a){return periodRes.filter(function(r){return r.apto===a;}).reduce(function(s,r){return s+Number(r.total||0);},0);}
+  function nA(a){var na=normApto(a),t=0;periodRes.filter(function(r){return normApto(r.apto)===na;}).forEach(function(r){var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");if(resMetricsPeriod==="mes"){var s=ci<new Date(resYear,resMonth,1)?new Date(resYear,resMonth,1):ci,e=co>new Date(resYear,resMonth+1,0,23,59)?new Date(resYear,resMonth+1,0,23,59):co,dd=(e-s)/86400000;if(dd>0)t+=dd;}else{t+=(co-ci)/86400000;}});return Math.round(t);}
+  function iA(a){var na=normApto(a);return periodRes.filter(function(r){return normApto(r.apto)===na;}).reduce(function(s,r){return s+Number(r.total||0);},0);}
   var rows=APTOS.map(function(a){var n=nA(a),i=iA(a);return{apto:a,noites:n,ocup:((n/diasP)*100).toFixed(0),tarifa:n>0?i/n:0,ingresos:i};}).filter(function(r){return r.noites>0;});
   var tN=rows.reduce(function(s,r){return s+r.noites;},0),tI=rows.reduce(function(s,r){return s+r.ingresos;},0),tO=((tN/(diasP*APTOS.length))*100).toFixed(0);
   if(!rows.length){document.getElementById("resMetricsContent").innerHTML="<div style='font-size:12px;color:var(--text-soft);text-align:center;padding:12px 0'>Nenhuma reserva ativa em "+label+"</div>";return;}
