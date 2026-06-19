@@ -1572,7 +1572,7 @@ function renderPropGestTabla() {
         <span class="prop-fecha">${fecha}</span>
         <span class="prop-turno">${turnoLabel}</span>
         <span class="prop-local">${esc(localLabel(c.local))}</span>
-        <span class="prop-monto">$${formatNumber(c.total_neto || 0)}</span>
+        <span class="prop-monto">$${formatNumber(Math.round((c.total_bruto || 0) * (1 - (parseFloat(c.porcentaje_admin) || 0) / 100)))}</span>
         <span>${c.total_puntos || 0}</span>
         <span class="prop-estado ${estadoCls}" ${estadoClickable} ${estadoTitle}>${estadoTxt}</span>
       </div>`;
@@ -1705,6 +1705,13 @@ async function abrirEditarCierre(cierreId) {
   const c = (PROP_CIERRES || []).find(x => x.id === cierreId);
   if (!c) { toast('No se encontró el cierre', 'error'); return; }
   if (c.pagado) { toast('No se puede editar un cierre ya pagado', 'error'); return; }
+  // Asegurar que PROP_CONFIG esté cargado (puede no estarlo si se abre desde liquidar)
+  if (!PROP_CONFIG) {
+    try {
+      const data = await api('propinas_config?id=eq.1');
+      PROP_CONFIG = (data && data[0]) ? data[0] : {};
+    } catch(e) { PROP_CONFIG = {}; }
+  }
 
   CIERRE_EDITANDO = cierreId;
   CIERRE_EDIT_PUNTOS = {};
@@ -2617,6 +2624,21 @@ window.poblarItemsComponente = function() {
   if (opts) opts.style.display = 'none';
 };
 
+function recCerrarDropdown() {
+  const opts = document.getElementById('compItemOpts');
+  if (opts) opts.style.display = 'none';
+}
+
+// Cerrar dropdown al tocar/hacer click fuera del buscador de componentes
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('compItemWrap');
+  if (wrap && !wrap.contains(e.target)) recCerrarDropdown();
+});
+document.addEventListener('touchstart', function(e) {
+  const wrap = document.getElementById('compItemWrap');
+  if (wrap && !wrap.contains(e.target)) recCerrarDropdown();
+}, { passive: true });
+
 window.recFiltrarItems = function(input) {
   const q = (input.value || '').toLowerCase().trim();
   const opts = document.getElementById('compItemOpts');
@@ -2627,18 +2649,24 @@ window.recFiltrarItems = function(input) {
   if (!filtrados.length) {
     opts.innerHTML = '<div class="ped-ins-no-result">Sin resultados</div>';
   } else {
-    opts.innerHTML = filtrados.map(i =>
-      '<div class="ped-ins-opt" onmousedown="recSeleccionarItem(' + JSON.stringify(String(i.id)) + ',' + JSON.stringify(i.nombre) + ',' + JSON.stringify(i.unidad) + ')">' + esc(i.nombre) + '</div>'
-    ).join('');
+    // Usar data-id para evitar conflictos de comillas en onclick
+    opts.innerHTML = filtrados.map(function(i) {
+      return '<div class="ped-ins-opt" data-rec-id="' + esc(String(i.id)) + '" onclick="recSeleccionarItemById(this)">' + esc(i.nombre) + '</div>';
+    }).join('');
   }
   opts.style.display = 'block';
 };
 
 window.recOcultarItems = function() {
-  setTimeout(function() {
-    const opts = document.getElementById('compItemOpts');
-    if (opts) opts.style.display = 'none';
-  }, 200);
+  // Timeout largo para que en mobile el onclick de la opción se ejecute antes de cerrar
+  setTimeout(recCerrarDropdown, 500);
+};
+
+window.recSeleccionarItemById = function(el) {
+  const id = el.dataset.recId;
+  const item = REC_ITEMS_LISTA.find(function(i) { return String(i.id) === String(id); });
+  if (!item) return;
+  recSeleccionarItem(item.id, item.nombre, item.unidad);
 };
 
 window.recSeleccionarItem = function(id, nombre, unidad) {
@@ -2648,8 +2676,7 @@ window.recSeleccionarItem = function(id, nombre, unidad) {
   if (hiddenEl) hiddenEl.value = id;
   if (searchEl) searchEl.value = nombre;
   if (unidad && uSel) uSel.value = unidad;
-  const opts = document.getElementById('compItemOpts');
-  if (opts) opts.style.display = 'none';
+  recCerrarDropdown();
 };
 
 window.agregarComponente = function() {
