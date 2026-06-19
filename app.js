@@ -1681,9 +1681,9 @@ function abrirNuevoCierre() {
 
   const tc = PROP_CONFIG || {};
   document.getElementById('cierreTcHint').textContent =
-    'Cotización actual: USD $' + formatNumber(tc.tc_usd || 0) +
-    ' · EUR $' + formatNumber(tc.tc_eur || 0) +
-    ' · BRL $' + formatNumber(tc.tc_brl || 0);
+    'Cotización actual: USD $' + formatNumber(tc.cambio_usd || 0) +
+    ' · EUR $' + formatNumber(tc.cambio_eur || 0) +
+    ' · BRL $' + formatNumber(tc.cambio_brl || 0);
 
   document.getElementById('cierreBilletes').innerHTML = BILLETES_DENOM.map(d =>
     '<label class="billete-row"><span>$' + formatNumber(d) + '</span>' +
@@ -1734,9 +1734,9 @@ async function abrirEditarCierre(cierreId) {
 
   const tc = PROP_CONFIG || {};
   document.getElementById('cierreTcHint').textContent =
-    'Cotización actual: USD $' + formatNumber(tc.tc_usd || 0) +
-    ' · EUR $' + formatNumber(tc.tc_eur || 0) +
-    ' · BRL $' + formatNumber(tc.tc_brl || 0);
+    'Cotización actual: USD $' + formatNumber(tc.cambio_usd || 0) +
+    ' · EUR $' + formatNumber(tc.cambio_eur || 0) +
+    ' · BRL $' + formatNumber(tc.cambio_brl || 0);
 
   document.getElementById('cierreBilletes').innerHTML = BILLETES_DENOM.map(d =>
     '<label class="billete-row"><span>$' + formatNumber(d) + '</span>' +
@@ -1811,9 +1811,9 @@ function recalcCierre() {
   const tc = PROP_CONFIG || {};
   let cash = 0;
   BILLETES_DENOM.forEach(d => { cash += d * billeteVal(d); });
-  const extranjera = valNumCierre('cierreUsd') * (parseFloat(tc.tc_usd) || 0) +
-                     valNumCierre('cierreEur') * (parseFloat(tc.tc_eur) || 0) +
-                     valNumCierre('cierreBrl') * (parseFloat(tc.tc_brl) || 0);
+  const extranjera = valNumCierre('cierreUsd') * (parseFloat(tc.cambio_usd) || 0) +
+                     valNumCierre('cierreEur') * (parseFloat(tc.cambio_eur) || 0) +
+                     valNumCierre('cierreBrl') * (parseFloat(tc.cambio_brl) || 0);
   const electronico = valNumCierre('cierreTarjeta') + valNumCierre('cierreTransf');
   const total = cash + extranjera + electronico;
   const puntos = CIERRE_COLABS.reduce((s, c) => s + (parseFloat(c.puntos) || 0), 0);
@@ -1839,7 +1839,7 @@ async function guardarCierre() {
   BILLETES_DENOM.forEach(d => { const n = billeteVal(d); billetes['bil_' + d] = n; cash += d * n; });
   const usd = valNumCierre('cierreUsd'), eur = valNumCierre('cierreEur'), brl = valNumCierre('cierreBrl');
   const tarjeta = valNumCierre('cierreTarjeta'), transf = valNumCierre('cierreTransf');
-  const extranjera = usd * (parseFloat(tc.tc_usd) || 0) + eur * (parseFloat(tc.tc_eur) || 0) + brl * (parseFloat(tc.tc_brl) || 0);
+  const extranjera = usd * (parseFloat(tc.cambio_usd) || 0) + eur * (parseFloat(tc.cambio_eur) || 0) + brl * (parseFloat(tc.cambio_brl) || 0);
   const bruto = cash + extranjera + tarjeta + transf;
   const pct = parseFloat((PROP_CONFIG || {}).porcentaje_admin) || 0;
   const montoAdmin = Math.round(bruto * pct / 100);
@@ -1859,7 +1859,7 @@ async function guardarCierre() {
     fecha: document.getElementById('cierreFecha').value || hoyStr(),
     turno: document.getElementById('cierreTurno').value,
     monto_usd: usd, monto_eur: eur, monto_brl: brl,
-    tc_usd: parseFloat(tc.tc_usd) || 0, tc_eur: parseFloat(tc.tc_eur) || 0, tc_brl: parseFloat(tc.tc_brl) || 0,
+    tc_usd: parseFloat(tc.cambio_usd) || 0, tc_eur: parseFloat(tc.cambio_eur) || 0, tc_brl: parseFloat(tc.cambio_brl) || 0,
     monto_tarjeta: tarjeta, monto_transferencia: transf,
     porcentaje_admin: pct,
     total_bruto: Math.round(bruto), total_neto: Math.round(neto), total_puntos: puntos,
