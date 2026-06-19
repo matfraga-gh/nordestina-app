@@ -111,6 +111,9 @@ async function api(path, options = {}) {
 // HELPERS - Hash y sesión
 // ============================================
 async function sha256(str) {
+  if (!crypto || !crypto.subtle) {
+    throw new Error('Tu navegador no soporta cifrado seguro. Abrí la app desde https:// en Chrome o Safari actualizado.');
+  }
   const buf = new TextEncoder().encode(str);
   const hash = await crypto.subtle.digest('SHA-256', buf);
   return Array.from(new Uint8Array(hash))
@@ -4208,7 +4211,7 @@ async function openMiBiblioteca() {
   try {
     const [cats, conts] = await Promise.all([
       api('biblioteca_categorias?activo=eq.true&order=orden.asc'),
-      api('biblioteca_contenidos?activo=eq.true&order=creado_en.desc')
+      api('biblioteca_contenidos?activo=neq.false&order=creado_en.desc')
     ]);
     BIB_CATEGORIAS = cats || [];
     BIB_CONTENIDOS = conts || [];
@@ -4219,9 +4222,19 @@ async function openMiBiblioteca() {
 
   // Filtrar contenidos por locales del usuario
   const localesUser = localesUsuarioActual();
+  const esEditor = !!(currentUser && currentUser.editor_biblioteca);
+  const transversalSlug = (() => {
+    const t = LOCALES_DB.find(x => /transversal/i.test(x.nombre || '') || /transversal/i.test(x.slug || ''));
+    return t ? t.slug : null;
+  })();
   const visibles = BIB_CONTENIDOS.filter(c => {
     if (isMaster() || isAdmin()) return true;
-    if (!c.locales || c.locales.length === 0) return false;
+    // contenido sin locales = transversal, visible para todos
+    if (!c.locales || c.locales.length === 0) return true;
+    // contenido marcado como transversal
+    if (transversalSlug && c.locales.includes(transversalSlug)) return true;
+    // Si no es editor de biblioteca, ve el contenido de sus locales también
+    if (!esEditor) return c.locales.some(loc => localesUser.includes(loc));
     return c.locales.some(loc => localesUser.includes(loc));
   });
 
@@ -4338,7 +4351,7 @@ async function recargarBibAdmin() {
   try {
     const [cats, conts] = await Promise.all([
       api('biblioteca_categorias?activo=eq.true&order=orden.asc'),
-      api('biblioteca_contenidos?activo=eq.true&order=creado_en.desc')
+      api('biblioteca_contenidos?order=creado_en.desc')
     ]);
     BIB_CATEGORIAS = cats || [];
     BIB_CONTENIDOS = conts || [];
@@ -4386,23 +4399,31 @@ function renderBibAdminLista() {
     const tipo = BIB_TIPOS.find(t => t.key === c.tipo) || BIB_TIPOS[0];
     const cat = BIB_CATEGORIAS.find(k => k.id === c.categoria_id);
     const locTxt = (!c.locales || c.locales.length === 0)
-      ? 'Sin locales'
+      ? 'Todos los locales'
       : (c.locales.length === getLocalesActivos().length
           ? 'Todos los locales'
           : c.locales.length + ' local' + (c.locales.length > 1 ? 'es' : ''));
 
+    const inactivo = c.activo === false;
     const btnDelete = puedeAdminBibCat()
       ? `<button class="bib-btn-delete" onclick="borrarContenido(${c.id})" title="Borrar"><i class="ti ti-trash"></i></button>`
       : '';
+    const btnActivar = (inactivo && puedeAdminBibCat())
+      ? `<button class="bib-btn-activar" onclick="activarContenido(${c.id})" title="Activar"><i class="ti ti-eye"></i></button>`
+      : '';
+    const badgeInactivo = inactivo
+      ? `<span class="bib-badge-inactivo">Inactivo</span>`
+      : '';
 
     html += `
-      <div class="bib-admin-item">
+      <div class="bib-admin-item${inactivo ? ' bib-admin-item--inactivo' : ''}">
         <div class="bib-admin-item-icon ${tipo.cls}"><i class="ti ${tipo.icon}"></i></div>
         <div class="bib-admin-item-info">
-          <div class="bib-admin-item-titulo">${esc(c.titulo)}</div>
+          <div class="bib-admin-item-titulo">${esc(c.titulo)}${badgeInactivo}</div>
           <div class="bib-admin-item-meta">${esc(cat ? cat.nombre : 'Sin categoría')} · ${locTxt}</div>
         </div>
         <div class="bib-admin-item-actions">
+          ${btnActivar}
           <button class="bib-btn-edit" onclick="openModalContenido(${c.id})" title="Editar"><i class="ti ti-edit"></i></button>
           ${btnDelete}
         </div>
@@ -4534,12 +4555,22 @@ async function guardarContenido() {
   btn.disabled = true;
   btn.textContent = 'Guardando...';
 
+  // Si eligieron el local "TODOS" (transversal), guardar locales=null para que aparezca en todos
+  const transversalSlugGuardar = (() => {
+    const t = LOCALES_DB.find(x => /transversal/i.test(x.nombre || '') || /transversal/i.test(x.slug || ''));
+    return t ? t.slug : null;
+  })();
+  const localesParaGuardar = (transversalSlugGuardar && BIB_LOCALES_SEL.includes(transversalSlugGuardar))
+    ? null
+    : BIB_LOCALES_SEL;
+
   const body = {
     titulo,
     categoria_id,
     tipo: BIB_TIPO_SEL,
     url,
-    locales: BIB_LOCALES_SEL,
+    locales: localesParaGuardar,
+    activo: true,
     actualizado_en: new Date().toISOString()
   };
 
@@ -4569,6 +4600,20 @@ async function guardarContenido() {
     btn.textContent = 'Guardar';
   }
 }
+
+async function activarContenido(id) {
+  try {
+    await api(`biblioteca_contenidos?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ activo: true })
+    });
+    toast('Contenido activado');
+    await recargarBibAdmin();
+  } catch (e) {
+    toast('Error al activar', 'error');
+  }
+}
+window.activarContenido = activarContenido;
 
 async function borrarContenido(id) {
   const c = BIB_CONTENIDOS.find(x => x.id === id);
