@@ -1399,10 +1399,11 @@ async function abrirGestionPropinas() {
     return;
   }
 
-  // Pre-seleccionar el primer local del usuario si no hay selección
+  // Pre-seleccionar el primer local real (no transversal) si no hay selección
   const localesUser = localesPropinasUsuario();
+  const slugTransversal = getSlugTransversal();
   if (!PROP_LOCAL_SEL || !localesUser.includes(PROP_LOCAL_SEL)) {
-    PROP_LOCAL_SEL = localesUser[0] || null;
+    PROP_LOCAL_SEL = localesUser.find(l => l !== slugTransversal) || localesUser[0] || null;
   }
 
   renderPropGestHeader();
@@ -1549,7 +1550,7 @@ function renderPropGestTabla() {
         <span>Turno</span>
         <span>Local</span>
         <span>Monto</span>
-        <span>Puntos</span>
+        <span>Pts</span>
         <span>Estado</span>
       </div>`;
 

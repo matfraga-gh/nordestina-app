@@ -2597,7 +2597,7 @@ button {
   background: rgba(0,0,0,0.25);
   padding: 10px 14px;
   display: grid;
-  grid-template-columns: 40px 56px 84px 72px 36px 92px;
+  grid-template-columns: 42px 60px 1fr 74px 36px 90px;
   gap: 8px;
   font-size: 10px;
   text-transform: uppercase;
@@ -2608,7 +2608,7 @@ button {
 .prop-tabla-row {
   padding: 12px 14px;
   display: grid;
-  grid-template-columns: 40px 56px 84px 72px 36px 92px;
+  grid-template-columns: 42px 60px 1fr 74px 36px 90px;
   gap: 8px;
   align-items: center;
   font-size: 13px;
@@ -2677,19 +2677,22 @@ button {
   line-height: 1.5;
 }
 
-/* Mobile: tabla más compacta */
+/* Mobile: ocultar Turno (col 2), mostrar Local, Monto, Pts, Estado */
 @media (max-width: 600px) {
   .prop-tabla-header,
   .prop-tabla-row {
-    grid-template-columns: 42px 1fr 62px 30px 72px;
+    grid-template-columns: 44px 1fr 68px 26px 68px;
     gap: 5px;
     font-size: 11px;
+    padding: 10px 10px;
   }
-  /* En mobile: ocultar solo Local (col 3), mostrar Monto (col 4) */
-  .prop-tabla-header > span:nth-child(3),
-  .prop-tabla-row > span:nth-child(3) {
+  /* Ocultar Turno (col 2) */
+  .prop-tabla-header > span:nth-child(2),
+  .prop-tabla-row > span:nth-child(2) {
     display: none;
   }
+  .prop-local { font-size: 11px; }
+  .prop-monto { font-size: 12px; }
 }
 
 /* Botón ⚙️ configurar en header de Gestión Propinas */
