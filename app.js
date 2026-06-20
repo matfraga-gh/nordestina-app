@@ -1483,10 +1483,10 @@ function cierresLocalActual() {
 
 // El botón "Nuevo cierre" no aplica en modo "Todos"
 function actualizarBtnNuevoCierre() {
+  // El botón siempre es visible; abrirNuevoCierre() valida la selección de local
   const btn = document.getElementById('propGestNuevoBtn');
   if (!btn) return;
-  const slugTodos = getSlugTransversal();
-  btn.style.display = (slugTodos && PROP_LOCAL_SEL === slugTodos) ? 'none' : '';
+  btn.style.display = '';
 }
 
 function renderPropGestKpis() {

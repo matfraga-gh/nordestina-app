@@ -1,1303 +1,1977 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="es">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Nordestina</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;600&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --ocean:#1a4a6b;--ocean-mid:#2e6e9e;--ocean-light:#d6eaf8;
-  --sand:#f7f0e3;--sand-mid:#e8d9c0;--sand-dark:#c9b48a;
-  --white:#fff;--text:#1a2e3b;--text-soft:#5a7a8a;
-  --green:#1a6b3a;--green-bg:#e6f4ec;
-  --red:#6b1a1a;--red-bg:#f4e6e6;
-  --yellow:#7a6000;--yellow-bg:#fdf8e1;
-}
-body{background:var(--sand);font-family:'Jost',sans-serif;color:var(--text);min-height:100vh}
+<meta charset="UTF-8">
+<meta name="theme-color" content="#1C1A17">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AZUCAPP">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1C1A17">
+<title>AZUCAPP · Gestión interna de Azuca</title>
 
-/* ── VIEWS ── */
-.view{display:none}
-.view.active{display:block}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-/* ── LOGIN ── */
-#viewLogin{position:fixed;inset:0;background:var(--ocean);z-index:999;display:none;align-items:center;justify-content:center}
-#viewLogin.active{display:flex}
-.login-card{background:var(--sand);border-radius:20px;padding:36px 28px;width:90%;max-width:360px;text-align:center}
-.login-logo{font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--ocean);letter-spacing:4px;font-weight:700;margin-bottom:4px}
-.login-sub{font-size:9px;color:var(--text-soft);letter-spacing:3px;text-transform:uppercase;margin-bottom:32px}
-.login-err{display:none;background:var(--red-bg);color:var(--red);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:16px;text-align:left}
-.lf{text-align:left;margin-bottom:14px}
-.lf label{display:block;font-size:10px;color:var(--text-soft);letter-spacing:1.5px;text-transform:uppercase;font-weight:600;margin-bottom:5px}
-.lf input{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--sand-mid);background:var(--white);font-size:14px;color:var(--text);font-family:'Jost',sans-serif;outline:none}
-.btn-login{width:100%;padding:13px;background:var(--ocean);border:none;border-radius:10px;color:var(--white);font-size:14px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;margin-top:6px}
+<link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@3.34.1/dist/tabler-icons.min.css">
 
-/* ── DASH ── */
-#viewDash{background:var(--ocean);min-height:100vh;padding:40px 20px}
-.dash-header{text-align:center;margin-bottom:28px}
-.dash-logo{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--white);letter-spacing:4px;font-weight:700}
-.dash-sub{font-size:9px;color:var(--sand-dark);letter-spacing:3px;text-transform:uppercase;margin-top:4px}
-.dash-user{font-size:13px;color:var(--sand-mid);margin-top:10px}
-.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:480px;margin:0 auto 16px}
-.dash-card{background:var(--sand);border-radius:16px;padding:22px 16px;text-align:center;cursor:pointer;border:2px solid transparent;transition:all .2s}
-.dash-card:hover{transform:translateY(-2px);border-color:var(--sand-dark)}
-.dash-card.full{grid-column:1/-1}
-.dash-icon{font-size:32px;margin-bottom:10px}
-.dash-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--ocean);margin-bottom:4px}
-.dash-desc{font-size:11px;color:var(--text-soft)}
-.dash-badge{display:inline-block;border-radius:20px;padding:2px 10px;font-size:10px;font-weight:600;margin-top:6px}
-.badge-green{background:var(--green-bg);color:var(--green)}
-.badge-blue{background:var(--ocean-light);color:var(--ocean)}
-.badge-amber{background:var(--yellow-bg);color:var(--yellow)}
-.btn-logout-dash{display:block;width:100%;max-width:480px;margin:0 auto;padding:10px;background:none;border:1.5px solid rgba(255,255,255,.25);border-radius:10px;color:rgba(255,255,255,.7);font-size:12px;cursor:pointer;font-family:'Jost',sans-serif}
-
-/* ── HEADER APPS ── */
-.app-header{background:var(--ocean);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:relative}
-.app-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--sand-dark),var(--sand-mid),var(--sand-dark))}
-.app-brand{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--white);letter-spacing:3px;font-weight:600}
-.app-sub{font-size:8px;color:var(--sand-dark);letter-spacing:2px;text-transform:uppercase;margin-top:1px}
-.app-btns{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
-.abtn{border:none;border-radius:7px;padding:6px 10px;cursor:pointer;font-size:11px;font-family:'Jost',sans-serif;font-weight:600}
-.abtn-sand{background:var(--sand-dark);color:var(--white)}
-.abtn-mid{background:var(--ocean-mid);color:var(--white)}
-.abtn-green{background:var(--green);color:var(--white)}
-.abtn-outline{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.75)}
-.app-user{font-size:10px;color:var(--sand-dark)}
-
-/* ── MONTH NAV ── */
-.month-nav{background:var(--ocean-mid);padding:7px 16px;display:flex;align-items:center;justify-content:space-between}
-.nav-arrow{background:none;border:none;color:rgba(255,255,255,.8);cursor:pointer;font-size:22px;padding:0 8px}
-.month-label{color:var(--white);font-size:11px;letter-spacing:3px;text-transform:uppercase;font-family:'Jost',sans-serif;font-weight:300}
-
-/* ── TABS ── */
-.tabs{display:flex;border-bottom:2px solid var(--sand-mid);background:var(--white)}
-.tab{flex:1;padding:10px 4px;border:none;background:none;cursor:pointer;font-size:11px;font-family:'Jost',sans-serif;color:var(--text-soft);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s}
-.tab.active{color:var(--ocean);border-bottom-color:var(--ocean);font-weight:600}
-
-/* ── CONTENT ── */
-.content{padding:12px 12px 70px;max-width:480px;margin:0 auto}
-
-/* ── CARDS ── */
-.card{background:var(--white);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 2px 12px rgba(26,74,107,.08);border:1px solid rgba(26,74,107,.06)}
-.kpi-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px;margin-bottom:12px}
-.kpi{border-radius:10px;padding:10px 6px;text-align:center;border:1px solid rgba(0,0,0,.05)}
-.kpi-label{font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;font-weight:600}
-.kpi-value{font-size:12px;font-weight:600;line-height:1.2;word-break:break-all}
-.ops-card{background:var(--white);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 2px 12px rgba(26,74,107,.08);border:1px solid rgba(26,74,107,.06)}
-.ops-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;text-align:center}
-.ops-value{font-size:17px;font-weight:700;color:var(--ocean);font-family:'Cormorant Garamond',serif}
-.ops-label{font-size:10px;color:var(--text-soft);margin-top:2px}
-
-/* ── CHIPS ── */
-.chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600}
-.chip-pendiente{background:var(--yellow-bg);color:var(--yellow)}
-.chip-confirmada{background:var(--ocean-light);color:var(--ocean)}
-.chip-checkin{background:var(--green-bg);color:var(--green)}
-.chip-checkout{background:#e8f5e9;color:#2e7d32}
-.chip-cancelada{background:var(--red-bg);color:var(--red)}
-
-/* ── RES CARDS ── */
-.res-card{background:var(--white);border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 2px 10px rgba(26,74,107,.08);border:1px solid rgba(26,74,107,.06);cursor:pointer}
-.res-apto{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:var(--ocean)}
-.res-huesped{font-size:13px;color:var(--text);margin-bottom:2px}
-.res-fechas{font-size:11px;color:var(--text-soft)}
-.res-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
-.res-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--sand-mid)}
-.res-canal{font-size:10px;color:var(--text-soft);background:var(--sand);padding:2px 7px;border-radius:10px}
-.pago-tag{display:inline-block;background:var(--ocean-light);color:var(--ocean);padding:2px 7px;border-radius:8px;font-size:10px;font-weight:600;margin-top:2px}
-
-/* ── FILTERS ── */
-.filter-row{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px}
-.filter-row::-webkit-scrollbar{display:none}
-.fbtn{border:1px solid var(--sand-dark);background:none;border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Jost',sans-serif;color:var(--text-soft);cursor:pointer;white-space:nowrap}
-.fbtn.active{background:var(--ocean);border-color:var(--ocean);color:var(--white);font-weight:600}
-
-/* ── MISC ── */
-.sec-title{font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:2px;margin-bottom:11px;display:block;font-weight:600}
-.empty{color:var(--text-soft);font-size:13px;text-align:center;padding:24px 0}
-.sync-badge{display:inline-flex;align-items:center;gap:4px;background:var(--ocean-light);color:var(--ocean);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:600;margin-bottom:10px}
-.entry-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--sand-mid)}
-.entry-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
-.entry-info{flex:1;min-width:0}
-.entry-cat{font-size:13px;color:var(--text);font-weight:600}
-.entry-group{font-size:11px;color:var(--text-soft)}
-.entry-desc{font-size:11px;color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.entry-date{font-size:10px;color:var(--sand-dark);margin-top:2px}
-.entry-source{font-size:9px;background:var(--ocean-light);color:var(--ocean);border-radius:8px;padding:1px 5px;margin-top:2px;display:inline-block}
-.entry-amt{font-size:13px;font-weight:600;flex-shrink:0}
-.report-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--sand-mid)}
-.rl{font-size:13px;color:var(--text);flex:1}
-.rl.indent{font-size:11px;color:var(--text-soft);padding-left:14px}
-.rl.bold{font-weight:700}
-.rp{font-size:10px;color:var(--text-soft);margin-right:8px}
-.rv{font-size:13px;color:var(--text)}
-.rv.bold{font-weight:700}
-
-/* ── METRICS ── */
-.metrics-toggle{background:var(--sand);border:none;border-bottom:1px solid var(--sand-mid);width:100%;text-align:center;padding:7px;font-size:11px;color:var(--text-soft);font-family:'Jost',sans-serif;cursor:pointer}
-.metrics-panel{display:none;background:var(--white);border-bottom:2px solid var(--sand-mid)}
-.metrics-inner{padding:14px 12px 16px;max-width:480px;margin:0 auto}
-
-/* ── CALENDAR ── */
-.cal-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.cal-table{border-collapse:collapse;min-width:max-content;width:100%}
-.cal-head-apto{font-size:10px;font-weight:600;color:var(--text-soft);text-transform:uppercase;padding:8px 10px 6px;background:var(--white);position:sticky;left:0;z-index:2;min-width:90px;border-right:2px solid var(--sand-mid)}
-.cal-head-day{font-size:10px;color:var(--text-soft);text-align:center;padding:4px 0 2px;min-width:26px;line-height:1.2}
-.cal-head-day.today{color:var(--ocean);font-weight:700}
-.cal-head-dow{font-size:8px;color:var(--sand-dark);text-align:center;padding-bottom:4px}
-.cal-apto-label{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:700;color:var(--ocean);padding:4px 10px;background:var(--white);position:sticky;left:0;z-index:2;border-right:2px solid var(--sand-mid);white-space:nowrap}
-.cal-cell{height:26px;min-width:26px;border-left:1px solid rgba(232,217,192,.6)}
-.cal-cell.weekend{background:rgba(201,180,138,.1)}
-.cal-cell.today-col{background:rgba(46,110,158,.07)}
-.cal-bar{height:26px;display:flex;align-items:center;width:100%}
-.occ{cursor:pointer;height:18px;width:100%;opacity:.82}
-.occ-start{border-radius:6px 0 0 6px;margin-left:3px;width:calc(100% - 3px)}
-.occ-end{border-radius:0 6px 6px 0;margin-right:3px;width:calc(100% - 3px)}
-.occ-single{border-radius:6px;margin:0 3px;width:calc(100% - 6px)}
-.cal-stats{display:flex;justify-content:space-around;background:var(--white);margin:12px 12px 0;border-radius:12px;padding:12px;box-shadow:0 2px 10px rgba(26,74,107,.07)}
-.cal-stat-val{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;text-align:center}
-.cal-stat-lbl{font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1px;text-align:center}
-
-/* ── MODALS ── */
-.overlay{position:fixed;inset:0;background:rgba(26,46,59,.55);z-index:200;display:none;align-items:flex-end;justify-content:center}
-.overlay.open{display:flex}
-.modal{background:var(--sand);border-radius:16px 16px 0 0;padding:20px 18px 36px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto}
-.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
-.modal-title{font-size:16px;font-weight:700;color:var(--ocean);font-family:'Cormorant Garamond',serif;letter-spacing:1px}
-.btn-x{background:none;border:none;cursor:pointer;color:var(--text-soft);font-size:22px;line-height:1}
-label{display:block;font-size:10px;color:var(--text-soft);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;font-weight:600}
-select,input,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid var(--sand-dark);background:var(--white);font-size:13px;color:var(--text);margin-bottom:11px;font-family:'Jost',sans-serif;outline:none}
-textarea{resize:vertical;min-height:65px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.form-section{padding:12px;background:rgba(255,255,255,.6);border-radius:10px;margin-bottom:10px}
-.fsec-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ocean);font-weight:600;margin-bottom:10px}
-.saldo-box{background:var(--ocean-light);border-radius:8px;padding:8px 12px;margin-bottom:11px;display:flex;justify-content:space-between;align-items:center}
-.cafe-row{display:flex;align-items:center;gap:10px;background:var(--white);border-radius:8px;padding:10px;margin-bottom:11px;border:1px solid var(--sand-dark)}
-.fx-box{display:none;background:var(--ocean-light);border-radius:8px;padding:10px;margin-bottom:11px}
-.fx-title{font-size:10px;font-weight:600;color:var(--ocean);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.fx-result{margin-top:8px;font-size:12px;color:var(--ocean)}
-.btn-save{width:100%;padding:12px;background:var(--ocean);border:none;border-radius:10px;color:var(--white);font-size:14px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;margin-top:4px}
-.btn-secondary{width:100%;padding:10px;background:none;border:1.5px solid var(--ocean);border-radius:10px;color:var(--ocean);font-size:13px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;margin-top:8px}
-.btn-danger{width:100%;padding:10px;background:none;border:1.5px solid var(--red);border-radius:10px;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;margin-top:8px}
-.btn-green{width:100%;padding:12px;background:var(--green);border:none;border-radius:10px;color:var(--white);font-size:14px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;margin-top:4px}
-.detail-section{background:var(--white);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid rgba(26,74,107,.06)}
-.detail-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--sand-mid);font-size:13px}
-.detail-row:last-child{border-bottom:none}
-.detail-label{color:var(--text-soft);font-size:12px}
-.detail-value{color:var(--text);font-weight:500;text-align:right;max-width:65%}
-.status-bar{display:flex;gap:6px;margin-bottom:12px}
-.s-step{flex:1;height:4px;border-radius:2px;background:var(--sand-mid)}
-.s-step.done{background:var(--ocean)}
-.s-step.current{background:var(--sand-dark)}
-
-/* ── USERS ── */
-.user-card{background:var(--sand);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
-.user-avatar{width:40px;height:40px;border-radius:50%;background:var(--ocean);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.user-info{flex:1}
-.user-name{font-size:14px;font-weight:600;color:var(--text)}
-.user-login{font-size:11px;color:var(--text-soft)}
-.rol-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;margin-top:3px}
-.rol-master{background:var(--yellow-bg);color:var(--yellow)}
-.rol-administrativa{background:var(--ocean-light);color:var(--ocean)}
-.rol-comercial{background:var(--green-bg);color:var(--green)}
-.rol-checkin{background:#f0e6f6;color:#6b1a6b}
-.rol-auditor{background:#f0f0f0;color:#555}
-.rol-housekeeping{background:#fff3e0;color:#e65100}
-.btn-sm{background:none;border:1px solid var(--sand-dark);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text-soft);cursor:pointer;font-family:'Jost',sans-serif}
-.btn-sm-red{background:none;border:1px solid var(--red);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--red);cursor:pointer;font-family:'Jost',sans-serif}
-.prov-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--sand-mid);font-size:13px}
-.btn-save-sm{background:var(--ocean);border:none;border-radius:8px;padding:10px 16px;color:var(--white);font-size:13px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;flex-shrink:0}
-.type-row{display:flex;gap:8px;margin-bottom:11px}
-.type-btn{flex:1;padding:8px;border:2px solid var(--sand-mid);border-radius:8px;background:none;cursor:pointer;font-size:13px;font-family:'Jost',sans-serif;color:var(--text-soft);transition:all .2s}
-.type-btn.income-active{background:var(--green-bg);border-color:var(--green);color:var(--green);font-weight:600}
-.type-btn.expense-active{background:var(--red-bg);border-color:var(--red);color:var(--red);font-weight:600}
-
-/* ── TOAST ── */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--ocean);color:var(--white);padding:8px 18px;border-radius:20px;font-size:12px;z-index:500;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1}
-canvas{max-width:100%}
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<!-- ══ LOGIN ══════════════════════════════════════════════════════════════ -->
-<div id="viewLogin" class="active">
-  <div class="login-card">
-    <div class="login-logo">&#127958; NORDESTINA</div>
-    <div class="login-sub">Icaraizinho · Acesso</div>
-    <div class="login-err" id="loginErr"></div>
-    <div class="lf"><label>Usuario</label><input type="text" id="loginUser" placeholder="seu usuario"/></div>
-    <div class="lf"><label>Senha</label><input type="password" id="loginPass" placeholder="sua senha"/></div>
-    <button class="btn-login" id="btnLogin">Entrar</button>
+<!-- ============================================
+     VISTA: LOGIN
+============================================ -->
+<div id="vLogin" class="view active">
+  <div class="login-wrap">
+    <div class="brand">
+      <div class="logo">a<span class="logo-accent">z</span>uca<span class="logo-accent">pp</span></div>
+      <div class="tagline">GESTIÓN INTERNA DE AZUCA</div>
+    </div>
+
+    <form class="login-form" id="loginForm" autocomplete="off">
+      <label class="field">
+        <span class="field-label">Usuario</span>
+        <input type="text" id="loginUsuario" autocomplete="username" required>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Contraseña</span>
+        <input type="password" id="loginPassword" autocomplete="current-password" required>
+      </label>
+
+      <button type="submit" class="btn-primary" id="btnLogin">
+        Ingresar
+      </button>
+
+      <div class="login-error" id="loginError"></div>
+    </form>
+
+    <div class="login-footer">Azuca · Grupo Gastronómico · Mendoza</div>
   </div>
 </div>
 
-<!-- ══ DASHBOARD ══════════════════════════════════════════════════════════ -->
-<div id="viewDash" class="view">
-  <div class="dash-header">
-    <div class="dash-logo">&#127958; NORDESTINA</div>
-    <div class="dash-sub">Icaraizinho · Painel</div>
-    <div class="dash-user" id="dashUser"></div>
-  </div>
-  <div class="dash-grid" id="dashGrid"></div>
-  <button class="btn-logout-dash" id="btnLogoutDash">Sair da conta</button>
-</div>
+<!-- ============================================
+     VISTA: CAMBIO DE CONTRASEÑA OBLIGATORIO
+============================================ -->
+<div id="vChangePass" class="view">
+  <div class="login-wrap">
+    <div class="brand">
+      <div class="logo">a<span class="logo-accent">z</span>uca<span class="logo-accent">pp</span></div>
+      <div class="tagline">CAMBIO DE CONTRASEÑA</div>
+    </div>
 
-<!-- ══ RESERVAS ═══════════════════════════════════════════════════════════ -->
-<div id="viewReservas" class="view">
-  <div class="app-header">
-    <div><div class="app-brand">&#127958; NORDESTINA</div><div class="app-sub">Reservas &amp; Vendas</div></div>
-    <div class="app-btns">
-      <span class="app-user" id="resUser"></span>
-      <button class="abtn abtn-outline" id="resBtnBack">&#8592; Painel</button>
-      <button class="abtn abtn-sand" id="resBtnNova">+ Reserva</button>
-      <button class="abtn abtn-outline" id="resBtnSair">Sair</button>
+    <div class="info-banner">
+      <i class="ti ti-info-circle"></i>
+      <span>Por seguridad, debés cambiar tu contraseña antes de continuar.</span>
     </div>
-  </div>
-  <div class="month-nav">
-    <button class="nav-arrow" id="resPrev">&#8249;</button>
-    <span class="month-label" id="resMonthLabel"></span>
-    <button class="nav-arrow" id="resNext">&#8250;</button>
-  </div>
-  <div class="tabs">
-    <button class="tab active" id="resTab0">&#128203; Reservas</button>
-    <button class="tab" id="resTab1">&#128197; Disponibilidade</button>
-  </div>
-  <button class="metrics-toggle" id="resMetricsToggle">&#9660; Ver metricas por unidade</button>
-  <div class="metrics-panel" id="resMetricsPanel">
-    <div class="metrics-inner">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <span style="font-size:9px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:2px">Metricas de Ocupacao</span>
-        <div style="display:flex;gap:6px"><button class="fbtn active" id="resMBtnMes">Mes</button><button class="fbtn" id="resMBtnAno">Ano</button></div>
-      </div>
-      <div id="resMetricsContent"></div>
-    </div>
-  </div>
-  <div class="content" id="resListContent"></div>
-  <div id="resCalContent" style="display:none;padding-bottom:70px"></div>
-</div>
 
-<!-- ══ GESTAO ═════════════════════════════════════════════════════════════ -->
-<div id="viewGestao" class="view">
-  <div class="app-header">
-    <div><div class="app-brand">&#127796; NORDESTINA</div><div class="app-sub">Gestao Administrativa</div></div>
-    <div class="app-btns">
-      <span class="app-user" id="gestUser"></span>
-      <button class="abtn abtn-outline" id="gestBtnBack">&#8592; Painel</button>
-      <button class="abtn abtn-sand" id="gestBtnNovo">+ Novo</button>
-      <button class="abtn abtn-mid" id="gestBtnFornec">&#128101;</button>
-      <button class="abtn abtn-green" id="gestBtnExcel">&#8675; Excel</button>
-      <button class="abtn abtn-outline" id="gestBtnSair">Sair</button>
-    </div>
-  </div>
-  <div class="month-nav">
-    <button class="nav-arrow" id="gestPrev">&#8249;</button>
-    <span class="month-label" id="gestMonthLabel"></span>
-    <button class="nav-arrow" id="gestNext">&#8250;</button>
-  </div>
-  <div class="tabs">
-    <button class="tab active" id="gestTab0">&#127754; Dashboard</button>
-    <button class="tab" id="gestTab1">&#128203; Movimentos</button>
-    <button class="tab" id="gestTab2">&#128196; Resumo</button>
-  </div>
-  <div class="content">
-    <div class="kpi-grid">
-      <div class="kpi" style="background:var(--green-bg)"><div class="kpi-label">Receita</div><div class="kpi-value" style="color:var(--green)" id="kpiReceita">R$ 0</div></div>
-      <div class="kpi" style="background:var(--red-bg)"><div class="kpi-label">Despesas</div><div class="kpi-value" style="color:var(--red)" id="kpiDespesas">R$ 0</div></div>
-      <div class="kpi" style="background:var(--green-bg)"><div class="kpi-label">Resultado</div><div class="kpi-value" style="color:var(--green)" id="kpiResultado">R$ 0</div></div>
-      <div class="kpi" style="background:var(--ocean-light)"><div class="kpi-label">Rentab.</div><div class="kpi-value" style="color:var(--ocean)" id="kpiRentab">0%</div></div>
-    </div>
-    <div class="ops-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
-        <span class="sec-title" style="margin-bottom:0">Metricas Operacionais</span>
-        <span style="font-size:9px;color:var(--text-soft);letter-spacing:1px">AUTO · Reservas</span>
-      </div>
-      <div class="ops-grid">
-        <div><div class="ops-value" id="opsNoites">&#8212;</div><div class="ops-label">Noites Vendidas</div></div>
-        <div><div class="ops-value" id="opsOcupacao">&#8212;</div><div class="ops-label">% Ocupacao</div></div>
-        <div><div class="ops-value" id="opsPreco">&#8212;</div><div class="ops-label">Preco Medio</div></div>
-      </div>
-      <div id="opsHistory" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--sand-mid)">
-        <div style="font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;font-weight:600">Ultimos 6 meses</div>
-        <div id="opsHistoryContent"></div>
-      </div>
-    </div>
-    <div id="gestViewDashboard">
-      <div class="card"><span class="sec-title">Ultimos 6 meses</span><canvas id="barChart" height="175"></canvas></div>
-      <div class="card" id="pieCard"><span class="sec-title">Despesas por Grupo</span><canvas id="pieChart" height="200"></canvas></div>
-    </div>
-    <div id="gestViewList" style="display:none">
-      <div class="card">
-        <span class="sec-title" id="gestListTitle">Movimentos</span>
-        <div class="sync-badge">&#128279; Receitas de reservas sincronizadas</div>
-        <div id="gestListContent"><div class="empty">Carregando...</div></div>
-      </div>
-    </div>
-    <div id="gestViewReport" style="display:none">
-      <div class="card" id="gestRepReceita"></div>
-      <div class="card" id="gestRepDespesas"></div>
-      <div class="card" id="gestRepResumo"></div>
-    </div>
+    <form class="login-form" id="changePassForm" autocomplete="off">
+      <label class="field">
+        <span class="field-label">Nueva contraseña</span>
+        <input type="password" id="newPass1" minlength="6" required>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Repetir contraseña</span>
+        <input type="password" id="newPass2" minlength="6" required>
+      </label>
+
+      <button type="submit" class="btn-primary">
+        Guardar y continuar
+      </button>
+
+      <div class="login-error" id="changePassError"></div>
+    </form>
   </div>
 </div>
 
-<!-- ══ USUARIOS ══════════════════════════════════════════════════════════ -->
-<div id="viewUsuarios" class="view" style="background:var(--ocean);min-height:100vh;padding:24px 16px">
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;max-width:480px;margin-left:auto;margin-right:auto">
-    <button class="abtn abtn-outline" id="usersBtnBack">&#8592; Painel</button>
-    <span style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--white);letter-spacing:2px;font-weight:600">Usuarios</span>
-  </div>
-  <div id="usersList" style="max-width:480px;margin:0 auto"></div>
-  <div style="max-width:480px;margin:12px auto 0">
-    <button class="btn-save" id="btnAddUser">+ Novo Usuario</button>
+<!-- ============================================
+     VISTA: DASHBOARD
+============================================ -->
+<div id="vDash" class="view">
+  <div class="dash-wrap">
+    <div class="brand">
+      <div class="logo">a<span class="logo-accent">z</span>uca<span class="logo-accent">pp</span></div>
+      <div class="tagline">GESTIÓN INTERNA DE AZUCA</div>
+    </div>
+
+    <div class="greeting">
+      <span class="greeting-text" id="greetingText">Hola</span>
+      <span class="greeting-emoji" id="greetingEmoji">👋</span>
+    </div>
+
+    <button class="user-pill" id="userPillBtn" onclick="openMiPerfil()">
+      <div class="user-pill-avatar" id="userPillAvatar"></div>
+      <div class="user-pill-info">
+        <div class="user-pill-name" id="userPillName">Cargando...</div>
+        <div class="user-pill-role" id="userPillRole">—</div>
+      </div>
+      <i class="ti ti-chevron-right"></i>
+    </button>
+
+    <div class="datetime" id="datetime">—</div>
+
+    <div class="dash-grid" id="dashGrid"></div>
+
+    <button class="dash-logout" onclick="doLogout()"><i class="ti ti-logout"></i> Cerrar sesión</button>
+
   </div>
 </div>
 
-<!-- ══ MODALS RESERVAS ════════════════════════════════════════════════════ -->
-<div class="overlay" id="resFormOverlay">
-  <div class="modal">
-    <div class="modal-head"><span class="modal-title" id="resFormTitle">Nova Reserva</span><button class="btn-x" id="resCloseForm">&#215;</button></div>
-    <div class="form-section">
-      <div class="fsec-title">&#128204; Dados da Reserva</div>
-      <label>Apartamento</label><select id="fApto"><option value="">Selecionar...</option></select>
-      <div class="row2">
-        <div><label>Check-in</label><input type="date" id="fCheckin"/></div>
-        <div><label>Check-out</label><input type="date" id="fCheckout"/></div>
-      </div>
-      <div style="font-size:12px;color:var(--text-soft);margin-bottom:11px">Noites: <strong id="noitesCalc" style="color:var(--ocean)">&#8212;</strong></div>
-      <label>Nome do Hospede</label><input type="text" id="fNome" placeholder="Nome completo"/>
-      <label>CPF / Passaporte</label><input type="text" id="fDoc" placeholder="Ex: 123.456.789-00"/>
-      <label>Canal de Venda</label>
-      <select id="fCanal"><option value="">Selecionar...</option><option>WhatsApp</option><option>Booking.com</option><option>Walk-in</option><option>Indicacao</option><option>Instagram</option><option>Outro</option></select>
-      <label>Valor Total (R$)</label><input type="number" id="fTotal" placeholder="0,00"/>
-    </div>
-    <div class="form-section">
-      <div class="fsec-title">&#128101; Hospedes</div>
-      <div class="row2">
-        <div><label>Adultos</label><input type="number" id="fAdultos" min="0" max="20" placeholder="2"/></div>
-        <div><label>Criancas</label><input type="number" id="fCriancas" min="0" max="20" placeholder="0"/></div>
-      </div>
-      <div class="cafe-row">
-        <input type="checkbox" id="fCafe" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/>
-        <label for="fCafe" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Incluir cafe da manha</label>
+<!-- ============================================
+     VISTA: GESTIÓN DE PROPINAS (admin/editor)
+============================================ -->
+<div id="vGestionPropinas" class="view">
+  <div class="module-wrap">
+
+    <div class="module-header">
+      <button class="btn-back" onclick="openMiPropina()" aria-label="Volver">
+        <i class="ti ti-arrow-left"></i>
+      </button>
+      <div class="module-title-block">
+        <div class="module-title">Gestión de Propinas</div>
+        <div class="module-subtitle" id="propGestSubtitle">Cierres registrados</div>
       </div>
     </div>
-    <div class="form-section">
-      <div class="fsec-title">&#128176; Anticipo</div>
-      <label>Valor Anticipo (R$)</label><input type="number" id="fAnticipo" placeholder="0,00"/>
-      <label>Forma de Pagamento</label><select id="fPagoAnticipo"><option value="">Selecionar...</option></select>
-      <div class="fx-box" id="fxAnticipo">
-        <div class="fx-title" id="fxAntLabel">Cotacao</div>
-        <div class="row2" style="margin-bottom:0">
-          <div><label style="font-size:9px">Valor moeda estrangeira</label><input type="number" id="fValFxAnt" placeholder="0,00" style="margin-bottom:0"/></div>
-          <div><label style="font-size:9px">Taxa de cambio</label><input type="number" id="fTaxaAnt" placeholder="ex: 5.80" style="margin-bottom:0"/></div>
+
+    <!-- Selector de local (chips) -->
+    <div id="propGestLocales" class="bib-chips"></div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid" id="propGestKpis"></div>
+
+    <!-- Acciones: Exportar + Nuevo cierre (siempre visibles, antes de la tabla) -->
+    <div style="display:flex; gap:10px; margin-bottom:14px; align-items:center;">
+      <div id="propExportWrap" style="display:none;">
+        <button class="btn-ghost" onclick="abrirLiquidacion()"><i class="ti ti-file-spreadsheet"></i> Exportar liquidación</button>
+      </div>
+      <button class="btn-primary" id="propGestNuevoBtn" onclick="abrirNuevoCierre()" style="margin-left:auto;">
+        <i class="ti ti-plus"></i> Nuevo cierre
+      </button>
+    </div>
+
+    <!-- Tabla de cierres -->
+    <div id="propGestTabla">
+      <div class="loading">Cargando cierres...</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================
+     VISTA: MI PERFIL
+============================================ -->
+<div id="vMiPerfil" class="view">
+  <div class="module-wrap">
+
+    <div class="module-header">
+      <button class="btn-back" onclick="showDashboard()" aria-label="Volver">
+        <i class="ti ti-arrow-left"></i>
+      </button>
+      <div class="module-title-block">
+        <div class="module-title">Mi Perfil</div>
+        <div class="module-subtitle">Tu información y configuración</div>
+      </div>
+    </div>
+
+    <!-- Tarjeta principal con avatar y datos básicos -->
+    <div class="perfil-hero">
+      <div class="perfil-avatar" id="perfilAvatar"></div>
+      <div class="perfil-nombre" id="perfilNombre">—</div>
+      <div class="perfil-usuario" id="perfilUsuario">—</div>
+      <div class="perfil-badge" id="perfilBadge">—</div>
+    </div>
+
+    <!-- Sección: Información -->
+    <div class="perfil-section">
+      <div class="perfil-section-title">
+        <i class="ti ti-info-circle"></i> Mi información
+      </div>
+      <div class="perfil-row">
+        <span class="perfil-row-label">Empleado</span>
+        <span class="perfil-row-value" id="perfilEmpleado">—</span>
+      </div>
+      <div class="perfil-row">
+        <span class="perfil-row-label">Perfil</span>
+        <span class="perfil-row-value" id="perfilTipo">—</span>
+      </div>
+      <div class="perfil-row" id="perfilLocalesRow">
+        <span class="perfil-row-label">Locales asignados</span>
+        <span class="perfil-row-value" id="perfilLocales">—</span>
+      </div>
+    </div>
+
+    <!-- Sección: Seguridad -->
+    <div class="perfil-section">
+      <div class="perfil-section-title">
+        <i class="ti ti-shield-lock"></i> Seguridad
+      </div>
+      <button class="perfil-action-btn" onclick="showChangePass()">
+        <i class="ti ti-key"></i>
+        <div class="perfil-action-text">
+          <div class="perfil-action-title">Cambiar contraseña</div>
+          <div class="perfil-action-desc">Actualizá tu contraseña de acceso</div>
         </div>
-        <div class="fx-result">Equivalente em R$: <strong id="fxAntResult">&#8212;</strong></div>
-      </div>
-      <div class="saldo-box"><span style="font-size:12px;color:var(--ocean)">Saldo pendente</span><span id="saldoCalc" style="font-size:13px;font-weight:700;color:var(--ocean)">R$ 0,00</span></div>
-      <label>Observacoes Comercial</label><textarea id="fObsCom" placeholder="Pedidos especiais, notas..."></textarea>
+        <i class="ti ti-chevron-right"></i>
+      </button>
     </div>
-    <div class="form-section" id="secCheckinForm" style="display:none">
-      <div class="fsec-title">&#127968; Check-in</div>
-      <label>Saldo Cobrado (R$)</label><input type="number" id="fSaldoCob" placeholder="0,00"/>
-      <label>Forma de Pagamento Saldo</label><select id="fPagoSaldo"><option value="">Selecionar...</option></select>
-      <div class="fx-box" id="fxSaldo">
-        <div class="fx-title" id="fxSaldoLabel">Cotacao</div>
-        <div class="row2" style="margin-bottom:0">
-          <div><label style="font-size:9px">Valor moeda estrangeira</label><input type="number" id="fValFxSaldo" placeholder="0,00" style="margin-bottom:0"/></div>
-          <div><label style="font-size:9px">Taxa de cambio</label><input type="number" id="fTaxaSaldo" placeholder="ex: 5.80" style="margin-bottom:0"/></div>
+
+    <!-- Sección: Salir -->
+    <div class="perfil-section">
+      <button class="perfil-action-btn danger" onclick="doLogout()">
+        <i class="ti ti-logout"></i>
+        <div class="perfil-action-text">
+          <div class="perfil-action-title">Cerrar sesión</div>
+          <div class="perfil-action-desc">Salir de AZUCAPP</div>
         </div>
-        <div class="fx-result">Equivalente em R$: <strong id="fxSaldoResult">&#8212;</strong></div>
+        <i class="ti ti-chevron-right"></i>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================
+     VISTA: CAMBIO DE CONTRASEÑA VOLUNTARIO
+============================================ -->
+<div id="vChangePassVoluntary" class="view">
+  <div class="login-wrap">
+    <div class="brand">
+      <div class="logo">a<span class="logo-accent">z</span>uca<span class="logo-accent">pp</span></div>
+      <div class="tagline">CAMBIAR CONTRASEÑA</div>
+    </div>
+
+    <form class="login-form" id="changePassVoluntaryForm" autocomplete="off">
+      <label class="field">
+        <span class="field-label">Contraseña actual</span>
+        <input type="password" id="currentPass" required>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Nueva contraseña</span>
+        <input type="password" id="voluntaryPass1" minlength="6" required>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Repetir contraseña</span>
+        <input type="password" id="voluntaryPass2" minlength="6" required>
+      </label>
+
+      <div class="btn-row">
+        <button type="button" class="btn-ghost" onclick="openMiPerfil()">Cancelar</button>
+        <button type="submit" class="btn-primary">Guardar</button>
       </div>
-      <label>Observacoes / Danos</label><textarea id="fObsCheckin" placeholder="Estado do apartamento, danos..."></textarea>
+
+      <div class="login-error" id="voluntaryPassError"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================
+     VISTA: MI SEMANA
+============================================ -->
+<div id="vMiSemana" class="view">
+  <div class="module-wrap">
+
+    <div class="module-header">
+      <button class="btn-back" onclick="showDashboard()" aria-label="Volver">
+        <i class="ti ti-arrow-left"></i>
+      </button>
+      <div class="module-title-block">
+        <div class="module-title">Mi semana</div>
+        <div class="module-subtitle" id="miSemanaSubtitle">Cargando...</div>
+      </div>
     </div>
-    <div id="resFormActions"></div>
-  </div>
-</div>
 
-<div class="overlay" id="resDetailOverlay">
-  <div class="modal">
-    <div class="modal-head"><span class="modal-title" id="resDetailTitle">Reserva</span><button class="btn-x" id="resCloseDetail">&#215;</button></div>
-    <div id="resDetailContent"></div>
-  </div>
-</div>
-
-<div class="overlay" id="checkoutOverlay">
-  <div class="modal">
-    <div class="modal-head"><span class="modal-title" id="coTitle">Checkout</span><button class="btn-x" id="coClose">&#215;</button></div>
-    <div style="font-size:12px;color:var(--text-soft);margin-bottom:16px" id="coSubtitle"></div>
-    <div class="form-section">
-      <div class="fsec-title">&#9989; Checklist de Saida</div>
-      <div id="coChecklist"></div>
-      <label style="margin-top:4px">Observacoes / Danos</label>
-      <textarea id="coObs" placeholder="Descreva danos, itens faltando..."></textarea>
+    <div class="week-nav" id="weekNav">
+      <button class="week-arrow" onclick="cambiarSemanaEmp(-1)" aria-label="Semana anterior">
+        <i class="ti ti-chevron-left"></i>
+      </button>
+      <div class="week-label" id="weekLabel">—</div>
+      <button class="week-arrow" onclick="cambiarSemanaEmp(1)" aria-label="Semana siguiente">
+        <i class="ti ti-chevron-right"></i>
+      </button>
     </div>
-    <div id="coAlert" style="display:none;background:var(--yellow-bg);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--yellow)">&#9888; Itens pendentes serao registrados mas o checkout sera concluido.</div>
-    <button class="btn-green" id="coConfirm">&#10003; Confirmar Checkout</button>
-  </div>
-</div>
 
-<!-- ══ MODALS GESTAO ══════════════════════════════════════════════════════ -->
-<div class="overlay" id="gestFormOverlay">
-  <div class="modal">
-    <div class="modal-head"><span class="modal-title">Novo Movimento</span><button class="btn-x" id="gestCloseForm">&#215;</button></div>
-    <div class="type-row">
-      <button class="type-btn income-active" id="gBtnIncome">Receita</button>
-      <button class="type-btn" id="gBtnExpense">Despesa</button>
+    <div class="dias-grid" id="diasGrid"></div>
+
+    <div class="comentario-general" id="comentarioGeneral" style="display:none"></div>
+
+    <div class="no-empleado" id="noEmpleado" style="display:none">
+      <i class="ti ti-info-circle"></i>
+      <div>
+        <div class="ne-title">No tenés turnos asignados</div>
+        <div class="ne-desc">Tu usuario no está vinculado a un colaborador con turnos. Si esto es un error, contactá a Recursos Humanos.</div>
+      </div>
     </div>
-    <div id="gIncomeGroupWrap" style="display:none"><label>Tipo de Receita</label><select id="gFormIncomeGroup"><option value="">Selecionar...</option><option value="reservas">Vendas de Reservas</option><option value="outros">Outras Receitas</option></select></div>
-    <div id="gExpenseGroupWrap" style="display:none"><label>Grupo de Despesa</label><select id="gFormGroup"><option value="">Selecionar...</option></select></div>
-    <label>Categoria</label><select id="gFormCategory"><option value="">Categoria...</option></select>
-    <div id="gProvWrap" style="display:none"><label>Fornecedor</label><select id="gFormProv"><option value="">Selecionar...</option></select></div>
-    <label>Valor (R$)</label><input type="number" id="gFormAmount" placeholder="0,00"/>
-    <label>Data</label><input type="date" id="gFormDate"/>
-    <label>Descricao</label><input type="text" id="gFormDesc" placeholder="Descricao (opcional)"/>
-    <button class="btn-save" id="gBtnSave">Salvar</button>
+
+    <div class="reportar-wrap" id="reportarWrap" style="display:none">
+      <button class="btn-incidencia" onclick="openIncidenciaModal()">
+        <i class="ti ti-alert-triangle"></i>
+        Reportar incidencia
+      </button>
+      <div class="reportar-hint">
+        Ej: llegada tarde, enfermedad, cambio de turno, ausencia
+      </div>
+    </div>
+
   </div>
 </div>
 
-<div class="overlay" id="provOverlay">
-  <div class="modal">
-    <div class="modal-head"><span class="modal-title">Fornecedores</span><button class="btn-x" id="provClose">&#215;</button></div>
-    <label>Categoria</label><select id="provCatSel"><option value="">Selecionar categoria...</option></select>
-    <div id="provList" style="margin-bottom:12px"></div>
-    <div id="provAddWrap" style="display:none">
-      <label>Novo Fornecedor</label>
-      <div style="display:flex;gap:8px;align-items:flex-start"><input type="text" id="provNewName" placeholder="Nome do fornecedor" style="margin-bottom:0"/><button class="btn-save-sm" id="provBtnAdd">+</button></div>
+<!-- ============================================
+     VISTA: MI PROPINA
+============================================ -->
+<div id="vMiPropina" class="view">
+  <div class="module-wrap">
+
+    <div class="module-header">
+      <button class="btn-back" onclick="showDashboard()" aria-label="Volver">
+        <i class="ti ti-arrow-left"></i>
+      </button>
+      <div class="module-title-block">
+        <div class="module-title">Mi propina</div>
+        <div class="module-subtitle" id="miPropinaSubtitle">Propinas acumuladas</div>
+      </div>
+    </div>
+
+    <div id="propinaContenido">
+      <div class="loading">Cargando propinas...</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================
+     VISTA: ADMINISTRACIÓN - Panel principal
+============================================ -->
+<div id="vAdmin" class="view">
+  <div class="module-wrap">
+
+    <div class="module-header">
+      <button class="btn-back" onclick="showDashboard()" aria-label="Volver">
+        <i class="ti ti-arrow-left"></i>
+      </button>
+      <div class="module-title-block">
+        <div class="module-title">Administración</div>
+        <div class="module-subtitle">Gestión de la aplicación</div>
+      </div>
+    </div>
+
+    <div class="admin-grid" id="adminGrid"></div>
+
+  </div>
+</div>
+
+<!-- ============================================
+     VISTA: ADMINISTRACIÓN - Usuarios
+============================================ -->
+<div id="vPersonal" class="view">
+  <div class="module-wrap">
+
+    <div class="module-header">
+      <button class="btn-back" onclick="openAdministracion()" aria-label="Volver">
+        <i class="ti ti-arrow-left"></i>
+      </button>
+      <div class="module-title-block">
+        <div class="module-title">Personal</div>
+        <div class="module-subtitle" id="personalCount">Cargando...</div>
+      </div>
+    </div>
+
+    <div class="admin-toolbar">
+      <input type="search" id="personalSearch" placeholder="Buscar por nombre, apellido o usuario..." class="search-input">
+      <button class="btn-primary btn-icon-only" onclick="abrirCrearUsuario()" title="Crear acceso">
+        <i class="ti ti-plus"></i>
+      </button>
+    </div>
+
+    <div class="personal-filtros">
+      <select id="personalFiltroLocal" class="mini-select"><option value="">Todos los locales</option></select>
+      <select id="personalFiltroSector" class="mini-select"><option value="">Todos los sectores</option></select>
+      <select id="personalFiltroPerfil" class="mini-select">
+        <option value="">Todos los perfiles</option>
+        <option value="master">Master</option>
+        <option value="admin">Admin</option>
+        <option value="editor">Editor</option>
+        <option value="usuario">Usuario</option>
+        <option value="sinacceso">Sin acceso</option>
+      </select>
+    </div>
+
+    <div class="personal-exportbar">
+      <button class="btn-ghost" onclick="exportarPersonalExcel()"><i class="ti ti-file-spreadsheet"></i>Exportar Excel</button>
+    </div>
+
+    <div id="personalLista">
+      <div class="loading">Cargando personal...</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================
+     VISTA: ADMINISTRACIÓN - Editores y permisos
+============================================ -->
+<div id="vAdminEditores" class="view">
+  <div class="module-wrap">
+
+    <div class="module-header">
+      <button class="btn-back" onclick="openAdministracion()" aria-label="Volver">
+        <i class="ti ti-arrow-left"></i>
+      </button>
+      <div class="module-title-block">
+        <div class="module-title">Editores y permisos</div>
+        <div class="module-subtitle" id="editoresCount">Cargando...</div>
+      </div>
+    </div>
+
+    <div class="info-banner" style="margin-top:0;margin-bottom:14px;">
+      <i class="ti ti-info-circle"></i>
+      <span>Mostrando solo usuarios con perfil <strong>Editor</strong>. Para sumar a alguien, cambiale el perfil desde Usuarios.</span>
+    </div>
+
+    <div id="editoresLista">
+      <div class="loading">Cargando editores...</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================
+     VISTA: ADMINISTRACIÓN - Locales
+============================================ -->
+<!-- ============================================
+     VISTA: PLANTILLAS DE ROSTERS (Admin)
+============================================ -->
+<div id="vPlantillasRosters" class="view">
+  <div class="module-wrap">
+    <div class="module-header">
+      <button class="btn-back" onclick="openAdministracion()" aria-label="Volver"><i class="ti ti-arrow-left"></i></button>
+      <div class="module-title-block">
+        <div class="module-title">Plantillas de Rosters</div>
+        <div class="module-subtitle" id="plantillasCount">Cargando...</div>
+      </div>
+    </div>
+    <div class="info-banner" style="margin-top:0;margin-bottom:14px;">
+      <i class="ti ti-info-circle"></i>
+      <span>Los editores usan estas plantillas al armar la semana, para no cargar día por día. Un día en “—” queda vacío para completar a mano.</span>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-bottom:14px;" onclick="abrirNuevaPlantilla()"><i class="ti ti-plus"></i> Nueva plantilla</button>
+    <div id="plantillasLista"><div class="loading">Cargando...</div></div>
+  </div>
+</div>
+
+<div id="vAdminLocales" class="view">
+  <div class="module-wrap">
+
+    <div class="module-header">
+      <button class="btn-back" onclick="openAdministracion()" aria-label="Volver">
+        <i class="ti ti-arrow-left"></i>
+      </button>
+      <div class="module-title-block">
+        <div class="module-title">Locales</div>
+        <div class="module-subtitle" id="localesAdminCount">Cargando...</div>
+      </div>
+    </div>
+
+    <div class="info-banner" style="margin-top:0;margin-bottom:14px;">
+      <i class="ti ti-info-circle"></i>
+      <span>Editá el nombre visible de cada local. Los locales <strong>reservados</strong> aparecen ocultos hasta que los actives.</span>
+    </div>
+
+    <div id="localesAdminLista">
+      <div class="loading">Cargando locales...</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: EDITAR LOCAL
+============================================ -->
+<div id="modalLocal" class="modal-overlay" style="display:none">
+  <div class="modal-card modal-bib-cat">
+    <div class="modal-header">
+      <div class="modal-title">Editar local</div>
+      <button class="modal-close" onclick="closeModalLocal()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Identificador interno (slug)</label>
+        <input type="text" id="localSlug" class="form-input" disabled style="opacity:0.6">
+        <div class="form-hint">Este identificador no se puede cambiar. Es lo que la app usa internamente.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nombre visible</label>
+        <input type="text" id="localNombre" class="form-input" placeholder="Ej: Azuca" maxlength="60">
+        <div class="form-hint">Lo que ve el usuario en toda la app.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Estado</label>
+        <div class="local-toggle">
+          <button class="local-toggle-btn" id="localToggleActivo" onclick="setLocalActivo(true)">
+            <i class="ti ti-eye"></i> Activo
+          </button>
+          <button class="local-toggle-btn" id="localToggleInactivo" onclick="setLocalActivo(false)">
+            <i class="ti ti-eye-off"></i> Oculto
+          </button>
+        </div>
+        <div class="form-hint" id="localEstadoHint">Cuando está activo, aparece en toda la app.</div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModalLocal()">Cancelar</button>
+      <button class="btn-primary" id="btnGuardarLocal" onclick="guardarLocal()">Guardar</button>
     </div>
   </div>
 </div>
 
-<!-- ══ MODAL CONFIRMACION ════════════════════════════════════════════════ -->
-<div class="overlay" id="confirmOverlay">
-  <div class="modal" style="max-height:auto;padding:28px 24px 32px">
-    <div style="text-align:center;margin-bottom:8px;font-size:28px" id="confirmIcon">&#128465;</div>
-    <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--ocean);text-align:center;margin-bottom:8px" id="confirmTitle">Confirmar</div>
-    <div style="font-size:13px;color:var(--text-soft);text-align:center;margin-bottom:24px" id="confirmMsg">Tem certeza?</div>
-    <div style="display:flex;gap:10px">
-      <button class="btn-secondary" style="margin-top:0;flex:1" id="confirmCancel">Cancelar</button>
-      <button class="btn-danger" style="margin-top:0;flex:1" id="confirmOk">Confirmar</button>
+<!-- ============================================
+     VISTA: ADMINISTRACIÓN - Insumos
+============================================ -->
+<div id="vAdminInsumos" class="view">
+  <div class="module-wrap">
+
+    <div class="module-header">
+      <button class="btn-back" onclick="volverDeInsumos()" aria-label="Volver">
+        <i class="ti ti-arrow-left"></i>
+      </button>
+      <div class="module-title-block">
+        <div class="module-title">Insumos</div>
+        <div class="module-subtitle" id="insumosCount">Cargando...</div>
+      </div>
+      <button class="btn-config-propinas" id="insumoGearBtn" onclick="openMenuGestion()" title="Gestionar subfamilias y proveedores">
+        <i class="ti ti-settings"></i>
+      </button>
+    </div>
+
+    <div class="info-banner" style="margin-top:0; margin-bottom:14px;">
+      <i class="ti ti-info-circle"></i>
+      <span>Cargá los insumos con sus precios y formatos. Solo los insumos <strong>validados</strong> se pueden usar en sub-elaboraciones y platos.</span>
+    </div>
+
+    <!-- Botón crear nuevo -->
+    <button class="btn-primary-full" id="insumoNuevoBtn" onclick="openModalInsumo(null)">
+      <i class="ti ti-plus"></i> Nuevo insumo
+    </button>
+
+    <!-- Filtros -->
+    <div class="insumos-filters">
+      <input type="text" id="insumoBuscar" class="form-input" placeholder="Buscar por nombre o proveedor..." oninput="onBuscarInsumo()">
+      <div class="ins-filter-row">
+        <input type="text" id="insumoSubfamilia" class="form-input" list="insumoSubfamiliaList" placeholder="Filtrar por subfamilia..." oninput="onFiltroInsumo()" autocomplete="off">
+        <datalist id="insumoSubfamiliaList"></datalist>
+        <input type="text" id="insumoProveedor" class="form-input" list="insumoProveedorList" placeholder="Filtrar por proveedor..." oninput="onFiltroInsumo()" autocomplete="off">
+        <datalist id="insumoProveedorList"></datalist>
+        <select id="insumoEstado" class="form-input" onchange="onFiltroInsumo()">
+          <option value="">Todos los estados</option>
+          <option value="validado">✓ Validados</option>
+          <option value="pendiente">⏳ Pendientes</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Contador + acciones -->
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+      <span id="insumosCountInline" style="font-size:13px; color:var(--c-sand); font-weight:600;">—</span>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-ghost" onclick="limpiarFiltrosInsumos()"><i class="ti ti-filter-off"></i> Limpiar</button>
+        <button class="btn-ghost" id="insumoExportBtn" onclick="exportarInsumosExcel()"><i class="ti ti-file-spreadsheet"></i> Exportar Excel</button>
+      </div>
+    </div>
+
+    <!-- Lista -->
+    <div id="insumosLista">
+      <div class="loading">Cargando insumos...</div>
+    </div>
+
+    <!-- Paginación -->
+    <div id="insumosPager" class="pager"></div>
+
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: CREAR / EDITAR INSUMO
+============================================ -->
+<div id="modalInsumo" class="modal-overlay" style="display:none">
+  <div class="modal-card modal-bib">
+    <div class="modal-header">
+      <div class="modal-title" id="modalInsumoTitle">Nuevo insumo</div>
+      <button class="modal-close" onclick="closeModalInsumo()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre del insumo</label>
+        <input type="text" id="insNombre" class="form-input" placeholder="Ej: ACEITE DE OLIVA" maxlength="120">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Formato / Presentación comercial</label>
+        <input type="text" id="insFormato" class="form-input" placeholder="Ej: BIDON 5 LITROS, BOLSA KILO" maxlength="120">
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Unidad base</label>
+          <select id="insUnidad" class="form-input">
+            <option value="kg">kg — kilos</option>
+            <option value="gr">gr — gramos</option>
+            <option value="lt">lt — litros</option>
+            <option value="ml">ml — mililitros</option>
+            <option value="u">u — unidades</option>
+            <option value="porcion">porcion</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cantidad por envase</label>
+          <input type="number" id="insCantidad" class="form-input" step="1" min="0" placeholder="1">
+          <div class="form-hint" id="insCantidadHint">Ej: si el envase tiene 5 litros, poné 5</div>
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Costo del envase ($)</label>
+          <input type="number" id="insCosto" class="form-input" step="1" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Costo / unidad base</label>
+          <input type="text" id="insCostoUnidad" class="form-input" disabled style="opacity:0.7">
+          <div class="form-hint">Calculado automáticamente</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Proveedor</label>
+        <input type="text" id="insProveedor" class="form-input" list="insProveedorList" placeholder="Ej: AVARMAY S.A.S." autocomplete="off" maxlength="120">
+        <datalist id="insProveedorList"></datalist>
+        <div class="form-hint">Escribí para crear uno nuevo o elegí uno existente</div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Subfamilia</label>
+          <input type="text" id="insSubfamilia" class="form-input" list="insSubfamiliaList" placeholder="Ej: ACEITES, VINAGRES Y SALSAS" autocomplete="off">
+          <datalist id="insSubfamiliaList"></datalist>
+          <div class="form-hint">Escribí para crear una nueva o elegí una existente</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Código HiOPOS (opcional)</label>
+          <input type="text" id="insCodigo" class="form-input" placeholder="Ej: AZ-00108" maxlength="40">
+        </div>
+      </div>
+
+      <div class="info-banner" style="margin:8px 0;">
+        <i class="ti ti-info-circle"></i>
+        <span><strong>Cómo funciona:</strong> cargás el precio del envase y cuántas unidades base trae. El sistema calcula el costo por unidad base automáticamente. En recetas, cocina solo ve el insumo si está validado.</span>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModalInsumo()">Cancelar</button>
+      <button class="btn-ghost" id="btnInsumoSinValidar" onclick="guardarInsumo(false)">Guardar sin validar</button>
+      <button class="btn-primary" id="btnInsumoValidar" onclick="guardarInsumo(true)">✓ Validar</button>
     </div>
   </div>
 </div>
 
-<!-- ══ MODAL USUARIOS ════════════════════════════════════════════════════ -->
-<div class="overlay" id="userFormOverlay">
-  <div class="modal">
-    <div class="modal-head"><span class="modal-title" id="userFormTitle">Novo Usuario</span><button class="btn-x" id="userFormClose">&#215;</button></div>
-    <label>Nome</label><input type="text" id="ufNome" placeholder="Nome completo"/>
-    <label>Usuario (login)</label><input type="text" id="ufUsuario" placeholder="Ex: agustina"/>
-    <label>Senha</label><input type="password" id="ufSenha" placeholder="Minimo 6 caracteres"/>
-    <label>Rol</label>
-    <select id="ufRol"><option value="">Selecionar...</option><option value="master">Master</option><option value="administrativa">Administrativa</option><option value="comercial">Comercial</option><option value="checkin">Check-in</option><option value="housekeeping">Housekeeping</option><option value="auditor">Auditor</option></select>
-    <label>Ativo</label>
-    <select id="ufAtivo"><option value="true">Sim</option><option value="false">Nao</option></select>
-    <button class="btn-save" id="userFormSave">Salvar</button>
+<!-- ============================================
+     MODAL: EDITAR LOCALES DE UN EDITOR
+============================================ -->
+<!-- ============================================
+     MODAL: EDITAR TURNOS DE UN EMPLEADO
+============================================ -->
+<!-- ============================================
+     MODAL: EDITAR / NUEVA PLANTILLA
+============================================ -->
+<!-- ============================================
+     MODAL: ARTÍCULO DE STOCK (Admin)
+============================================ -->
+<!-- ============================================
+     MODAL: CIERRE DE CAJA
+============================================ -->
+<div class="modal-overlay" id="modalCierreCaja">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title" id="ccModalTitulo">Nuevo cierre</h2>
+      <button class="modal-close" onclick="closeCierreCaja()" aria-label="Cerrar"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <label class="field"><span class="field-label">Local</span><select id="ccLocal"></select></label>
+      <div class="cierre-row2">
+        <label class="field"><span class="field-label">Fecha</span><input type="date" id="ccFecha"></label>
+        <label class="field"><span class="field-label">Turno</span><select id="ccTurno"></select></label>
+      </div>
+      <div class="cierre-row2">
+        <label class="field"><span class="field-label">Ventas totales ($)</span><input type="number" step="any" min="0" id="ccVentas" oninput="ccCalcProm()"></label>
+        <label class="field"><span class="field-label">Pax (cubiertos)</span><input type="number" min="0" id="ccPax" oninput="ccCalcProm()"></label>
+      </div>
+      <div class="cc-prom" id="ccProm"></div>
+      <label class="field"><span class="field-label">Observaciones</span><textarea id="ccObs" rows="2" placeholder="Opcional"></textarea></label>
+      <div class="login-error" id="ccError"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost ped-danger" id="ccBorrarBtn" style="display:none;" onclick="borrarCierreCaja()">Eliminar</button>
+      <button class="btn-ghost" onclick="closeCierreCaja()">Cancelar</button>
+      <button class="btn-primary" id="ccGuardarBtn" onclick="guardarCierreCaja()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalStockArticulo">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title" id="stockArtTitulo">Nuevo artículo</h2>
+      <button class="modal-close" onclick="closeStockArticulo()" aria-label="Cerrar"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <label class="field"><span class="field-label">Nombre</span>
+        <input type="text" id="saNombre" placeholder="Ej: Copa Riedel Degustazione"></label>
+      <label class="field"><span class="field-label">Unidad de control</span>
+        <select id="saUnidad"></select></label>
+      <p class="field-label" style="margin-bottom:6px;">Locales donde se controla</p>
+      <div class="locales-grid" id="saLocalesGrid"></div>
+      <label class="field" style="flex-direction:row;align-items:center;gap:8px;margin-top:12px;cursor:pointer;">
+        <input type="checkbox" id="saActivo" checked style="width:auto;">
+        <span class="field-label" style="margin:0;">Artículo activo</span>
+      </label>
+      <div class="login-error" id="saError"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeStockArticulo()">Cancelar</button>
+      <button class="btn-primary" id="saGuardarBtn" onclick="guardarStockArticulo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalPlantilla">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title" id="plantillaModalTitulo">Nueva plantilla</h2>
+      <button class="modal-close" onclick="closePlantillaModal()" aria-label="Cerrar"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <label class="field"><span class="field-label">Nombre</span>
+        <input type="text" id="plNombre" placeholder="Ej: Cocina mañana"></label>
+      <label class="field"><span class="field-label">Local</span>
+        <select id="plLocal"></select></label>
+      <div id="plDias" style="margin-top:6px;"></div>
+      <label class="field" style="flex-direction:row;align-items:center;gap:8px;margin-top:10px;cursor:pointer;">
+        <input type="checkbox" id="plActivo" checked style="width:auto;">
+        <span class="field-label" style="margin:0;">Plantilla activa (disponible para usar)</span>
+      </label>
+      <div class="login-error" id="plError"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closePlantillaModal()">Cancelar</button>
+      <button class="btn-primary" id="plGuardarBtn" onclick="guardarPlantilla()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalEditarTurnos">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title" id="rostEmpNombre">Turnos</h2>
+      <button class="modal-close" onclick="closeEditarTurnosModal()" aria-label="Cerrar"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-text" id="rostEmpSemana" style="font-size:12px;color:var(--c-muted);margin-top:0;">—</p>
+      <div class="rost-plantilla-row" id="rostPlantillaRow">
+        <select id="rostPlantilla"></select>
+        <button type="button" class="btn-ghost" onclick="aplicarPlantilla()"><i class="ti ti-wand"></i> Aplicar</button>
+      </div>
+      <div id="rostDias"></div>
+      <div class="login-error" id="rostError"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeEditarTurnosModal()">Cancelar</button>
+      <button class="btn-primary" id="rostGuardarBtn" onclick="guardarTurnosEmp()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalLocales">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title">Locales asignados</h2>
+      <button class="modal-close" onclick="closeLocalesModal()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <p class="modal-text" id="localesUserName">—</p>
+      <p class="modal-text" style="font-size:12px;color:var(--c-muted);">
+        Elegí los locales donde esta persona puede operar.
+      </p>
+
+      <div class="locales-grid" id="localesGrid"></div>
+
+      <div class="login-error" id="localesError"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeLocalesModal()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarLocales()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: CREAR / EDITAR USUARIO
+============================================ -->
+<div class="modal-overlay" id="modalUserForm">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title" id="userFormTitle">Nuevo usuario</h2>
+      <button class="modal-close" onclick="closeUserFormModal()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <label class="field">
+        <span class="field-label">Nombre completo</span>
+        <input type="text" id="userNombre" placeholder="Ej: Florencia Cahiza">
+      </label>
+
+      <label class="field">
+        <span class="field-label">Usuario (para login)</span>
+        <input type="text" id="userUsuario" placeholder="Ej: cahflo" autocapitalize="off">
+      </label>
+
+      <label class="field" id="userPasswordField">
+        <span class="field-label">Contraseña inicial</span>
+        <input type="text" id="userPassword" placeholder="Mínimo 6 caracteres">
+        <small class="field-hint">El usuario deberá cambiarla en su primer login.</small>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Perfil</span>
+        <select id="userPerfil">
+          <option value="usuario">Usuario (colaborador común)</option>
+          <option value="editor">Editor</option>
+          <option value="admin">Admin (gestión completa)</option>
+          <option value="master" id="optMaster">Master (máximo nivel)</option>
+        </select>
+        <small class="field-hint" id="userPerfilHint">El perfil define qué puede hacer la persona.</small>
+      </label>
+
+      <!-- Al CREAR: selector de locales (auto-crea empleado) -->
+      <div class="field" id="userLocalesField">
+        <span class="field-label">Local(es) asignado(s)</span>
+        <div id="userLocalesGrid" class="locales-grid-inline"></div>
+        <small class="field-hint">Se crea automáticamente la ficha del colaborador con estos locales.</small>
+      </div>
+
+      <!-- Al EDITAR: vincular a empleado existente -->
+      <label class="field" id="userEmpleadoField" style="display:none;">
+        <span class="field-label">Vincular a colaborador</span>
+        <select id="userEmpleado">
+          <option value="">Sin vincular (no tiene turnos)</option>
+        </select>
+        <small class="field-hint">Necesario para que vea sus turnos en "Mi semana".</small>
+      </label>
+
+      <div class="login-error" id="userFormError"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeUserFormModal()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarUsuario()" id="btnGuardarUser">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: RESET PASSWORD
+============================================ -->
+<div class="modal-overlay" id="modalResetPass">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title">Resetear contraseña</h2>
+      <button class="modal-close" onclick="closeResetPassModal()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <p class="modal-text" id="resetPassUser">Usuario: —</p>
+
+      <div class="info-banner">
+        <i class="ti ti-info-circle"></i>
+        <span>Le asignás una contraseña nueva. La persona deberá cambiarla al ingresar.</span>
+      </div>
+
+      <label class="field">
+        <span class="field-label">Nueva contraseña</span>
+        <input type="text" id="resetPassValue" placeholder="Mínimo 6 caracteres">
+      </label>
+
+      <div class="login-error" id="resetPassError"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeResetPassModal()">Cancelar</button>
+      <button class="btn-primary" onclick="confirmarResetPass()">Resetear</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: REPORTAR INCIDENCIA
+============================================ -->
+<div class="modal-overlay" id="modalIncidencia">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title">Reportar incidencia</h2>
+      <button class="modal-close" onclick="closeIncidenciaModal()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <label class="field">
+        <span class="field-label">Tipo</span>
+        <select id="incTipo">
+          <option value="tardanza">⏰ Llegada tarde</option>
+          <option value="ausencia">❌ Ausencia</option>
+          <option value="enfermedad">🤒 Enfermedad</option>
+          <option value="cambio_turno">🔄 Cambio de turno</option>
+          <option value="otro">📝 Otro</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Fecha</span>
+        <input type="date" id="incFecha">
+      </label>
+
+      <label class="field">
+        <span class="field-label">Descripción</span>
+        <textarea id="incDesc" rows="3" placeholder="Explicá brevemente qué pasó..."></textarea>
+      </label>
+
+      <div class="login-error" id="incError"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeIncidenciaModal()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarIncidencia()">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: DETALLE DE INCIDENCIA
+============================================ -->
+<div class="modal-overlay" id="modalResolverInc">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title" id="giResTitulo">Incidencia</h2>
+      <button class="modal-close" onclick="closeResolverInc()" aria-label="Cerrar"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="giResInfo"></div>
+      <label class="field" style="margin-top:12px;"><span class="field-label">Comentario de respuesta (opcional)</span>
+        <textarea id="giResComent" rows="3" placeholder="Ej: dale, avisá con más tiempo la próxima"></textarea></label>
+      <div class="login-error" id="giResError"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost ped-danger" onclick="rechazarIncidencia()">✗ Rechazar</button>
+      <button class="btn-primary" onclick="aceptarIncidencia()">✓ Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalIncDetalle">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title" id="incDetTitle">Incidencia</h2>
+      <button class="modal-close" onclick="closeIncDetalleModal()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body" id="incDetBody"></div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeIncDetalleModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     VISTA: MI BIBLIOTECA (usuario común)
+============================================ -->
+<div id="vBiblioteca" class="view">
+  <div class="module-wrap">
+
+    <div class="module-header">
+      <button class="btn-back" onclick="showDashboard()" aria-label="Volver">
+        <i class="ti ti-arrow-left"></i>
+      </button>
+      <div class="module-title-block">
+        <div class="module-title">Mi Biblioteca</div>
+        <div class="module-subtitle">Material de capacitación, procedimientos y novedades</div>
+      </div>
+    </div>
+
+    <div id="bibChips" class="bib-chips"></div>
+
+    <div id="bibContenido">
+      <div class="loading">Cargando biblioteca...</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================
+     VISTA: ADMINISTRAR BIBLIOTECA
+============================================ -->
+<div id="vAdminBiblioteca" class="view">
+  <div class="module-wrap">
+
+    <div class="module-header">
+      <button class="btn-back" onclick="openMiBiblioteca()" aria-label="Volver">
+        <i class="ti ti-arrow-left"></i>
+      </button>
+      <div class="module-title-block">
+        <div class="module-title">Administrar Biblioteca</div>
+        <div class="module-subtitle" id="adminBibSubtitle">Gestión de contenidos</div>
+      </div>
+    </div>
+
+    <div class="bib-tabs">
+      <button class="bib-tab active" id="bibTabContenidos" onclick="switchBibTab('contenidos')">
+        <i class="ti ti-files"></i> Contenidos
+      </button>
+      <button class="bib-tab" id="bibTabCategorias" onclick="switchBibTab('categorias')" style="display:none">
+        <i class="ti ti-folders"></i> Categorías
+      </button>
+    </div>
+
+    <!-- Tab contenidos -->
+    <div id="bibPanelContenidos">
+      <button class="btn-primary-full" onclick="openModalContenido(null)">
+        <i class="ti ti-plus"></i> Agregar contenido
+      </button>
+      <div id="bibAdminLista">
+        <div class="loading">Cargando contenidos...</div>
+      </div>
+    </div>
+
+    <!-- Tab categorías -->
+    <div id="bibPanelCategorias" style="display:none">
+      <button class="btn-primary-full" onclick="openModalCategoria(null)">
+        <i class="ti ti-plus"></i> Nueva categoría
+      </button>
+      <div id="bibAdminCategorias">
+        <div class="loading">Cargando categorías...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: AGREGAR / EDITAR CONTENIDO
+============================================ -->
+<div id="modalContenido" class="modal-overlay" style="display:none">
+  <div class="modal-card modal-bib">
+    <div class="modal-header">
+      <div class="modal-title" id="modalContenidoTitle">Nuevo contenido</div>
+      <button class="modal-close" onclick="closeModalContenido()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Título</label>
+        <input type="text" id="contTitulo" class="form-input" placeholder="Ej: Manual de uniforme 2026" maxlength="120">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Categoría</label>
+        <select id="contCategoria" class="form-input"></select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tipo de contenido</label>
+        <div class="tipo-grid" id="contTipoGrid"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Link (URL)</label>
+        <input type="url" id="contUrl" class="form-input" placeholder="https://...">
+        <div class="form-hint" id="contUrlHint">Pegá el link completo (Drive, Dropbox, YouTube, Spotify, etc.)</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Locales que pueden verlo</label>
+        <div class="locales-chips" id="contLocales"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModalContenido()">Cancelar</button>
+      <button class="btn-primary" id="btnGuardarContenido" onclick="guardarContenido()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: AGREGAR / EDITAR CATEGORÍA
+============================================ -->
+<div id="modalCategoria" class="modal-overlay" style="display:none">
+  <div class="modal-card modal-bib-cat">
+    <div class="modal-header">
+      <div class="modal-title" id="modalCategoriaTitle">Nueva categoría</div>
+      <button class="modal-close" onclick="closeModalCategoria()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre</label>
+        <input type="text" id="catNombre" class="form-input" placeholder="Ej: Marketing" maxlength="60">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Ícono</label>
+        <div class="icon-picker" id="catIconPicker"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModalCategoria()">Cancelar</button>
+      <button class="btn-primary" id="btnGuardarCategoria" onclick="guardarCategoria()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: CONFIGURACIÓN DE PROPINAS
+============================================ -->
+<div id="modalConfigPropinas" class="modal-overlay" style="display:none">
+  <div class="modal-card modal-bib">
+    <div class="modal-header">
+      <div class="modal-title">Configurar Propinas</div>
+      <button class="modal-close" onclick="closeConfigPropinas()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <p style="color:var(--c-muted); font-size:12px; margin:0 0 14px;">
+        Tipos de cambio para moneda extranjera y descuento administrativo.
+      </p>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">USD</label>
+          <input type="number" id="configUSD" class="form-input" step="0.01" min="0">
+          <div class="form-hint">Pesos por dólar</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">EUR</label>
+          <input type="number" id="configEUR" class="form-input" step="0.01" min="0">
+          <div class="form-hint">Pesos por euro</div>
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">BRL</label>
+          <input type="number" id="configBRL" class="form-input" step="0.01" min="0">
+          <div class="form-hint">Pesos por real</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">% Descuento admin</label>
+          <input type="number" id="configPct" class="form-input" step="0.01" min="0" max="100">
+          <div class="form-hint">Se descuenta del total bruto</div>
+        </div>
+      </div>
+
+      <div id="configUltima" style="color:var(--c-muted); font-size:11px; margin-top:6px; text-align:center;"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeConfigPropinas()">Cancelar</button>
+      <button class="btn-primary" id="btnGuardarConfig" onclick="guardarConfigPropinas()">Guardar configuración</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: MENÚ DE GESTIÓN (subfamilias / proveedores)
+============================================ -->
+<div id="modalMenuGestion" class="modal-overlay" style="display:none">
+  <div class="modal-card modal-bib-cat">
+    <div class="modal-header">
+      <div class="modal-title">¿Qué querés gestionar?</div>
+      <button class="modal-close" onclick="closeMenuGestion()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <button class="perfil-action-btn" onclick="closeMenuGestion(); openGestionSubfamilias();">
+        <i class="ti ti-tag"></i>
+        <div class="perfil-action-text">
+          <div class="perfil-action-title">Subfamilias</div>
+          <div class="perfil-action-desc">Renombrar, fusionar o borrar</div>
+        </div>
+        <i class="ti ti-chevron-right"></i>
+      </button>
+
+      <button class="perfil-action-btn" onclick="closeMenuGestion(); openGestionProveedores();">
+        <i class="ti ti-truck"></i>
+        <div class="perfil-action-text">
+          <div class="perfil-action-title">Proveedores</div>
+          <div class="perfil-action-desc">Renombrar, fusionar o borrar</div>
+        </div>
+        <i class="ti ti-chevron-right"></i>
+      </button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeMenuGestion()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: GESTIÓN DE SUBFAMILIAS
+============================================ -->
+<div id="modalSubfamilias" class="modal-overlay" style="display:none">
+  <div class="modal-card modal-bib">
+    <div class="modal-header">
+      <div class="modal-title">Gestionar subfamilias</div>
+      <button class="modal-close" onclick="closeGestionSubfamilias()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <p style="color:var(--c-muted); font-size:12px; margin:0 0 12px;">
+        Renombrá o fusioná subfamilias. Los cambios se aplican a todos los insumos asociados.
+      </p>
+
+      <div id="subfamiliasLista">
+        <div class="loading">Cargando...</div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeGestionSubfamilias()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: RENOMBRAR / FUSIONAR SUBFAMILIA
+============================================ -->
+<div id="modalRenombrarSubfam" class="modal-overlay" style="display:none">
+  <div class="modal-card modal-bib-cat">
+    <div class="modal-header">
+      <div class="modal-title" id="renombrarSubfamTitle">Renombrar subfamilia</div>
+      <button class="modal-close" onclick="closeRenombrarSubfam()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Subfamilia original</label>
+        <input type="text" id="subfamOriginal" class="form-input" disabled style="opacity:0.7">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nuevo nombre</label>
+        <input type="text" id="subfamNuevo" class="form-input" placeholder="Escribí el nombre nuevo" maxlength="80">
+        <div class="form-hint" id="subfamHint">Si el nuevo nombre ya existe, las subfamilias se fusionan.</div>
+      </div>
+
+      <div id="subfamCount" style="color:var(--c-muted); font-size:12px; margin-top:8px;"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeRenombrarSubfam()">Cancelar</button>
+      <button class="btn-primary" id="btnRenombrarSubfam" onclick="guardarRenombrarSubfam()">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: GESTIÓN DE PROVEEDORES
+============================================ -->
+<div id="modalProveedores" class="modal-overlay" style="display:none">
+  <div class="modal-card modal-bib">
+    <div class="modal-header">
+      <div class="modal-title">Gestionar proveedores</div>
+      <button class="modal-close" onclick="closeGestionProveedores()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <p style="color:var(--c-muted); font-size:12px; margin:0 0 12px;">
+        Renombrá o fusioná proveedores. Los cambios se aplican a todos los insumos asociados.
+      </p>
+
+      <div id="proveedoresLista">
+        <div class="loading">Cargando...</div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeGestionProveedores()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: RENOMBRAR / FUSIONAR PROVEEDOR
+============================================ -->
+<div id="modalRenombrarProv" class="modal-overlay" style="display:none">
+  <div class="modal-card modal-bib-cat">
+    <div class="modal-header">
+      <div class="modal-title">Renombrar proveedor</div>
+      <button class="modal-close" onclick="closeRenombrarProv()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Proveedor original</label>
+        <input type="text" id="provOriginal" class="form-input" disabled style="opacity:0.7">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nuevo nombre</label>
+        <input type="text" id="provNuevo" class="form-input" placeholder="Escribí el nombre nuevo" maxlength="120">
+        <div class="form-hint" id="provHint">Si el nuevo nombre ya existe, los proveedores se fusionan.</div>
+      </div>
+
+      <div id="provCount" style="color:var(--c-muted); font-size:12px; margin-top:8px;"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeRenombrarProv()">Cancelar</button>
+      <button class="btn-primary" id="btnRenombrarProv" onclick="guardarRenombrarProv()">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: CONFIRMACIÓN / ALERTA UNIVERSAL
+============================================ -->
+<div id="modalConfirm" class="modal-overlay" style="display:none">
+  <div class="modal-card modal-confirm" data-prevent-close>
+    <div class="modal-confirm-icon" id="confirmIcon">
+      <i class="ti ti-alert-circle"></i>
+    </div>
+    <div class="modal-confirm-title" id="confirmTitle">¿Estás seguro?</div>
+    <div class="modal-confirm-msg" id="confirmMsg"></div>
+    <div class="modal-confirm-actions" id="confirmActions">
+      <button class="btn-ghost" id="confirmBtnCancel" onclick="closeConfirm(false)">Cancelar</button>
+      <button class="btn-primary" id="confirmBtnOk" onclick="closeConfirm(true)">Confirmar</button>
+    </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script>
-(function(){
+<!-- ============================================
+     MODAL: FICHA DE PERSONAL (solo lectura)
+============================================ -->
+<div class="modal-overlay" id="modalFicha">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title" id="fichaTitulo">Ficha</h2>
+      <button class="modal-close" onclick="closeFichaModal()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+    <div class="modal-body" id="fichaBody"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeFichaModal()">Cerrar</button>
+      <button class="btn-primary" id="fichaEditarBtn" style="display:none;" onclick="editarDesdeFicha()"><i class="ti ti-edit"></i> Editar datos</button>
+    </div>
+  </div>
+</div>
 
-var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
-var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
-var H={"Content-Type":"application/json","apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Prefer":"return=representation"};
+<!-- ============================================
+     MODAL: EDITAR FICHA (Admin/Master)
+============================================ -->
+<div class="modal-overlay" id="modalEditarFicha">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title">Editar ficha</h2>
+      <button class="modal-close" onclick="closeEditarFichaModal()" aria-label="Cerrar"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-text" id="efPersonaNombre" style="font-weight:600;">—</p>
+      <div class="cierre-row2">
+        <label class="field"><span class="field-label">Nombre</span>
+          <input type="text" id="efNombre"></label>
+        <label class="field"><span class="field-label">Apellido</span>
+          <input type="text" id="efApellido"></label>
+      </div>
+      <div class="cierre-row2">
+        <label class="field"><span class="field-label">Sector</span>
+          <input type="text" id="efSector" list="efSectorList" placeholder="Ej: Cocina, Salón"></label>
+        <label class="field"><span class="field-label">Categoría</span>
+          <input type="text" id="efCategoria" list="efCategoriaList" placeholder="Ej: Mozo, Cocinero"></label>
+      </div>
+      <datalist id="efSectorList"></datalist>
+      <datalist id="efCategoriaList"></datalist>
+      <label class="field"><span class="field-label">Local principal</span>
+        <select id="efLocal"></select></label>
+      <label class="field" style="flex-direction:row;align-items:center;gap:8px;margin-top:10px;cursor:pointer;">
+        <input type="checkbox" id="efMultilocal" style="width:auto;">
+        <span class="field-label" style="margin:0;">Multilocal (se marca solo según los locales asignados)</span>
+      </label>
 
-// ── CONSTANTS ────────────────────────────────────────────────────────────────
-var APTOS=["Loft 04","Loft 09","Loft 01","Loft 07","Loft 08","Loft 10","Loft 05","Loft 11","Loft 02","Loft 03","Loft 06","Casa Nordestina"];
-var MONTHS=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-var PAGOS=["Pendente","Contado em R$","Contado em USD","Contado em EU$","Contado em USD (Arg)","Contado em AR$ (Arg)","Cartao de Credito","Link Stripe","KamiPay","Pix","Booking Pagamentos"];
-var PAGOS_FX={"Contado em USD":{moeda:"USD",label:"Cotacao USD -> R$"},"Contado em EU$":{moeda:"EUR",label:"Cotacao EUR -> R$"},"Contado em USD (Arg)":{moeda:"USD",label:"Cotacao USD (Arg) -> R$"},"Contado em AR$ (Arg)":{moeda:"ARS",label:"Cotacao ARS -> R$"}};
-var RES_SL={pendiente:"Pendente",confirmada:"Confirmada",checkin:"Check-in feito",checkout:"Checkout feito",cancelada:"Cancelada"};
-var RES_SC={pendiente:"chip-pendiente",confirmada:"chip-confirmada",checkin:"chip-checkin",checkout:"chip-checkout",cancelada:"chip-cancelada"};
-var CAL_COLORS=["#1a4a6b","#2e6e9e","#c9b48a","#8b6340","#5a9ec9","#1a6b3a","#4a8ab0","#a07850","#6b3a6b","#2e7a5e"];
-var CO_ITEMS=[{id:"roupas",label:"Roupas de cama e toalhas verificadas"},{id:"eletro",label:"Eletrodomesticos funcionando"},{id:"inventario",label:"Inventario completo (louca, controles, etc)"},{id:"chave",label:"Chave / acesso entregado"}];
-var ROL_ICONS={master:"👑",administrativa:"💼",comercial:"📋",checkin:"🏠",housekeeping:"🧹",auditor:"👁"};
-var ROL_LABELS={master:"Master",administrativa:"Administrativa",comercial:"Comercial",checkin:"Check-in",housekeeping:"Housekeeping",auditor:"Auditor"};
-var INCOME_CATS_RES=["Vendas WhatsApp","Vendas Walk Inn","Vendas Booking","Vendas Cafe da Manha","Vendas Outras"];
-var INCOME_CATS_OUT=["Aluguel de Espaco para Evento","Venda Avulsa","Outros Ingressos"];
-var EXP_CATS={"Salarios e Remuneracoes":["Salarios pessoal permanente","Salarios diarios funcionarios","Salarios pessoal part-time"],"Honorarios Profissionais":["Contador","Outros honorarios"],"Honorarios de Servicos":["Servico de Lavanderia","Servicos de Manutencao","Servico de Cafe da Manha","Outros servicos"],"Consorcio":["Despesas ordinarias","Despesas extraordinarias"],"Impostos":["Simples Nacional","FGTS Funcionarios","Receita Federal","Parcelamento Simples"],"Servicos":["Energia","Gas","Servico de Internet","Telefone","Sistema de Gestao","Hosting Web"],"Comissoes de Venda":["Gestao de Vendas - Agustina","Comissoes Booking","Carol","Outras Comissoes"],"Bens de Uso":["Produtos de Limpeza","Produtos Jardim e Piscina","Suprimentos de Manutencao","Substituicao Roupas de Cama","Substituicao de Louca","Substituicao de Mobiliario","Substituicao de Fardamentos"],"Outros Gastos":["Comissoes Cartao de Credito","Comissoes Bancarias","Publicidade e Propaganda","Frete e Correio","Devolucao de Valores","Lanche Funcionarios","Parcela Emprestimo","Outros"]};
-var EXP_GROUPS=Object.keys(EXP_CATS);
-var PIE_COLORS=["#1a4a6b","#2e6e9e","#c9b48a","#8b6340","#5a9ec9","#e8d9c0","#1a6b3a","#4a8ab0","#a07850"];
+      <div id="efLocalesSection" style="margin-top:16px;">
+        <p class="field-label" style="margin-bottom:4px;">Locales asignados</p>
+        <p class="modal-text" style="font-size:12px;color:var(--c-muted);margin-top:0;">
+          Locales donde esta persona puede operar además del principal (multilocal y editores).
+        </p>
+        <div class="locales-grid" id="efLocalesGrid"></div>
+      </div>
 
-// ── STATE ────────────────────────────────────────────────────────────────────
-var curUser=null;
-var allUsers=[], editingUserId=null;
-var allRes=[], resMonth=new Date().getMonth(), resYear=new Date().getFullYear();
-var resTab="lista", resFilter="todas", resMetricsOpen=false, resMetricsPeriod="mes";
-var resEditingId=null, coResId=null;
-var allEntries=[], allMetrics={}, allProvs=[];
-var gestMonth=new Date().getMonth(), gestYear=new Date().getFullYear();
-var gestTab="dashboard", gestFormType="income";
-var barChartInst=null, pieChartInst=null;
+      <div class="login-error" id="efError"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeEditarFichaModal()">Cancelar</button>
+      <button class="btn-primary" id="efGuardarBtn" onclick="guardarEditarFicha()">Guardar</button>
+    </div>
+  </div>
+</div>
 
-// ── UTILS ────────────────────────────────────────────────────────────────────
-function fmt(n){return "R$\u00a0"+Number(n||0).toLocaleString("pt-BR",{minimumFractionDigits:2});}
-function fmtD(s){return s?s.split("-").reverse().join("/"):"—";}
-function normApto(x){return (x==null?"":String(x)).trim().toLowerCase().replace(/\s+/g," ").replace(/([a-zaaiou\u00e1\u00e9\u00ed\u00f3\u00fa\u00f1])(\d)/g,"$1 $2").replace(/(\D)0+(\d)/g,"$1$2").replace(/^(apto|apartamento|loft|departamento|depto|dep|apt)\s+/,"");}
-function nights(a,b){if(!a||!b)return 0;var d=(new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/86400000;return d>0?d:0;}
-function dim(y,m){return new Date(y,m+1,0).getDate();}
-function mk(y,m){return y+"-"+(m+1<10?"0":"")+(m+1);}
-function showToast(msg){var t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(function(){t.classList.remove("show");},2500);}
+<!-- ============================================
+     MODAL: CAMBIAR PERFIL
+============================================ -->
+<div class="modal-overlay" id="modalCambiarPerfil">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title">Cambiar perfil</h2>
+      <button class="modal-close" onclick="closeCambiarPerfilModal()" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p id="cambiarPerfilNombre" style="color:var(--c-cream);margin-bottom:10px;font-weight:500;"></p>
+      <label class="field">
+        <span class="field-label">Perfil</span>
+        <select id="cambiarPerfilSelect">
+          <option value="usuario">Usuario (colaborador común)</option>
+          <option value="editor">Editor</option>
+          <option value="admin">Admin (gestión completa)</option>
+          <option value="master" id="cpOptMaster">Master (máximo nivel)</option>
+        </select>
+      </label>
+      <div class="login-error" id="cambiarPerfilError"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeCambiarPerfilModal()">Cancelar</button>
+      <button class="btn-primary" id="btnGuardarPerfil" onclick="guardarCambioPerfil()">Guardar</button>
+    </div>
+  </div>
+</div>
 
-async function api(path,method,body){
-  method=method||"GET";
-  var o={method:method,headers:H};
-  if(body) o.body=JSON.stringify(body);
-  var r=await fetch(SB_URL+"/rest/v1/"+path,o);
-  if(!r.ok){console.error(await r.text());return null;}
-  if(method==="DELETE"||r.status===204)return true;
-  return r.json();
-}
+<!-- ============================================
+     MODAL: NUEVO CIERRE DE PROPINAS (Fase 2)
+============================================ -->
+<div class="modal-overlay" id="modalNuevoCierre">
+  <div class="modal-card cierre-card">
+    <div class="modal-header">
+      <h2 class="modal-title" id="cierreModalTitulo">Nuevo cierre</h2>
+      <button class="modal-close" onclick="closeNuevoCierre()" aria-label="Cerrar"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body cierre-body">
 
-async function sha256(msg){
-  var buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(msg));
-  return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,"0");}).join("");
-}
+      <div class="cierre-section">
+        <div class="cierre-row2">
+          <label class="field"><span class="field-label">Local</span>
+            <input type="text" id="cierreLocal" readonly></label>
+          <label class="field"><span class="field-label">Fecha</span>
+            <input type="date" id="cierreFecha"></label>
+        </div>
+        <label class="field"><span class="field-label">Turno</span>
+          <select id="cierreTurno">
+            <option value="mediodia">🍲 Mediodía</option>
+            <option value="noche">🌙 Noche</option>
+            <option value="evento">🎉 Evento</option>
+            <option value="especial">⭐ Especial</option>
+          </select>
+        </label>
+      </div>
 
-// ── VIEW MANAGER ─────────────────────────────────────────────────────────────
-function showView(id){
-  document.querySelectorAll(".view").forEach(function(v){v.classList.remove("active");});
-  document.getElementById(id).classList.add("active");
-  // login is position:fixed so handle separately
-  document.getElementById("viewLogin").classList.remove("active");
-  if(id==="viewLogin") document.getElementById("viewLogin").classList.add("active");
-}
+      <div class="cierre-section">
+        <div class="cierre-section-title"><i class="ti ti-cash"></i> Efectivo (cantidad de billetes)</div>
+        <div class="billete-grid" id="cierreBilletes"></div>
+      </div>
 
-function isReadonly(){ return curUser && curUser.rol==="auditor"; }
+      <div class="cierre-section">
+        <div class="cierre-section-title"><i class="ti ti-currency-dollar"></i> Moneda extranjera</div>
+        <div class="cierre-row3">
+          <label class="field"><span class="field-label">USD</span><input type="number" min="0" step="any" id="cierreUsd" placeholder="0" oninput="recalcCierre()"></label>
+          <label class="field"><span class="field-label">EUR</span><input type="number" min="0" step="any" id="cierreEur" placeholder="0" oninput="recalcCierre()"></label>
+          <label class="field"><span class="field-label">BRL</span><input type="number" min="0" step="any" id="cierreBrl" placeholder="0" oninput="recalcCierre()"></label>
+        </div>
+        <div class="cierre-hint" id="cierreTcHint"></div>
+      </div>
 
-async function doLogin(){
-  var user=document.getElementById("loginUser").value.trim().toLowerCase();
-  var pass=document.getElementById("loginPass").value;
-  var errEl=document.getElementById("loginErr");
-  errEl.style.display="none";
-  if(!user||!pass){errEl.textContent="Preencha usuario e senha";errEl.style.display="block";return;}
-  var hash=await sha256(pass);
-  var res=await api("usuarios?usuario=eq."+encodeURIComponent(user)+"&senha_hash=eq."+hash+"&ativo=eq.true&select=id,nome,usuario,rol");
-  if(!res||!res.length){errEl.textContent="Usuario ou senha incorretos";errEl.style.display="block";return;}
-  curUser=res[0];
-  sessionStorage.setItem("nordestina_user",JSON.stringify(curUser));
-  goToDash();
-}
+      <div class="cierre-section">
+        <div class="cierre-section-title"><i class="ti ti-credit-card"></i> Electrónicos</div>
+        <div class="cierre-row2">
+          <label class="field"><span class="field-label">Tarjeta</span><input type="number" min="0" step="any" id="cierreTarjeta" placeholder="0" oninput="recalcCierre()"></label>
+          <label class="field"><span class="field-label">Transferencia</span><input type="number" min="0" step="any" id="cierreTransf" placeholder="0" oninput="recalcCierre()"></label>
+        </div>
+      </div>
 
-function goToDash(){
-  var acc=getAccess();
-  document.getElementById("dashUser").textContent="Ola, "+curUser.nome+" · "+(ROL_ICONS[curUser.rol]||"")+" "+(ROL_LABELS[curUser.rol]||curUser.rol);
-  var h="";
-  if(acc.reservas) h+="<div class='dash-card' id='dcReservas'><div class='dash-icon'>&#127958;</div><div class='dash-title'>Reservas</div><div class='dash-desc'>Gestao de reservas e disponibilidade</div><span class='dash-badge "+(acc.readonly?"badge-blue":"badge-green")+"'>"+(acc.readonly?"Somente leitura":"Acesso completo")+"</span></div>";
-  if(acc.admin)    h+="<div class='dash-card' id='dcGestao'><div class='dash-icon'>&#128200;</div><div class='dash-title'>Gestao Administrativa</div><div class='dash-desc'>Financas, despesas e relatorios</div><span class='dash-badge "+(acc.readonly?"badge-blue":"badge-blue")+"'>"+(acc.readonly?"Somente leitura":"Acesso completo")+"</span></div>";
-  if(acc.users)    h+="<div class='dash-card full' id='dcUsuarios'><div class='dash-icon'>&#128101;</div><div class='dash-title'>Usuarios</div><div class='dash-desc'>Gerenciar usuarios e permissoes</div><span class='dash-badge badge-amber'>Master</span></div>";
-  document.getElementById("dashGrid").innerHTML=h;
-  if(acc.reservas) document.getElementById("dcReservas").addEventListener("click",openReservas);
-  if(acc.admin)    document.getElementById("dcGestao").addEventListener("click",openGestao);
-  if(acc.users)    document.getElementById("dcUsuarios").addEventListener("click",openUsuarios);
-  showView("viewDash");
-}
+      <div class="cierre-resumen" id="cierreResumen"></div>
 
-function getAccess(){
-  var r=curUser?curUser.rol:"";
-  return{
-    reservas:["master","comercial","checkin","auditor","housekeeping"].indexOf(r)>=0,
-    admin:["master","administrativa","auditor"].indexOf(r)>=0,
-    users:r==="master",
-    readonly:r==="auditor"
-  };
-}
+      <div class="cierre-section">
+        <div class="cierre-section-title"><i class="ti ti-users"></i> Colaboradores · puntos</div>
+        <div class="colab-list" id="cierreColabs"><div class="loading">Cargando...</div></div>
+      </div>
 
-function doLogout(){
-  if(!confirm("Deseja sair?"))return;
-  sessionStorage.removeItem("nordestina_user");
-  curUser=null;
-  document.getElementById("loginUser").value="";
-  document.getElementById("loginPass").value="";
-  document.getElementById("loginErr").style.display="none";
-  showView("viewLogin");
-}
+      <label class="field"><span class="field-label">Comentario (opcional)</span>
+        <textarea id="cierreComentario" rows="2"></textarea></label>
 
-function checkSession(){
-  var saved=sessionStorage.getItem("nordestina_user");
-  if(saved){try{curUser=JSON.parse(saved);goToDash();}catch(e){sessionStorage.removeItem("nordestina_user");}}
-}
+      <div class="login-error" id="cierreError"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeNuevoCierre()">Cancelar</button>
+      <button class="btn-primary" id="btnGuardarCierre" onclick="guardarCierre()">Guardar cierre</button>
+    </div>
+  </div>
+</div>
 
-// ── RESERVAS ─────────────────────────────────────────────────────────────────
-function openReservas(){
-  document.getElementById("resUser").textContent=curUser.nome;
-  // ocultar botón nueva reserva para auditor
-  document.getElementById("resBtnNova").style.display=isReadonly()?"none":"inline-block";
-  showView("viewReservas");
-  loadReservas();
-}
+<!-- ============================================
+     MODAL: EXPORTAR LIQUIDACIÓN DE PROPINAS
+============================================ -->
+<div class="modal-overlay" id="modalLiquidacion">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title">Exportar liquidación</h2>
+      <button class="modal-close" onclick="closeLiquidacion()" aria-label="Cerrar"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--c-muted); font-size:13px; margin-bottom:12px;">Elegí el período. El Excel trae todos los locales que podés ver, con el detalle por cierre y el total por empleado.</p>
+      <div class="cierre-row2">
+        <label class="field"><span class="field-label">Desde</span><input type="date" id="liqDesde"></label>
+        <label class="field"><span class="field-label">Hasta</span><input type="date" id="liqHasta"></label>
+      </div>
+      <div class="login-error" id="liqError"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeLiquidacion()">Cancelar</button>
+      <button class="btn-primary" id="btnGenerarLiq" onclick="generarLiquidacion()">Generar Excel</button>
+    </div>
+  </div>
+</div>
 
-async function loadReservas(){
-  var d=await api("reservas?select=*&order=checkin.asc");
-  allRes=d||[];
-  renderReservas();
-  if(resMetricsOpen)renderResMetrics();
-}
+<!-- ============================================
+     VISTA: MIS RECETAS - Sub-elaboraciones
+============================================ -->
+<!-- ============================================
+     VISTA: MIS DATOS
+============================================ -->
+<!-- ============================================
+     VISTA: HISTORIAL DE CAMBIOS
+============================================ -->
+<div id="vHistorial" class="view">
+  <div class="module-wrap">
+    <div class="module-header">
+      <button class="btn-back" onclick="openAdministracion()" aria-label="Volver"><i class="ti ti-arrow-left"></i></button>
+      <div class="module-title-block">
+        <div class="module-title">Historial</div>
+        <div class="module-subtitle">Auditoría de cambios</div>
+      </div>
+    </div>
+    <label class="field"><span class="field-label">Módulo</span>
+      <select id="histModuloFiltro" onchange="onFiltroHistorial()">
+        <option value="">Todos los módulos</option>
+        <option value="Rosters">Rosters</option>
+        <option value="Cierres">Cierres de caja</option>
+        <option value="Propinas">Propinas</option>
+        <option value="Recetas">Recetas</option>
+      </select>
+    </label>
+    <div id="histLista"><div class="loading">Cargando...</div></div>
+  </div>
+</div>
 
-function renderReservas(){
-  document.getElementById("resMonthLabel").textContent=MONTHS[resMonth]+" "+resYear;
-  if(resTab==="calendario"){renderResCal();return;}
-  renderResList();
-}
+<!-- ============================================
+     VISTA: MIS ESTADÍSTICAS
+============================================ -->
+<div id="vMisEstadisticas" class="view">
+  <div class="module-wrap">
+    <div class="module-header">
+      <button class="btn-back" onclick="showDashboard()" aria-label="Volver"><i class="ti ti-arrow-left"></i></button>
+      <div class="module-title-block">
+        <div class="module-title">Mis Estadísticas</div>
+        <div class="module-subtitle">Ventas, pax y promedio por local</div>
+      </div>
+    </div>
+    <div class="est-filtros">
+      <label class="field" style="flex:1;min-width:0"><span class="field-label">Mes</span>
+        <select id="estMes" onchange="onFiltroEst()"></select>
+      </label>
+      <label class="field" style="flex:1;min-width:0"><span class="field-label">Local</span>
+        <select id="estLocal" onchange="onFiltroEst()"></select>
+      </label>
+    </div>
+    <div id="estResumen"></div>
+    <div id="estLista"></div>
+  </div>
+</div>
 
-function renderResList(){
-  var f=allRes.filter(function(r){if(!r.checkin)return false;var d=new Date(r.checkin+"T12:00:00");return d.getMonth()===resMonth&&d.getFullYear()===resYear;});
-  f=f.filter(function(r){return resFilter==="todas"||r.status===resFilter;});
-  var h="<div class='filter-row'>";
-  ["todas","pendiente","confirmada","checkin","cancelada"].forEach(function(s){
-    h+="<button class='fbtn"+(resFilter===s?" active":"")+"' data-rf='"+s+"'>"+(s==="todas"?"Todas":RES_SL[s])+"</button>";
-  });
-  h+="</div>";
-  if(!f.length){h+="<div class='empty'>Nenhuma reserva neste mes.</div>";}
-  else f.forEach(function(r){
-    var n=nights(r.checkin,r.checkout),saldo=Number(r.total||0)-Number(r.anticipo||0);
-    var sH="";
-    if(r.status!=="checkin"&&r.status!=="cancelada"&&r.status!=="checkout"&&saldo>0)sH="<div style='font-size:11px;font-weight:600;color:var(--yellow)'>Saldo: "+fmt(saldo)+"</div>";
-    if(r.status==="checkin")sH="<div style='font-size:11px;font-weight:600;color:var(--green)'>Pago completo</div>";
-    h+="<div class='res-card' data-rid='"+r.id+"'><div class='res-header'><div><div class='res-apto'>"+(r.apto||"—")+"</div><div class='res-huesped'>"+(r.nome||"—")+"</div><div class='res-fechas'>"+fmtD(r.checkin)+" → "+fmtD(r.checkout)+" · "+n+" noite"+(n!==1?"s":"")+"</div></div><span class='chip "+(RES_SC[r.status]||"chip-pendiente")+"'>"+(RES_SL[r.status]||r.status)+"</span></div><div class='res-footer'><div><span class='res-canal'>"+(r.canal||"—")+"</span>"+(r.pago_anticipo?"<div class='pago-tag'>"+r.pago_anticipo+"</div>":"")+"</div><div style='text-align:right'><div style='font-size:14px;font-weight:700;color:var(--ocean)'>"+fmt(r.total)+"</div><div style='font-size:10px;color:var(--text-soft)'>Anticipo: "+fmt(r.anticipo)+"</div>"+sH+"</div></div></div>";
-  });
-  document.getElementById("resListContent").innerHTML=h;
-  document.querySelectorAll("[data-rid]").forEach(function(el){el.addEventListener("click",function(){openResDetail(parseInt(el.dataset.rid));});});
-  document.querySelectorAll("[data-rf]").forEach(function(btn){btn.addEventListener("click",function(){resFilter=btn.dataset.rf;renderResList();});});
-}
+<!-- ============================================
+     VISTA: MIS CIERRES
+============================================ -->
+<div id="vMisCierres" class="view">
+  <div class="module-wrap">
+    <div class="module-header">
+      <button class="btn-back" onclick="showDashboard()" aria-label="Volver"><i class="ti ti-arrow-left"></i></button>
+      <div class="module-title-block">
+        <div class="module-title">Mis Cierres</div>
+        <div class="module-subtitle">Cierre de caja por local y turno</div>
+      </div>
+    </div>
+    <label class="field"><span class="field-label">Local</span>
+      <select id="ccLocalFiltro" onchange="onFiltroCierres()"></select></label>
+    <button class="btn-primary" id="ccNuevoBtn" style="width:100%;margin:12px 0 14px;" onclick="abrirNuevoCierreCaja()"><i class="ti ti-plus"></i> Nuevo cierre</button>
+    <div id="cierresLista"><div class="loading">Cargando...</div></div>
+  </div>
+</div>
 
-function renderResCal(){
-  var d2=dim(resYear,resMonth),today=new Date();
-  var mrs=allRes.filter(function(r){if(!r.checkin||r.status==="cancelada")return false;var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");return ci<=new Date(resYear,resMonth+1,0)&&co>=new Date(resYear,resMonth,1);});
-  // Build aptos list: APTOS + any "orphans" from reservations not matching APTOS via normalized comparison
-  var aptosList=APTOS.slice();
-  var aptosNorm=APTOS.map(normApto);
-  var seenOrph={};
-  mrs.forEach(function(r){var na=normApto(r.apto);if(!na)return;if(aptosNorm.indexOf(na)<0&&!seenOrph[na]){seenOrph[na]=true;aptosList.push(r.apto);}});
-  var dow0=["D","S","T","Q","Q","S","S"];
-  var h="<div style='background:var(--white);border-bottom:1px solid var(--sand-mid);padding:10px 12px 6px;display:flex;justify-content:space-between'><span style='font-size:11px;font-weight:600;color:var(--ocean);text-transform:uppercase;letter-spacing:1px'>"+MONTHS[resMonth]+" "+resYear+"</span><span style='font-size:10px;color:var(--text-soft)'>"+aptosList.length+" unidades</span></div>";
-  h+="<div class='cal-wrap'><table class='cal-table'><thead><tr><th class='cal-head-apto'>Unidade</th>";
-  for(var d=1;d<=d2;d++){var dt=new Date(resYear,resMonth,d),dw=dt.getDay(),isT=dt.getDate()===today.getDate()&&dt.getMonth()===today.getMonth()&&dt.getFullYear()===today.getFullYear();h+="<th><div class='cal-head-day"+(isT?" today":"")+"'>"+d+"</div><div class='cal-head-dow'>"+dow0[dw]+"</div></th>";}
-  h+="</tr></thead><tbody>";
-  for(var ai=0;ai<aptosList.length;ai++){
-    var rowNorm=normApto(aptosList[ai]);
-    var isOrphan=aptosNorm.indexOf(rowNorm)<0;
-    h+="<tr><td class='cal-apto-label'"+(isOrphan?" style='color:var(--yellow);font-style:italic' title='Nome nao bate com APTOS padrao'":"")+">"+aptosList[ai]+(isOrphan?" *":"")+"</td>";
-    for(var d=1;d<=d2;d++){
-      var dt=new Date(resYear,resMonth,d),dw=dt.getDay(),isT=dt.getDate()===today.getDate()&&dt.getMonth()===today.getMonth()&&dt.getFullYear()===today.getFullYear();
-      var cc="cal-cell"+(dw===0||dw===6?" weekend":"")+(isT?" today-col":"");
-      var res=null;for(var ri=0;ri<mrs.length;ri++){if(normApto(mrs[ri].apto)!==rowNorm)continue;var ci2=new Date(mrs[ri].checkin+"T12:00:00"),co2=new Date(mrs[ri].checkout+"T12:00:00");if(dt>=ci2&&dt<co2){res=mrs[ri];break;}}
-      var bar="";
-      if(res){var isS=dt.getTime()===new Date(res.checkin+"T12:00:00").getTime(),isE=new Date(new Date(res.checkout+"T12:00:00").getTime()-86400000).getTime()===dt.getTime();var cls="occ"+(isS&&isE?" occ-single":isS?" occ-start":isE?" occ-end":"");bar="<div class='"+cls+"' style='background:"+CAL_COLORS[ai%CAL_COLORS.length]+"' data-calrid='"+res.id+"'></div>";}
-      h+="<td class='"+cc+"'><div class='cal-bar'>"+bar+"</div></td>";
-    }
-    h+="</tr>";
-  }
-  var ocu=aptosList.filter(function(a){var na=normApto(a);return mrs.some(function(r){return normApto(r.apto)===na;});}).length;
-  h+="</tbody></table></div><div class='cal-stats'><div><div class='cal-stat-val' style='color:var(--ocean)'>"+mrs.length+"</div><div class='cal-stat-lbl'>Reservas</div></div><div><div class='cal-stat-val' style='color:var(--green)'>"+ocu+"</div><div class='cal-stat-lbl'>Com reserva</div></div><div><div class='cal-stat-val' style='color:var(--sand-dark)'>"+(aptosList.length-ocu)+"</div><div class='cal-stat-lbl'>Livres</div></div></div>";
-  document.getElementById("resCalContent").innerHTML=h;
-  document.querySelectorAll("[data-calrid]").forEach(function(el){el.addEventListener("click",function(){openResDetail(parseInt(el.dataset.calrid));});});
-}
+<!-- ============================================
+     VISTA: MI STOCK
+============================================ -->
+<div id="vMiStock" class="view">
+  <div class="module-wrap">
+    <div class="module-header">
+      <button class="btn-back" onclick="showDashboard()" aria-label="Volver"><i class="ti ti-arrow-left"></i></button>
+      <div class="module-title-block">
+        <div class="module-title">Mi Stock</div>
+        <div class="module-subtitle">Control de stock por local</div>
+      </div>
+    </div>
+    <div id="stockTabs" class="stock-tabs" style="display:none;">
+      <button class="stock-tab active" data-tab="cargar" onclick="stockCambiarTab('cargar')">Cargar</button>
+      <button class="stock-tab" data-tab="articulos" onclick="stockCambiarTab('articulos')">Artículos</button>
+      <button class="stock-tab" data-tab="reportes" onclick="stockCambiarTab('reportes')">Reportes</button>
+    </div>
+    <div id="stockBody"></div>
+  </div>
+</div>
 
-// ── RES METRICS ──────────────────────────────────────────────────────────────
-function renderResMetrics(){
-  var active=allRes.filter(function(r){return r.status==="confirmada"||r.status==="checkin"||r.status==="checkout";});
-  var periodRes,diasP,label;
-  if(resMetricsPeriod==="mes"){
-    periodRes=active.filter(function(r){if(!r.checkin)return false;var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");return ci<=new Date(resYear,resMonth+1,0)&&co>new Date(resYear,resMonth,1);});
-    diasP=dim(resYear,resMonth);label=MONTHS[resMonth]+" "+resYear;
-  } else {
-    periodRes=active.filter(function(r){return r.checkin&&new Date(r.checkin+"T12:00:00").getFullYear()===resYear;});
-    diasP=365;label="Ano "+resYear;
-  }
-  function nA(a){var na=normApto(a),t=0;periodRes.filter(function(r){return normApto(r.apto)===na;}).forEach(function(r){var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");if(resMetricsPeriod==="mes"){var s=ci<new Date(resYear,resMonth,1)?new Date(resYear,resMonth,1):ci,e=co>new Date(resYear,resMonth+1,0,23,59)?new Date(resYear,resMonth+1,0,23,59):co,dd=(e-s)/86400000;if(dd>0)t+=dd;}else{t+=(co-ci)/86400000;}});return Math.round(t);}
-  function iA(a){var na=normApto(a);return periodRes.filter(function(r){return normApto(r.apto)===na;}).reduce(function(s,r){return s+Number(r.total||0);},0);}
-  var rows=APTOS.map(function(a){var n=nA(a),i=iA(a);return{apto:a,noites:n,ocup:((n/diasP)*100).toFixed(0),tarifa:n>0?i/n:0,ingresos:i};});
-  var tN=rows.reduce(function(s,r){return s+r.noites;},0),tI=rows.reduce(function(s,r){return s+r.ingresos;},0),tO=((tN/(diasP*APTOS.length))*100).toFixed(0);
-  if(tN===0){document.getElementById("resMetricsContent").innerHTML="<div style='font-size:12px;color:var(--text-soft);text-align:center;padding:12px 0'>Nenhuma reserva ativa em "+label+"</div>";return;}
-  var h="<div style='overflow-x:auto'><table style='width:100%;border-collapse:collapse;font-size:12px'><thead><tr style='border-bottom:2px solid var(--sand-mid)'><th style='text-align:left;padding:4px 6px;font-size:9px;color:var(--text-soft);font-weight:600;text-transform:uppercase'>Unidade</th><th style='text-align:center;padding:4px;font-size:9px;color:var(--text-soft);font-weight:600;text-transform:uppercase'>Noites</th><th style='text-align:center;padding:4px;font-size:9px;color:var(--text-soft);font-weight:600;text-transform:uppercase'>Ocup.</th><th style='text-align:right;padding:4px;font-size:9px;color:var(--text-soft);font-weight:600;text-transform:uppercase'>Tarifa</th><th style='text-align:right;padding:4px 6px;font-size:9px;color:var(--text-soft);font-weight:600;text-transform:uppercase'>Ingresos</th></tr></thead><tbody>";
-  rows.forEach(function(r){var op=parseInt(r.ocup),bc=op>=70?"var(--green)":op>=40?"var(--ocean)":"var(--sand-dark)";h+="<tr style='border-bottom:1px solid var(--sand-mid)'><td style='padding:7px 6px;font-weight:600;color:var(--ocean);font-family:Cormorant Garamond,serif;font-size:13px'>"+r.apto+"</td><td style='text-align:center;padding:7px 4px'>"+r.noites+"</td><td style='padding:7px 4px'><div style='display:flex;align-items:center;gap:4px;justify-content:center'><div style='width:32px;height:5px;background:var(--sand-mid);border-radius:3px;overflow:hidden'><div style='width:"+Math.min(op,100)+"%;height:100%;background:"+bc+";border-radius:3px'></div></div><span style='font-size:11px;color:"+bc+";font-weight:600'>"+r.ocup+"%</span></div></td><td style='text-align:right;padding:7px 4px'>"+fmt(r.tarifa)+"</td><td style='text-align:right;padding:7px 6px;color:var(--green);font-weight:600'>"+fmt(r.ingresos)+"</td></tr>";});
-  h+="<tr style='background:var(--ocean-light)'><td style='padding:7px 6px;color:var(--ocean);font-weight:700'>TOTAL</td><td style='text-align:center;padding:7px 4px;color:var(--ocean);font-weight:700'>"+tN+"</td><td style='text-align:center;padding:7px 4px;color:var(--ocean);font-weight:700'>"+tO+"%</td><td style='text-align:right;padding:7px 4px;color:var(--ocean);font-weight:700'>"+fmt(tN>0?tI/tN:0)+"</td><td style='text-align:right;padding:7px 6px;color:var(--ocean);font-weight:700'>"+fmt(tI)+"</td></tr></tbody></table></div>";
-  document.getElementById("resMetricsContent").innerHTML=h;
-  if(resMetricsPeriod==="mes")syncMetrics(tN,diasP*APTOS.length);
-}
+<!-- ============================================
+     VISTA: MIS PEDIDOS
+============================================ -->
+<div id="vMisPedidos" class="view">
+  <div class="module-wrap">
+    <div class="module-header">
+      <button class="btn-back" onclick="showDashboard()" aria-label="Volver"><i class="ti ti-arrow-left"></i></button>
+      <div class="module-title-block">
+        <div class="module-title">Mis pedidos</div>
+        <div class="module-subtitle">Requerimientos de insumos</div>
+      </div>
+    </div>
+    <div class="ped-filtros">
+      <select id="pedLocalFiltro" onchange="onFiltroPedidos()"></select>
+      <select id="pedEstadoFiltro" onchange="onFiltroPedidos()">
+        <option value="">Todos los estados</option>
+        <option value="borrador">Borrador</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="confirmado">Confirmado</option>
+        <option value="completado">Completado</option>
+      </select>
+    </div>
+    <button class="btn-primary" id="pedNuevoBtn" style="width:100%;margin-bottom:14px;" onclick="abrirNuevoPedido()"><i class="ti ti-plus"></i> Nuevo pedido</button>
+    <div id="pedidosLista"><div class="loading">Cargando...</div></div>
+  </div>
+</div>
 
-async function syncMetrics(noites,cap){
-  var k=mk(resYear,resMonth);
-  var ex=await api("monthly_metrics?month_key=eq."+k);
-  if(ex&&ex.length>0)await api("monthly_metrics?id=eq."+ex[0].id,"PATCH",{noites:noites,capacidade:cap});
-  else await api("monthly_metrics","POST",{month_key:k,noites:noites,capacidade:cap});
-}
+<!-- ============================================
+     VISTA: EDITOR DE PEDIDO
+============================================ -->
+<div id="vPedidoEditor" class="view">
+  <div class="module-wrap">
+    <div class="module-header">
+      <button class="btn-back" onclick="openMisPedidos()" aria-label="Volver"><i class="ti ti-arrow-left"></i></button>
+      <div class="module-title-block">
+        <div class="module-title" id="pedEditorTitulo">Pedido</div>
+        <div class="module-subtitle" id="pedEditorSub"></div>
+      </div>
+    </div>
+    <div id="pedEditorBody"></div>
+  </div>
+</div>
 
-// ── RES DETAIL ───────────────────────────────────────────────────────────────
-function openResDetail(id){
-  var r=allRes.find(function(x){return x.id===id;});if(!r)return;
-  var n=nights(r.checkin,r.checkout),saldo=Number(r.total||0)-Number(r.anticipo||0);
-  document.getElementById("resDetailTitle").textContent=r.apto||"Reserva";
-  var step={pendiente:1,confirmada:2,checkin:3,checkout:4}[r.status]||0;
-  var h="<div class='status-bar'><div class='s-step"+(step>=1?" done":"")+"'></div><div class='s-step"+(step>=2?" done":step===1?" current":"")+"'></div><div class='s-step"+(step>=3?" done":step===2?" current":"")+"'></div><div class='s-step"+(step>=4?" done":step===3?" current":"")+"'></div></div>";
-  h+="<div style='text-align:center;margin-bottom:12px'><span class='chip "+(RES_SC[r.status]||"")+"'>"+(RES_SL[r.status]||r.status)+"</span></div>";
-  h+="<div class='detail-section'><span class='sec-title'>Dados da Reserva</span>";
-  h+="<div class='detail-row'><span class='detail-label'>Apartamento</span><span class='detail-value'>"+(r.apto||"—")+"</span></div>";
-  h+="<div class='detail-row'><span class='detail-label'>Hospede</span><span class='detail-value'>"+(r.nome||"—")+"</span></div>";
-  h+="<div class='detail-row'><span class='detail-label'>Documento</span><span class='detail-value'>"+(r.documento||"—")+"</span></div>";
-  h+="<div class='detail-row'><span class='detail-label'>Canal</span><span class='detail-value'>"+(r.canal||"—")+"</span></div>";
-  h+="<div class='detail-row'><span class='detail-label'>Check-in</span><span class='detail-value'>"+fmtD(r.checkin)+"</span></div>";
-  h+="<div class='detail-row'><span class='detail-label'>Check-out</span><span class='detail-value'>"+fmtD(r.checkout)+"</span></div>";
-  h+="<div class='detail-row'><span class='detail-label'>Noites</span><span class='detail-value'>"+n+"</span></div>";
-  h+="<div class='detail-row'><span class='detail-label'>Adultos</span><span class='detail-value'>"+(r.adultos||"—")+"</span></div>";
-  if(r.criancas>0)h+="<div class='detail-row'><span class='detail-label'>Criancas</span><span class='detail-value'>"+r.criancas+"</span></div>";
-  h+="<div class='detail-row'><span class='detail-label'>Cafe da manha</span><span class='detail-value'>"+(r.cafe?"Sim":"Nao")+"</span></div></div>";
-  h+="<div class='detail-section'><span class='sec-title'>Financeiro</span>";
-  h+="<div class='detail-row'><span class='detail-label'>Total</span><span class='detail-value' style='font-weight:700;color:var(--ocean)'>"+fmt(r.total)+"</span></div>";
-  h+="<div class='detail-row'><span class='detail-label'>Anticipo</span><span class='detail-value'>"+fmt(r.anticipo)+(r.pago_anticipo?" <span class='pago-tag'>"+r.pago_anticipo+"</span>":"")+(r.fx_moeda_anticipo?"<br><span style='font-size:10px;color:var(--text-soft)'>"+r.fx_moeda_anticipo+" "+r.fx_valor_anticipo+" x "+r.fx_taxa_anticipo+"</span>":"")+"</span></div>";
-  h+="<div class='detail-row'><span class='detail-label'>Saldo pendente</span><span class='detail-value' style='color:"+(saldo>0?"var(--yellow)":"var(--green)")+"'>"+fmt(saldo)+"</span></div>";
-  if(r.saldo_cobrado!=null&&r.saldo_cobrado!=="")h+="<div class='detail-row'><span class='detail-label'>Saldo cobrado</span><span class='detail-value' style='color:var(--green)'>"+fmt(r.saldo_cobrado)+(r.pago_saldo?" <span class='pago-tag'>"+r.pago_saldo+"</span>":"")+"</span></div>";
-  h+="</div>";
-  if(r.obs_comercial||r.obs_checkin){h+="<div class='detail-section'>";if(r.obs_comercial)h+="<div style='font-size:12px;margin-bottom:6px'><strong style='color:var(--text-soft);font-size:10px;display:block;margin-bottom:2px'>COMERCIAL</strong>"+r.obs_comercial+"</div>";if(r.obs_checkin)h+="<div style='font-size:12px'><strong style='color:var(--text-soft);font-size:10px;display:block;margin-bottom:2px'>CHECK-IN</strong>"+r.obs_checkin+"</div>";h+="</div>";}
-  if(r.status==="checkout"){
-    var allOk=CO_ITEMS.every(function(i){return r["co_"+i.id];});
-    h+="<div style='background:"+(allOk?"var(--green-bg)":"var(--yellow-bg)")+";border-radius:10px;padding:12px;margin-bottom:8px'><div style='font-size:10px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px'>Verificacao de Saida</div>";
-    CO_ITEMS.forEach(function(i){h+="<div style='font-size:12px;color:var(--text);padding:3px 0'>"+(r["co_"+i.id]?"&#10003;":"&#9888;")+" "+i.label+"</div>";});
-    if(r.co_obs)h+="<div style='font-size:11px;color:var(--text-soft);margin-top:8px;border-top:1px solid rgba(0,0,0,.08);padding-top:8px'>"+r.co_obs+"</div>";
-    h+="</div>";
-  }
-  if(!isReadonly()){
-    if(r.status==="pendiente"){h+="<button class='btn-save' data-a='confirmar' data-id='"+r.id+"'>Confirmar Reserva</button><button class='btn-secondary' data-a='editar' data-id='"+r.id+"'>Editar</button><button class='btn-danger' data-a='cancelar' data-id='"+r.id+"'>Cancelar</button>";}
-    else if(r.status==="confirmada"){h+="<button class='btn-save' data-a='checkin' data-id='"+r.id+"'>Registrar Check-in</button><button class='btn-secondary' data-a='editar' data-id='"+r.id+"'>Editar</button><button class='btn-danger' data-a='cancelar' data-id='"+r.id+"'>Cancelar</button>";}
-    else if(r.status==="checkin"){h+="<button class='btn-green' data-a='checkout' data-id='"+r.id+"'>&#128722; Registrar Checkout</button><button class='btn-secondary' data-a='editar' data-id='"+r.id+"'>Editar</button>";}
-    else if(r.status==="checkout"){h+="<button class='btn-secondary' data-a='recheckout' data-id='"+r.id+"'>&#9998; Editar Verificacao</button>";}
-    else if(r.status==="cancelada"){h+="<button class='btn-secondary' data-a='reativar' data-id='"+r.id+"'>Reativar</button>";}
-  } else {
-    h+="<div style='text-align:center;padding:12px;font-size:12px;color:var(--text-soft);background:var(--sand-mid);border-radius:8px'>&#128274; Modo somente leitura</div>";
-  }
-  document.getElementById("resDetailContent").innerHTML=h;
-  document.querySelectorAll("[data-a]").forEach(function(btn){
-    btn.addEventListener("click",function(){
-      var a=btn.dataset.a,id=parseInt(btn.dataset.id);
-      if(a==="confirmar")resChangeStatus(id,"confirmada");
-      else if(a==="cancelar")resChangeStatus(id,"cancelada");
-      else if(a==="reativar")resChangeStatus(id,"pendiente");
-      else if(a==="editar")resEditForm(id);
-      else if(a==="checkin")resOpenCheckin(id);
-      else if(a==="checkout"||a==="recheckout")openCheckout(id);
-    });
-  });
-  document.getElementById("resDetailOverlay").classList.add("open");
-}
+<!-- ============================================
+     VISTA: GESTIÓN DE INCIDENCIAS
+============================================ -->
+<div id="vGestionIncidencias" class="view">
+  <div class="module-wrap">
+    <div class="module-header">
+      <button class="btn-back" onclick="showDashboard()" aria-label="Volver"><i class="ti ti-arrow-left"></i></button>
+      <div class="module-title-block">
+        <div class="module-title">Gestión de Incidencias</div>
+        <div class="module-subtitle">Reportes del equipo para aceptar o rechazar</div>
+      </div>
+    </div>
+    <label class="field"><span class="field-label">Estado</span>
+      <select id="giEstadoFiltro" onchange="onFiltroIncidencias()">
+        <option value="pendiente">Pendientes</option>
+        <option value="aprobado">Aceptadas</option>
+        <option value="rechazado">Rechazadas</option>
+        <option value="">Todas</option>
+      </select></label>
+    <div id="incidenciasLista" style="margin-top:14px;"><div class="loading">Cargando...</div></div>
+  </div>
+</div>
 
-async function resChangeStatus(id,status){
-  var msgs={cancelada:"Cancelar esta reserva?",pendiente:"Reativar esta reserva?",confirmada:"Confirmar esta reserva?"};
-  if(!window.confirm(msgs[status]||"Continuar?")) return;
-  document.getElementById("resDetailOverlay").classList.remove("open");
-  await api("reservas?id=eq."+id,"PATCH",{status:status});
-  await loadReservas();
-  showToast(RES_SL[status]);
-}
+<!-- ============================================
+     VISTA: GESTIÓN DE ROSTERS
+============================================ -->
+<div id="vGestionRosters" class="view">
+  <div class="module-wrap">
+    <div class="module-header">
+      <button class="btn-back" onclick="showDashboard()" aria-label="Volver"><i class="ti ti-arrow-left"></i></button>
+      <div class="module-title-block">
+        <div class="module-title">Gestión de Rosters</div>
+        <div class="module-subtitle">Armá la semana de cada empleado</div>
+      </div>
+    </div>
 
-// ── CHECKOUT ─────────────────────────────────────────────────────────────────
-function openCheckout(id){
-  coResId=id;
-  document.getElementById("resDetailOverlay").classList.remove("open");
-  var r=allRes.find(function(x){return x.id===id;});if(!r)return;
-  document.getElementById("coTitle").textContent="Checkout — "+r.apto;
-  document.getElementById("coSubtitle").textContent=(r.nome||"")+" · saida: "+fmtD(r.checkout);
-  var h="";
-  CO_ITEMS.forEach(function(i){var c=r["co_"+i.id]?"checked":"";h+="<div style='display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--sand-mid)'><input type='checkbox' id='co_"+i.id+"' "+c+" style='width:20px;height:20px;cursor:pointer;accent-color:var(--ocean);flex-shrink:0'/><label for='co_"+i.id+"' style='font-size:13px;color:var(--text);cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400;margin:0'>"+i.label+"</label></div>";});
-  document.getElementById("coChecklist").innerHTML=h;
-  document.getElementById("coObs").value=r.co_obs||"";
-  document.getElementById("coAlert").style.display="none";
-  CO_ITEMS.forEach(function(i){var el=document.getElementById("co_"+i.id);if(el)el.addEventListener("change",function(){var ok=CO_ITEMS.every(function(x){var e=document.getElementById("co_"+x.id);return e&&e.checked;});document.getElementById("coAlert").style.display=ok?"none":"block";});});
-  document.getElementById("checkoutOverlay").classList.add("open");
-}
+    <div class="rost-controls">
+      <label class="field"><span class="field-label">Local</span>
+        <select id="rostLocal" onchange="onChangeLocalRoster()"></select></label>
+      <label class="field" style="margin-top:10px;"><span class="field-label">Sector</span>
+        <select id="rostSector" onchange="onChangeSectorRoster()"></select></label>
+    </div>
 
-async function confirmCheckout(){
-  var patch={status:"checkout",co_obs:document.getElementById("coObs").value};
-  CO_ITEMS.forEach(function(i){var e=document.getElementById("co_"+i.id);patch["co_"+i.id]=e?e.checked:false;});
-  var res=await api("reservas?id=eq."+coResId,"PATCH",patch);
-  if(res){document.getElementById("checkoutOverlay").classList.remove("open");await loadReservas();showToast("Checkout registrado!");}
-  else showToast("Erro ao salvar");
-}
+    <div class="week-nav">
+      <button class="week-arrow" onclick="cambiarSemanaRoster(-1)" aria-label="Semana anterior"><i class="ti ti-chevron-left"></i></button>
+      <div class="week-label" id="rostWeekLabel">—</div>
+      <button class="week-arrow" onclick="cambiarSemanaRoster(1)" aria-label="Semana siguiente"><i class="ti ti-chevron-right"></i></button>
+    </div>
 
-// ── RES FORM ─────────────────────────────────────────────────────────────────
-function resPopulateSelects(){
-  var a=document.getElementById("fApto");a.innerHTML="<option value=''>Selecionar...</option>";APTOS.forEach(function(x){a.innerHTML+="<option>"+x+"</option>";});
-  var opts="<option value=''>Selecionar...</option>";PAGOS.forEach(function(p){opts+="<option>"+p+"</option>";});
-  document.getElementById("fPagoAnticipo").innerHTML=opts;document.getElementById("fPagoSaldo").innerHTML=opts;
-}
+    <div class="rost-nota">
+      <label class="field"><span class="field-label">Nota general de la semana (la ve todo el local)</span>
+        <textarea id="rostNota" rows="2" placeholder="Opcional"></textarea></label>
+      <button class="btn-ghost rost-nota-btn" onclick="guardarNotaSemana()"><i class="ti ti-device-floppy"></i> Guardar nota</button>
+    </div>
 
-function resResetForm(){
-  resPopulateSelects();
-  ["fCheckin","fCheckout","fNome","fDoc","fTotal","fAnticipo","fObsCom","fSaldoCob","fObsCheckin","fValFxAnt","fTaxaAnt","fValFxSaldo","fTaxaSaldo"].forEach(function(id){document.getElementById(id).value="";});
-  document.getElementById("fCanal").value="";document.getElementById("fAdultos").value="2";document.getElementById("fCriancas").value="0";document.getElementById("fCafe").checked=false;
-  document.getElementById("noitesCalc").textContent="—";document.getElementById("saldoCalc").textContent="R$ 0,00";
-  document.getElementById("fxAnticipo").style.display="none";document.getElementById("fxSaldo").style.display="none";
-  document.getElementById("fxAntResult").textContent="—";document.getElementById("fxSaldoResult").textContent="—";
-  document.getElementById("secCheckinForm").style.display="none";
-}
+    <div id="rostLista"></div>
+  </div>
+</div>
 
-function resFillForm(r){
-  resResetForm();
-  document.getElementById("fApto").value=r.apto||"";document.getElementById("fCheckin").value=r.checkin||"";document.getElementById("fCheckout").value=r.checkout||"";
-  document.getElementById("fNome").value=r.nome||"";document.getElementById("fDoc").value=r.documento||"";document.getElementById("fCanal").value=r.canal||"";
-  document.getElementById("fTotal").value=r.total||"";document.getElementById("fAnticipo").value=r.anticipo||"";document.getElementById("fPagoAnticipo").value=r.pago_anticipo||"";
-  document.getElementById("fObsCom").value=r.obs_comercial||"";document.getElementById("fSaldoCob").value=r.saldo_cobrado||"";document.getElementById("fPagoSaldo").value=r.pago_saldo||"";
-  document.getElementById("fObsCheckin").value=r.obs_checkin||"";document.getElementById("fAdultos").value=r.adultos!=null?r.adultos:"2";document.getElementById("fCriancas").value=r.criancas!=null?r.criancas:"0";
-  document.getElementById("fCafe").checked=r.cafe||false;
-  calcNoites();calcSaldo();resPagoChange("anticipo");resPagoChange("saldo");
-}
+<div id="vMisDatos" class="view">
+  <div class="module-wrap">
+    <div class="module-header">
+      <button class="btn-back" onclick="showDashboard()" aria-label="Volver"><i class="ti ti-arrow-left"></i></button>
+      <div class="module-title-block">
+        <div class="module-title">Mis Datos</div>
+        <div class="module-subtitle">Tus datos personales y de cobro</div>
+      </div>
+    </div>
 
-function calcNoites(){
-  var ci=document.getElementById("fCheckin").value,co=document.getElementById("fCheckout").value;
-  if(ci){var m=new Date(ci+"T12:00:00");m.setDate(m.getDate()+1);document.getElementById("fCheckout").min=m.toISOString().slice(0,10);if(co&&new Date(co+"T12:00:00")<=new Date(ci+"T12:00:00")){document.getElementById("fCheckout").value="";document.getElementById("noitesCalc").textContent="—";return;}}
-  document.getElementById("noitesCalc").textContent=nights(ci,co)||"—";
-}
-function calcSaldo(){var t=parseFloat(document.getElementById("fTotal").value)||0,a=parseFloat(document.getElementById("fAnticipo").value)||0;document.getElementById("saldoCalc").textContent=fmt(Math.max(0,t-a));}
+    <div id="misDatosNoFicha" class="empty-list" style="display:none;">
+      Todavía no tenés una ficha de empleado vinculada. Hablá con RRHH para que te asocien.
+    </div>
 
-function resPagoChange(tipo){
-  var sId=tipo==="anticipo"?"fPagoAnticipo":"fPagoSaldo",bId=tipo==="anticipo"?"fxAnticipo":"fxSaldo",lId=tipo==="anticipo"?"fxAntLabel":"fxSaldoLabel";
-  var val=document.getElementById(sId).value,fx=PAGOS_FX[val];
-  if(fx){document.getElementById(lId).textContent=fx.label;document.getElementById(bId).style.display="block";}
-  else document.getElementById(bId).style.display="none";
-}
-function calcFxAnt(){var v=parseFloat(document.getElementById("fValFxAnt").value)||0,t=parseFloat(document.getElementById("fTaxaAnt").value)||0,r=v*t;document.getElementById("fxAntResult").textContent=r>0?fmt(r):"—";if(r>0){document.getElementById("fAnticipo").value=r.toFixed(2);calcSaldo();}}
-function calcFxSaldo(){var v=parseFloat(document.getElementById("fValFxSaldo").value)||0,t=parseFloat(document.getElementById("fTaxaSaldo").value)||0,r=v*t;document.getElementById("fxSaldoResult").textContent=r>0?fmt(r):"—";if(r>0)document.getElementById("fSaldoCob").value=r.toFixed(2);}
+    <div id="misDatosForm">
+      <div class="md-note"><i class="ti ti-info-circle"></i> Estos datos los completás y mantenés vos: sos responsable de que sean correctos. El <strong>alias</strong> se usa para el cobro de propinas.</div>
 
-function getFxD(tipo){
-  var sId=tipo==="anticipo"?"fPagoAnticipo":"fPagoSaldo",vId=tipo==="anticipo"?"fValFxAnt":"fValFxSaldo",tId=tipo==="anticipo"?"fTaxaAnt":"fTaxaSaldo";
-  var val=document.getElementById(sId).value,fx=PAGOS_FX[val];if(!fx)return null;
-  var v=parseFloat(document.getElementById(vId).value)||0,t=parseFloat(document.getElementById(tId).value)||0;if(!v||!t)return null;
-  return{moeda:fx.moeda,valor_fx:v,taxa:t};
-}
+      <div class="cierre-row2">
+        <label class="field"><span class="field-label">Nombre</span>
+          <input type="text" id="miNombre"></label>
+        <label class="field"><span class="field-label">Apellido</span>
+          <input type="text" id="miApellido"></label>
+      </div>
+      <div class="cierre-row2">
+        <label class="field"><span class="field-label">Documento</span>
+          <input type="text" id="miDocumento" placeholder="DNI"></label>
+        <label class="field"><span class="field-label">Fecha de nacimiento</span>
+          <input type="date" id="miFechaNac"></label>
+      </div>
+      <label class="field"><span class="field-label">Teléfono</span>
+        <input type="tel" id="miTelefono" placeholder="Ej: 261 555 1234"></label>
+      <label class="field"><span class="field-label">Email</span>
+        <input type="email" id="miEmail" placeholder="tucorreo@ejemplo.com"></label>
+      <label class="field"><span class="field-label">Alias (para cobro de propinas)</span>
+        <input type="text" id="miAlias" placeholder="alias.mp o CBU"></label>
 
-function resGetBaseData(){
-  var fxA=getFxD("anticipo");
-  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,canal:document.getElementById("fCanal").value,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked};
-}
+      <div class="md-subhead">Talles (uniforme)</div>
+      <div class="md-talles">
+        <label class="field"><span class="field-label">Remera</span>
+          <select id="miTalleRemera"></select></label>
+        <label class="field"><span class="field-label">Pantalón</span>
+          <select id="miTallePantalon"></select></label>
+        <label class="field"><span class="field-label">Calzado</span>
+          <select id="miTalleCalzado"></select></label>
+      </div>
 
-function checkSolap(apto,ci,co,exId){
-  var c1=new Date(ci+"T12:00:00"),c2=new Date(co+"T12:00:00");
-  return allRes.some(function(r){if(r.status==="cancelada"||r.status==="checkout")return false;if(r.apto!==apto)return false;if(exId&&r.id===exId)return false;return c1<new Date(r.checkout+"T12:00:00")&&c2>new Date(r.checkin+"T12:00:00");});
-}
+      <div class="login-error" id="misDatosError"></div>
+      <div class="md-ok" id="misDatosOk"></div>
 
-function resOpenNew(){resEditingId=null;resResetForm();document.getElementById("resFormTitle").textContent="Nova Reserva";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResNew'>Salvar Reserva</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResNew").addEventListener("click",function(){resSaveNew("confirmada");});}
-function resEditForm(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Editar Reserva";if(r.status==="checkin"||r.status==="confirmada")document.getElementById("secCheckinForm").style.display="block";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResEdit'>Salvar Alteracoes</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResEdit").addEventListener("click",resUpdateRes);}
-function resOpenCheckin(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Registrar Check-in";document.getElementById("secCheckinForm").style.display="block";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResCheckin'>Confirmar Check-in</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResCheckin").addEventListener("click",resSaveCheckin);}
+      <div style="margin-top:16px;">
+        <button class="btn-primary" id="btnGuardarMisDatos" onclick="guardarMisDatos()" style="width:100%;">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-async function syncAnticipo(rid,reserva){
-  if(!reserva.anticipo||reserva.anticipo<=0)return;
-  var ex=await api("entries?reserva_id=eq."+rid+"&tipo_receita=eq.anticipo");
-  var fxD=reserva.fx_moeda_anticipo?" ["+reserva.fx_moeda_anticipo+" "+reserva.fx_valor_anticipo+" x "+reserva.fx_taxa_anticipo+"]":"";
-  var e={type:"income",group_name:"",category:"Vendas "+(reserva.canal||"WhatsApp"),amount:reserva.anticipo,date:reserva.checkin||new Date().toISOString().slice(0,10),description:"Anticipo — "+(reserva.nome||"")+" — "+(reserva.apto||"")+" ("+fmtD(reserva.checkin)+"->"+fmtD(reserva.checkout)+") "+(reserva.pago_anticipo||"")+fxD,reserva_id:rid,tipo_receita:"anticipo"};
-  if(ex&&ex.length>0)await api("entries?id=eq."+ex[0].id,"PATCH",e);else await api("entries","POST",e);
-}
-async function syncSaldo(rid,reserva){
-  if(!reserva.saldo_cobrado||reserva.saldo_cobrado<=0)return;
-  var ex=await api("entries?reserva_id=eq."+rid+"&tipo_receita=eq.saldo");
-  var fxD=reserva.fx_moeda_saldo?" ["+reserva.fx_moeda_saldo+" "+reserva.fx_valor_saldo+" x "+reserva.fx_taxa_saldo+"]":"";
-  var e={type:"income",group_name:"",category:"Vendas "+(reserva.canal||"WhatsApp"),amount:reserva.saldo_cobrado,date:reserva.checkin||new Date().toISOString().slice(0,10),description:"Saldo — "+(reserva.nome||"")+" — "+(reserva.apto||"")+" ("+fmtD(reserva.checkin)+"->"+fmtD(reserva.checkout)+") "+(reserva.pago_saldo||"")+fxD,reserva_id:rid,tipo_receita:"saldo"};
-  if(ex&&ex.length>0)await api("entries?id=eq."+ex[0].id,"PATCH",e);else await api("entries","POST",e);
-}
+<div id="vMisRecetas" class="view">
+  <div class="module-wrap">
 
-async function resSaveNew(status){
-  var d=resGetBaseData();
-  if(!d.apto||!d.checkin||!d.checkout||!d.nome){showToast("Preencha os campos obrigatorios");return;}
-  if(new Date(d.checkout+"T12:00:00")<=new Date(d.checkin+"T12:00:00")){showToast("Check-out deve ser posterior ao check-in");return;}
-  if(checkSolap(d.apto,d.checkin,d.checkout,null)){showToast("Conflito: "+d.apto+" ja tem reserva nessas datas");return;}
-  d.status=status;
-  var res=await api("reservas","POST",d);
-  if(res&&res[0]){await syncAnticipo(res[0].id,res[0]);document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Reserva salva!");}
-  else showToast("Erro ao salvar");
-}
-async function resSaveCheckin(){
-  var saldo=parseFloat(document.getElementById("fSaldoCob").value)||0,fxS=getFxD("saldo");
-  var patch={saldo_cobrado:saldo,pago_saldo:document.getElementById("fPagoSaldo").value,obs_checkin:document.getElementById("fObsCheckin").value,status:"checkin",fx_moeda_saldo:fxS?fxS.moeda:null,fx_valor_saldo:fxS?fxS.valor_fx:null,fx_taxa_saldo:fxS?fxS.taxa:null};
-  var res=await api("reservas?id=eq."+resEditingId,"PATCH",patch);
-  if(res){var r=allRes.find(function(x){return x.id===resEditingId;});await syncSaldo(resEditingId,Object.assign({},r,patch));document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Check-in registrado!");}
-  else showToast("Erro ao salvar");
-}
-async function resUpdateRes(){
-  var d=resGetBaseData();
-  if(new Date(d.checkout+"T12:00:00")<=new Date(d.checkin+"T12:00:00")){showToast("Check-out deve ser posterior ao check-in");return;}
-  if(checkSolap(d.apto,d.checkin,d.checkout,resEditingId)){showToast("Conflito: "+d.apto+" ja tem reserva nessas datas");return;}
-  var fxS=getFxD("saldo");
-  d.saldo_cobrado=parseFloat(document.getElementById("fSaldoCob").value)||null;d.pago_saldo=document.getElementById("fPagoSaldo").value;d.obs_checkin=document.getElementById("fObsCheckin").value;
-  d.fx_moeda_saldo=fxS?fxS.moeda:null;d.fx_valor_saldo=fxS?fxS.valor_fx:null;d.fx_taxa_saldo=fxS?fxS.taxa:null;
-  var res=await api("reservas?id=eq."+resEditingId,"PATCH",d);
-  if(res){await syncAnticipo(resEditingId,Object.assign({},d,{id:resEditingId}));if(d.saldo_cobrado)await syncSaldo(resEditingId,Object.assign({},d,{id:resEditingId}));document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Atualizado!");}
-  else showToast("Erro ao atualizar");
-}
+    <div class="module-header">
+      <button class="btn-back" onclick="showDashboard()" aria-label="Volver"><i class="ti ti-arrow-left"></i></button>
+      <div class="module-title-block">
+        <div class="module-title">Mis recetas</div>
+        <div class="module-subtitle" id="recetasCount">Cargando...</div>
+      </div>
+    </div>
 
-// ── GESTAO ───────────────────────────────────────────────────────────────────
-function openGestao(){
-  document.getElementById("gestUser").textContent=curUser.nome;
-  // ocultar botones de acción para auditor
-  var ro=isReadonly();
-  document.getElementById("gestBtnNovo").style.display=ro?"none":"inline-block";
-  document.getElementById("gestBtnFornec").style.display=ro?"none":"inline-block";
-  document.getElementById("gestBtnExcel").style.display="inline-block"; // auditor sí puede exportar
-  showView("viewGestao");
-  loadGestao();
-}
+    <div class="receta-subnav">
+      <button class="receta-tab active" id="tabElaboracion" onclick="cambiarSeccionReceta('elaboracion')">Sub-elaboraciones</button>
+      <button class="receta-tab" id="tabPlato" onclick="cambiarSeccionReceta('plato')">Platos</button>
+      <button class="receta-tab" id="tabMenu" onclick="cambiarSeccionReceta('menu')">Menús</button>
+    </div>
 
-async function loadGestao(){
-  var res=await Promise.all([api("entries?select=*&order=date.desc"),api("monthly_metrics?select=*"),api("fornecedores?select=*&order=nome.asc"),api("reservas?select=*&order=checkin.asc")]);
-  allEntries=res[0]||[];allMetrics={};(res[1]||[]).forEach(function(m){allMetrics[m.month_key]=m;});allProvs=res[2]||[];allRes=res[3]||[];
-  renderGestao();
-}
+    <div class="admin-toolbar">
+      <input type="search" id="recetaSearch" placeholder="Buscar sub-elaboración..." class="search-input">
+      <button class="btn-primary btn-icon-only" id="recetaNuevoBtn" onclick="abrirNuevaSubelab()" title="Nueva sub-elaboración"><i class="ti ti-plus"></i></button>
+    </div>
 
-function computeOpsMetrics(year,month){
-  var monStart=new Date(year,month,1),monEnd=new Date(year,month+1,0,23,59,59);
-  var diasP=dim(year,month);
-  var monRes=(allRes||[]).filter(function(r){
-    if(!r.checkin||!r.checkout||r.status==="cancelada"||r.status==="pendiente")return false;
-    var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");
-    return ci<=monEnd&&co>monStart;
-  });
-  var noites=0;
-  monRes.forEach(function(r){
-    var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");
-    var s2=ci<monStart?monStart:ci,e2=co>monEnd?monEnd:co;
-    var d=(e2-s2)/86400000;
-    if(d>0)noites+=d;
-  });
-  noites=Math.round(noites);
-  var monEntries=(allEntries||[]).filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===month&&d.getFullYear()===year&&e.type==="income";});
-  var receita=monEntries.reduce(function(s,e){return s+Number(e.amount);},0);
-  var capacidade=diasP*APTOS.length;
-  return{noites:noites,capacidade:capacidade,ocupacao:capacidade>0?(noites/capacidade)*100:0,preco:noites>0?receita/noites:0,receita:receita};
-}
+    <div class="personal-filtros">
+      <select id="recetaFiltroLocal" class="mini-select"><option value="">Todos los locales</option></select>
+    </div>
 
-function renderOpsHistory(){
-  var el=document.getElementById("opsHistoryContent");if(!el)return;
-  var rows=[];
-  for(var i=5;i>=0;i--){
-    var d=new Date(gestYear,gestMonth-i,1);
-    var y=d.getFullYear(),m=d.getMonth();
-    rows.push({label:MONTHS[m]+" "+String(y).slice(-2),isCurrent:i===0,metrics:computeOpsMetrics(y,m)});
-  }
-  var h="<table style='width:100%;border-collapse:collapse;font-size:11px'><thead><tr style='border-bottom:1px solid var(--sand-mid)'>";
-  h+="<th style='text-align:left;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px'>Mes</th>";
-  h+="<th style='text-align:center;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px'>Noites</th>";
-  h+="<th style='text-align:center;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px'>Ocup.</th>";
-  h+="<th style='text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px'>Preco Medio</th>";
-  h+="</tr></thead><tbody>";
-  rows.forEach(function(r){
-    var m=r.metrics;
-    var rowStyle=r.isCurrent?"background:var(--ocean-light);":"";
-    var cellCol=r.isCurrent?"color:var(--ocean);font-weight:700":"color:var(--text)";
-    h+="<tr style='border-bottom:1px solid rgba(232,217,192,0.5);"+rowStyle+"'>";
-    h+="<td style='padding:6px 4px;"+cellCol+"'>"+r.label+"</td>";
-    h+="<td style='text-align:center;padding:6px 4px'>"+(m.noites>0?m.noites:"&#8212;")+"</td>";
-    h+="<td style='text-align:center;padding:6px 4px'>"+(m.capacidade>0&&m.noites>0?m.ocupacao.toFixed(0)+"%":"&#8212;")+"</td>";
-    h+="<td style='text-align:right;padding:6px 4px'>"+(m.noites>0?fmt(m.preco):"&#8212;")+"</td>";
-    h+="</tr>";
-  });
-  h+="</tbody></table>";
-  el.innerHTML=h;
-}
+    <div id="recetasLista"><div class="loading">Cargando sub-elaboraciones...</div></div>
 
-function renderGestao(){
-  document.getElementById("gestMonthLabel").textContent=MONTHS[gestMonth]+" "+gestYear;
-  var f=allEntries.filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===gestMonth&&d.getFullYear()===gestYear;});
-  var tI=f.filter(function(e){return e.type==="income";}).reduce(function(s,e){return s+Number(e.amount);},0);
-  var tE=f.filter(function(e){return e.type==="expense";}).reduce(function(s,e){return s+Number(e.amount);},0);
-  var bal=tI-tE,ren=tI>0?(bal/tI)*100:0;
-  document.getElementById("kpiReceita").textContent=fmt(tI);document.getElementById("kpiDespesas").textContent=fmt(tE);document.getElementById("kpiResultado").textContent=fmt(bal);document.getElementById("kpiRentab").textContent=ren.toFixed(1)+"%";
-  document.querySelectorAll(".kpi")[2].style.background=bal>=0?"var(--green-bg)":"var(--red-bg)";document.getElementById("kpiResultado").style.color=bal>=0?"var(--green)":"var(--red)";
-  var cm=computeOpsMetrics(gestYear,gestMonth);
-  document.getElementById("opsNoites").innerHTML=cm.noites||"&#8212;";document.getElementById("opsOcupacao").innerHTML=cm.capacidade>0&&cm.noites>0?cm.ocupacao.toFixed(0)+"%":"&#8212;";document.getElementById("opsPreco").innerHTML=cm.noites>0?fmt(tI/cm.noites):"&#8212;";
-  renderOpsHistory();
-  if(gestTab==="dashboard")renderGestDash(f,tI,tE);
-  else if(gestTab==="list")renderGestList(f);
-  else renderGestReport(f,tI,tE,bal,ren,cm);
-}
+  </div>
+</div>
 
-function renderGestDash(f,tI,tE){
-  var labels=[],incD=[],expD=[];
-  for(var i=5;i>=0;i--){var d=new Date(gestYear,gestMonth-i,1),m=d.getMonth(),y=d.getFullYear();labels.push(MONTHS[m]);incD.push(allEntries.filter(function(e){var ed=new Date(e.date+"T12:00:00");return ed.getMonth()===m&&ed.getFullYear()===y&&e.type==="income";}).reduce(function(s,e){return s+Number(e.amount);},0));expD.push(allEntries.filter(function(e){var ed=new Date(e.date+"T12:00:00");return ed.getMonth()===m&&ed.getFullYear()===y&&e.type==="expense";}).reduce(function(s,e){return s+Number(e.amount);},0));}
-  if(barChartInst)barChartInst.destroy();
-  barChartInst=new Chart(document.getElementById("barChart"),{type:"bar",data:{labels:labels,datasets:[{label:"Receitas",data:incD,backgroundColor:"#2e6e9e",borderRadius:5},{label:"Despesas",data:expD,backgroundColor:"#c9b48a",borderRadius:5}]},options:{responsive:true,layout:{padding:{top:22}},plugins:{legend:{labels:{font:{size:11},color:"#5a7a8a"}},datalabels:{anchor:"end",align:"top",color:"#1a2e3b",font:{size:9,weight:"600"},formatter:function(v){if(!v)return "";if(v>=10000)return "R$"+(v/1000).toFixed(0)+"k";if(v>=1000)return "R$"+(v/1000).toFixed(1)+"k";return "R$"+v.toFixed(0);}}},scales:{x:{ticks:{font:{size:10},color:"#5a7a8a"},grid:{display:false}},y:{display:false}}}});
-  var ebg=EXP_GROUPS.map(function(g){return{name:g,value:f.filter(function(e){return e.type==="expense"&&e.group_name===g;}).reduce(function(s,e){return s+Number(e.amount);},0)};}).filter(function(c){return c.value>0;});
-  var pc=document.getElementById("pieCard");
-  if(!ebg.length){pc.style.display="none";return;}pc.style.display="block";
-  if(pieChartInst)pieChartInst.destroy();
-  pieChartInst=new Chart(document.getElementById("pieChart"),{type:"doughnut",data:{labels:ebg.map(function(c){return c.name;}),datasets:[{data:ebg.map(function(c){return c.value;}),backgroundColor:PIE_COLORS,borderWidth:2,borderColor:"white"}]},options:{responsive:true,plugins:{legend:{labels:{font:{size:10},color:"#5a7a8a"}},datalabels:{color:"#fff",font:{size:11,weight:"700"},formatter:function(v,ctx){var total=ctx.dataset.data.reduce(function(a,b){return a+b;},0);var pct=total>0?(v/total*100):0;return pct>=6?pct.toFixed(0)+"%":"";}}}}});
-}
+<!-- ============================================
+     MODAL: NUEVA / EDITAR SUB-ELABORACIÓN
+============================================ -->
+<div class="modal-overlay" id="modalSubelab">
+  <div class="modal-card cierre-card">
+    <div class="modal-header">
+      <h2 class="modal-title" id="subelabTitulo">Nueva sub-elaboración</h2>
+      <button class="modal-close" onclick="closeSubelab()" aria-label="Cerrar"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body cierre-body">
 
-function renderGestList(f){
-  document.getElementById("gestListTitle").textContent="Movimentos - "+MONTHS[gestMonth]+" "+gestYear;
-  var el=document.getElementById("gestListContent");
-  if(!f.length){el.innerHTML="<div class='empty'>Nenhum movimento neste mes.</div>";return;}
-  var h="";
-  f.forEach(function(e){
-    var isI=e.type==="income";
-    h+="<div class='entry-row'><div class='entry-dot' style='background:"+(isI?"#2e6e9e":"#c9b48a")+"'></div><div class='entry-info'><div class='entry-cat'>"+e.category+"</div>";
-    if(e.group_name)h+="<div class='entry-group'>"+e.group_name+"</div>";
-    if(e.description)h+="<div class='entry-desc'>"+e.description+"</div>";
-    h+="<div class='entry-date'>"+e.date+"</div>";
-    if(e.reserva_id)h+="<span class='entry-source'>&#128279; Reservas</span>";
-    h+="</div><div class='entry-amt' style='color:"+(isI?"var(--green)":"var(--red)")+"'>"+(isI?"+":"-")+fmt(e.amount)+"</div>";
-    if(!e.reserva_id && !isReadonly())h+="<button class='btn-del-e' data-eid='"+e.id+"' style='background:none;border:none;cursor:pointer;color:#c8a0a0;font-size:16px'>&#128465;</button>";
-    else h+="<div style='width:24px'></div>";
-    h+="</div>";
-  });
-  el.innerHTML=h;
-  document.querySelectorAll(".btn-del-e").forEach(function(btn){btn.addEventListener("click",function(){delEntry(parseInt(btn.dataset.eid));});});
-}
+      <label class="field"><span class="field-label">Nombre</span>
+        <input type="text" id="subelabNombre" placeholder="Ej: Aceite de achiote"></label>
 
-function renderGestReport(f,tI,tE,bal,ren,cm){
-  var sc=[];f.filter(function(e){return e.type==="income"&&e.reserva_id;}).forEach(function(e){if(sc.indexOf(e.category)<0)sc.push(e.category);});
-  var ac=INCOME_CATS_RES.concat(INCOME_CATS_OUT);sc.forEach(function(c){if(ac.indexOf(c)<0)ac.push(c);});
-  var rH="<span class='sec-title'>Receita</span>";
-  ac.forEach(function(cat){var t=f.filter(function(e){return e.type==="income"&&e.category===cat;}).reduce(function(s,e){return s+Number(e.amount);},0);if(t>0)rH+=rRow(cat,fmt(t),(tI>0?(t/tI*100).toFixed(1):0)+"%",false,false);});
-  rH+=rRow("TOTAL RECEITAS",fmt(tI),"100%",true,false);
-  document.getElementById("gestRepReceita").innerHTML=rH;
-  var dH="<span class='sec-title'>Despesas</span>";
-  EXP_GROUPS.forEach(function(g){var gt=f.filter(function(e){return e.type==="expense"&&e.group_name===g;}).reduce(function(s,e){return s+Number(e.amount);},0);if(!gt)return;dH+=rRow(g,fmt(gt),(tE>0?(gt/tE*100).toFixed(1):0)+"%",true,false);EXP_CATS[g].forEach(function(cat){var t=f.filter(function(e){return e.type==="expense"&&e.group_name===g&&e.category===cat;}).reduce(function(s,e){return s+Number(e.amount);},0);if(t>0)dH+=rRow(cat,fmt(t),"",false,true);});});
-  dH+=rRow("TOTAL DESPESAS",fmt(tE),"100%",true,false);
-  document.getElementById("gestRepDespesas").innerHTML=dH;
-  var rs=document.getElementById("gestRepResumo");rs.style.background=bal>=0?"var(--green-bg)":"var(--red-bg)";
-  var ocup=cm.capacidade>0?(cm.noites/cm.capacidade*100).toFixed(0)+"%":"—",preco=cm.noites>0?fmt(tI/cm.noites):"—";
-  var sH=rRow("RESULTADO",fmt(bal),"",true,false)+rRow("Rentabilidade",ren.toFixed(1)+"%","",false,false);
-  if(cm.noites>0)sH+=rRow("Noites Vendidas",cm.noites,"",false,false);
-  if(cm.capacidade>0)sH+=rRow("% Ocupacao",ocup,"",false,false);
-  if(cm.noites>0)sH+=rRow("Preco Medio/Noite",preco,"",false,false);
-  rs.innerHTML=sH;
-}
+      <label class="field"><span class="field-label">Local</span>
+        <select id="subelabLocal"></select></label>
 
-function rRow(l,v,p,b,i){return "<div class='report-row'><span class='rl"+(i?" indent":"")+(b?" bold":"")+"'>"+l+"</span>"+(p?"<span class='rp'>"+p+"</span>":"")+"<span class='rv"+(b?" bold":"")+"'>"+v+"</span></div>";}
+      <div id="rendimientoCampos">
+        <div class="cierre-row2">
+          <label class="field"><span class="field-label">Rendimiento</span>
+            <input type="number" min="0" step="any" id="subelabRendimiento" placeholder="0"></label>
+          <label class="field"><span class="field-label">Unidad</span>
+            <select id="subelabUnidad"></select></label>
+        </div>
+      </div>
 
-function setGestView(v){
-  gestTab=v;
-  ["dashboard","list","report"].forEach(function(x,i){document.getElementById("gestTab"+i).className="tab"+(x===v?" active":"");document.getElementById("gestView"+x.charAt(0).toUpperCase()+x.slice(1)).style.display=x===v?"block":"none";});
-  renderGestao();
-}
+      <div id="categoriaCampo" style="display:none;">
+        <label class="field"><span class="field-label">Categoría</span>
+          <select id="platoCategoria">
+            <option value="">(sin categoría)</option>
+            <option value="snack">Snack</option>
+            <option value="entrada">Entrada</option>
+            <option value="principal">Principal</option>
+            <option value="postre">Postre</option>
+            <option value="pan">Pan</option>
+          </select></label>
+      </div>
 
-// ── GESTAO FORM ───────────────────────────────────────────────────────────────
-function openGestForm(){
-  document.getElementById("gFormDate").value=new Date().toISOString().slice(0,10);
-  document.getElementById("gFormAmount").value="";document.getElementById("gFormDesc").value="";
-  document.getElementById("gProvWrap").style.display="none";
-  setGFormType("income");
-  document.getElementById("gestFormOverlay").classList.add("open");
-}
+      <div id="precioCampo" style="display:none;">
+        <label class="field"><span class="field-label">Precio de venta</span>
+          <input type="number" min="0" step="any" id="platoPrecio" placeholder="0"></label>
+      </div>
 
-function setGFormType(t){
-  gestFormType=t;
-  document.getElementById("gBtnIncome").className="type-btn"+(t==="income"?" income-active":"");
-  document.getElementById("gBtnExpense").className="type-btn"+(t==="expense"?" expense-active":"");
-  if(t==="income"){document.getElementById("gIncomeGroupWrap").style.display="block";document.getElementById("gExpenseGroupWrap").style.display="none";document.getElementById("gFormIncomeGroup").value="";document.getElementById("gFormCategory").innerHTML="<option value=''>Selecionar grupo primeiro...</option>";document.getElementById("gProvWrap").style.display="none";}
-  else{document.getElementById("gIncomeGroupWrap").style.display="none";document.getElementById("gExpenseGroupWrap").style.display="block";var h="<option value=''>Selecionar...</option>";EXP_GROUPS.forEach(function(g){h+="<option value='"+g+"'>"+g+"</option>";});document.getElementById("gFormGroup").innerHTML=h;document.getElementById("gFormCategory").innerHTML="<option value=''>Selecionar grupo primeiro...</option>";document.getElementById("gProvWrap").style.display="none";}
-}
+      <div id="componentesSection" class="cierre-section" style="margin-top:6px;">
+        <div class="cierre-section-title"><i class="ti ti-list-details"></i> Componentes</div>
+        <div class="comp-add">
+          <select id="compTipo" class="mini-select" onchange="poblarItemsComponente()">
+            <option value="ingrediente">Insumo</option>
+            <option value="receta">Sub-elaboración</option>
+          </select>
+          <div id="compItemWrap" class="ped-ins-wrap" style="flex:1;min-width:0;">
+          <input type="text" id="compItemSearch" class="ped-ins-search" placeholder="Elegí un insumo..." autocomplete="off"
+            onclick="recFiltrarItems(this)" oninput="recFiltrarItems(this)">
+          <input type="hidden" id="compItem">
+          <div id="compItemOpts" class="ped-ins-opts"></div>
+        </div>
+          <div class="comp-add-row2">
+            <input type="number" min="0" step="any" id="compCantidad" class="mini-select" placeholder="Cantidad">
+            <select id="compUnidad" class="mini-select">
+              <option>kg</option><option>g</option><option>l</option><option>ml</option><option>unidad</option><option>porción</option>
+            </select>
+            <button type="button" class="btn-primary comp-add-btn" onclick="agregarComponente()"><i class="ti ti-plus"></i></button>
+          </div>
+        </div>
+        <div id="componentesLista" style="margin-top:10px;"></div>
+      </div>
 
-function gUpdateIncomeCats(){var g=document.getElementById("gFormIncomeGroup").value,cats=g==="reservas"?INCOME_CATS_RES:g==="outros"?INCOME_CATS_OUT:[];var h="<option value=''>Categoria...</option>";cats.forEach(function(c){h+="<option>"+c+"</option>";});document.getElementById("gFormCategory").innerHTML=h;document.getElementById("gProvWrap").style.display="none";}
-function gUpdateSubcats(){
-  var g=document.getElementById("gFormGroup").value;
-  var cats=g?EXP_CATS[g]||[]:[];
-  var h="<option value=''>Categoria...</option>";
-  cats.forEach(function(c){h+="<option>"+c+"</option>";});
-  document.getElementById("gFormCategory").innerHTML=h;
-  document.getElementById("gProvWrap").style.display="none";
-  document.getElementById("gFormProv").innerHTML="<option value=''>Selecionar...</option>";
-}
+      <div id="menuPasosSection" class="cierre-section" style="margin-top:6px; display:none;">
+        <div class="cierre-section-title"><i class="ti ti-list-numbers"></i> Pasos del menú</div>
+        <div class="comp-add">
+          <div style="display:flex; gap:8px;">
+            <select id="pasoPlato" class="mini-select" style="flex:1; min-width:0;"></select>
+            <button type="button" class="btn-primary comp-add-btn" onclick="agregarPaso()"><i class="ti ti-plus"></i></button>
+          </div>
+        </div>
+        <div id="pasosLista" style="margin-top:10px;"></div>
+      </div>
 
-function gUpdateProvSelect(){
-  var cat=document.getElementById("gFormCategory").value;
-  var wrap=document.getElementById("gProvWrap");
-  if(gestFormType!=="expense"||!cat){wrap.style.display="none";return;}
-  var provs=allProvs.filter(function(p){return p.categoria===cat;});
-  wrap.style.display="block";
-  var h="<option value=''>Selecionar fornecedor...</option>";
-  provs.forEach(function(p){h+="<option value='"+p.nome+"'>"+p.nome+"</option>";});
-  h+="<option value='__novo'>+ Novo fornecedor...</option>";
-  if(!provs.length) h="<option value=''>Nenhum fornecedor cadastrado</option><option value='__novo'>+ Novo fornecedor...</option>";
-  document.getElementById("gFormProv").innerHTML=h;
-}
+      <label class="field"><span class="field-label">Procedimiento (opcional)</span>
+        <textarea id="subelabProcedimiento" rows="2"></textarea></label>
 
-function gOnProvChange(){
-  var v=document.getElementById("gFormProv").value;
-  if(v==="__novo"){
-    var cat=document.getElementById("gFormCategory").value;
-    var nome=window.prompt("Nome do novo fornecedor para '"+cat+"':");
-    if(nome&&nome.trim()){
-      nome=nome.trim();
-      api("fornecedores","POST",{categoria:cat,nome:nome}).then(function(res){
-        if(res){
-          // recargar solo proveedores sin cerrar el form
-          api("fornecedores?select=*&order=nome.asc").then(function(data){
-            allProvs=data||[];
-            gUpdateProvSelect();
-            // seleccionar el nuevo proveedor
-            document.getElementById("gFormProv").value=nome;
-            document.getElementById("gFormDesc").value=nome;
-            showToast("Fornecedor adicionado!");
-          });
-        } else {
-          showToast("Erro ao salvar fornecedor");
-          document.getElementById("gFormProv").value="";
-        }
-      });
-    } else {
-      document.getElementById("gFormProv").value="";
-    }
-  } else if(v){
-    document.getElementById("gFormDesc").value=v;
-  }
-}
+      <div class="login-error" id="subelabError"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeSubelab()">Cancelar</button>
+      <button class="btn-primary" id="btnGuardarSubelab" onclick="guardarSubelab()">Guardar</button>
+    </div>
+  </div>
+</div>
 
-async function saveGestEntry(){
-  var cat=document.getElementById("gFormCategory").value,amt=document.getElementById("gFormAmount").value,date=document.getElementById("gFormDate").value;
-  var grp=gestFormType==="expense"?document.getElementById("gFormGroup").value:"",desc=document.getElementById("gFormDesc").value;
-  if(!cat||!amt||!date){showToast("Preencha todos os campos");return;}
-  var res=await api("entries","POST",{type:gestFormType,group_name:grp,category:cat,amount:parseFloat(amt),date:date,description:desc});
-  if(res){document.getElementById("gestFormOverlay").classList.remove("open");await loadGestao();showToast("Salvo!");}else showToast("Erro ao salvar");
-}
-
-async function delEntry(id){
-  if(!window.confirm("Apagar este movimento?")) return;
-  await api("entries?id=eq."+id,"DELETE");
-  await loadGestao();
-  showToast("Movimento apagado");
-}
-
-// ── FORNECEDORES ─────────────────────────────────────────────────────────────
-function openProvModal(){
-  var sel=document.getElementById("provCatSel"),h="<option value=''>Selecionar categoria...</option>";
-  EXP_GROUPS.forEach(function(g){EXP_CATS[g].forEach(function(c){h+="<option value='"+c+"'>"+g+" - "+c+"</option>";});});
-  sel.innerHTML=h;document.getElementById("provList").innerHTML="";document.getElementById("provAddWrap").style.display="none";
-  document.getElementById("provOverlay").classList.add("open");
-}
-function renderProvList(){
-  var cat=document.getElementById("provCatSel").value,listEl=document.getElementById("provList"),aw=document.getElementById("provAddWrap");
-  if(!cat){listEl.innerHTML="";aw.style.display="none";return;}aw.style.display="block";
-  var provs=allProvs.filter(function(p){return p.categoria===cat;});
-  if(!provs.length){listEl.innerHTML="<div style='font-size:12px;color:var(--text-soft);padding:4px 0'>Nenhum fornecedor ainda.</div>";return;}
-  var h="";provs.forEach(function(p){h+="<div class='prov-row'><span>"+p.nome+"</span><button data-pd='"+p.id+"' style='background:none;border:none;cursor:pointer;color:#c8a0a0;font-size:15px'>&#128465;</button></div>";});
-  listEl.innerHTML=h;document.querySelectorAll("[data-pd]").forEach(function(btn){btn.addEventListener("click",function(){delProv(parseInt(btn.dataset.pd));});});
-}
-async function addProv(){var cat=document.getElementById("provCatSel").value,nome=document.getElementById("provNewName").value.trim();if(!cat||!nome)return;var res=await api("fornecedores","POST",{categoria:cat,nome:nome});if(res){document.getElementById("provNewName").value="";await loadGestao();renderProvList();showToast("Fornecedor adicionado!");}}
-async function delProv(id){
-  if(!window.confirm("Remover fornecedor?")) return;
-  await api("fornecedores?id=eq."+id,"DELETE");
-  await loadGestao();
-  renderProvList();
-}
-
-// ── EXPORT ───────────────────────────────────────────────────────────────────
-async function exportExcel(){
-  showToast("Gerando exportacao...");
-  var res=await Promise.all([api("entries?select=*&order=date.desc"),api("reservas?select=*&order=checkin.desc"),api("fornecedores?select=*&order=categoria.asc")]);
-  var stamp=new Date().toLocaleDateString("pt-BR").replace(/\//g,"-");
-  function esc(v){if(v===null||v===undefined)return "";var s=String(v).replace(/"/g,'""');return(s.includes(",")||s.includes("\n")||s.includes('"'))?'"'+s+'"':s;}
-  function toCSV(rows,cols){var lines=[cols.map(function(c){return esc(c.l);}).join(",")];rows.forEach(function(r){lines.push(cols.map(function(c){return esc(r[c.k]);}).join(","));});return lines.join("\n");}
-  function dl(content,filename){var blob=new Blob(["\uFEFF"+content],{type:"text/csv;charset=utf-8"});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
-  dl(toCSV(res[0]||[],[{k:"date",l:"Data"},{k:"type",l:"Tipo"},{k:"group_name",l:"Grupo"},{k:"category",l:"Categoria"},{k:"amount",l:"Valor (R$)"},{k:"description",l:"Descricao"},{k:"reserva_id",l:"ID Reserva"}]),"nordestina_movimentos_"+stamp+".csv");
-  setTimeout(function(){dl(toCSV(res[1]||[],[{k:"id",l:"ID"},{k:"apto",l:"Apto"},{k:"nome",l:"Hospede"},{k:"canal",l:"Canal"},{k:"checkin",l:"Check-in"},{k:"checkout",l:"Check-out"},{k:"total",l:"Total"},{k:"anticipo",l:"Anticipo"},{k:"saldo_cobrado",l:"Saldo"},{k:"status",l:"Status"}]),"nordestina_reservas_"+stamp+".csv");},400);
-  setTimeout(function(){dl(toCSV(res[2]||[],[{k:"categoria",l:"Categoria"},{k:"nome",l:"Fornecedor"}]),"nordestina_fornecedores_"+stamp+".csv");showToast("3 arquivos exportados!");},800);
-}
-
-// ── USUARIOS ─────────────────────────────────────────────────────────────────
-function openUsuarios(){showView("viewUsuarios");loadUsers();}
-async function loadUsers(){var d=await api("usuarios?select=*&order=rol.asc,nome.asc");allUsers=d||[];renderUsers();}
-function renderUsers(){
-  var el=document.getElementById("usersList");if(!allUsers.length){el.innerHTML="<div style='color:rgba(255,255,255,.6);font-size:13px;text-align:center;padding:20px'>Nenhum usuario</div>";return;}
-  var h="";
-  allUsers.forEach(function(u){
-    var rc="rol-"+(u.rol||"comercial");
-    h+="<div class='user-card"+(u.ativo?"":" opacity:0.5")+"'><div class='user-avatar'>"+(ROL_ICONS[u.rol]||"👤")+"</div><div class='user-info'><div class='user-name'>"+u.nome+"</div><div class='user-login'>@"+u.usuario+"</div><span class='rol-badge "+rc+"'>"+(ROL_LABELS[u.rol]||u.rol)+"</span>"+(u.ativo?"":" <span style='font-size:10px;color:var(--text-soft)'>Inativo</span>")+"</div>";
-    if(u.id!==curUser.id)h+="<div style='display:flex;gap:6px'><button class='btn-sm' data-ue='"+u.id+"'>&#9998;</button><button class='btn-sm-red' data-ud='"+u.id+"'>&#128465;</button></div>";
-    h+="</div>";
-  });
-  el.innerHTML=h;
-  document.querySelectorAll("[data-ue]").forEach(function(btn){btn.addEventListener("click",function(){openEditUser(parseInt(btn.dataset.ue));});});
-  document.querySelectorAll("[data-ud]").forEach(function(btn){btn.addEventListener("click",function(){deleteUser(parseInt(btn.dataset.ud));});});
-}
-function openNewUser(){editingUserId=null;document.getElementById("userFormTitle").textContent="Novo Usuario";document.getElementById("ufNome").value="";document.getElementById("ufUsuario").value="";document.getElementById("ufSenha").value="";document.getElementById("ufRol").value="";document.getElementById("ufAtivo").value="true";document.getElementById("ufSenha").placeholder="Minimo 6 caracteres";document.getElementById("userFormOverlay").classList.add("open");}
-function openEditUser(id){editingUserId=id;var u=allUsers.find(function(x){return x.id===id;});if(!u)return;document.getElementById("userFormTitle").textContent="Editar Usuario";document.getElementById("ufNome").value=u.nome||"";document.getElementById("ufUsuario").value=u.usuario||"";document.getElementById("ufSenha").value="";document.getElementById("ufSenha").placeholder="Deixar em branco para nao alterar";document.getElementById("ufRol").value=u.rol||"";document.getElementById("ufAtivo").value=u.ativo?"true":"false";document.getElementById("userFormOverlay").classList.add("open");}
-async function saveUser(){
-  var nome=document.getElementById("ufNome").value.trim(),usuario=document.getElementById("ufUsuario").value.trim().toLowerCase(),senha=document.getElementById("ufSenha").value,rol=document.getElementById("ufRol").value,ativo=document.getElementById("ufAtivo").value==="true";
-  if(!nome||!usuario||!rol){showToast("Preencha todos os campos");return;}
-  var body={nome:nome,usuario:usuario,rol:rol,ativo:ativo};
-  if(editingUserId){if(senha){if(senha.length<6){showToast("Senha deve ter pelo menos 6 caracteres");return;}body.senha_hash=await sha256(senha);}var res=await api("usuarios?id=eq."+editingUserId,"PATCH",body);if(res){document.getElementById("userFormOverlay").classList.remove("open");await loadUsers();showToast("Usuario atualizado!");}}
-  else{if(!senha||senha.length<6){showToast("Senha deve ter pelo menos 6 caracteres");return;}body.senha_hash=await sha256(senha);var res=await api("usuarios","POST",body);if(res){document.getElementById("userFormOverlay").classList.remove("open");await loadUsers();showToast("Usuario criado!");}}
-}
-async function deleteUser(id){
-  var u=allUsers.find(function(x){return x.id===id;});
-  if(!window.confirm("Remover usuario "+(u?u.nome:"")+"?")) return;
-  var res=await api("usuarios?id=eq."+id,"DELETE");
-  if(res){await loadUsers();showToast("Usuario removido");}
-}
-
-// ── INIT ─────────────────────────────────────────────────────────────────────
-// Login
-document.getElementById("confirmCancel").addEventListener("click",function(){document.getElementById("confirmOverlay").classList.remove("open");});
-// Login
-document.getElementById("btnLogin").addEventListener("click",doLogin);
-document.getElementById("loginUser").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
-document.getElementById("loginPass").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
-document.getElementById("btnLogoutDash").addEventListener("click",doLogout);
-
-// Reservas nav
-document.getElementById("resBtnBack").addEventListener("click",goToDash);
-document.getElementById("resBtnSair").addEventListener("click",doLogout);
-document.getElementById("resBtnNova").addEventListener("click",resOpenNew);
-document.getElementById("resPrev").addEventListener("click",function(){resMonth--;if(resMonth<0){resMonth=11;resYear--;}renderReservas();if(resMetricsOpen)renderResMetrics();});
-document.getElementById("resNext").addEventListener("click",function(){resMonth++;if(resMonth>11){resMonth=0;resYear++;}renderReservas();if(resMetricsOpen)renderResMetrics();});
-document.getElementById("resTab0").addEventListener("click",function(){resTab="lista";document.getElementById("resTab0").className="tab active";document.getElementById("resTab1").className="tab";document.getElementById("resListContent").style.display="block";document.getElementById("resCalContent").style.display="none";renderReservas();});
-document.getElementById("resTab1").addEventListener("click",function(){resTab="calendario";document.getElementById("resTab0").className="tab";document.getElementById("resTab1").className="tab active";document.getElementById("resListContent").style.display="none";document.getElementById("resCalContent").style.display="block";renderReservas();});
-document.getElementById("resMetricsToggle").addEventListener("click",function(){resMetricsOpen=!resMetricsOpen;document.getElementById("resMetricsPanel").style.display=resMetricsOpen?"block":"none";document.getElementById("resMetricsToggle").innerHTML=(resMetricsOpen?"&#9650;":"&#9660;")+" Ver metricas por unidade";if(resMetricsOpen)renderResMetrics();});
-document.getElementById("resMBtnMes").addEventListener("click",function(){resMetricsPeriod="mes";document.getElementById("resMBtnMes").className="fbtn active";document.getElementById("resMBtnAno").className="fbtn";renderResMetrics();});
-document.getElementById("resMBtnAno").addEventListener("click",function(){resMetricsPeriod="ano";document.getElementById("resMBtnMes").className="fbtn";document.getElementById("resMBtnAno").className="fbtn active";renderResMetrics();});
-document.getElementById("resCloseForm").addEventListener("click",function(){document.getElementById("resFormOverlay").classList.remove("open");});
-document.getElementById("resCloseDetail").addEventListener("click",function(){document.getElementById("resDetailOverlay").classList.remove("open");});
-document.getElementById("coClose").addEventListener("click",function(){document.getElementById("checkoutOverlay").classList.remove("open");});
-document.getElementById("coConfirm").addEventListener("click",confirmCheckout);
-document.getElementById("fCheckin").addEventListener("input",calcNoites);
-document.getElementById("fCheckout").addEventListener("input",calcNoites);
-document.getElementById("fTotal").addEventListener("input",calcSaldo);
-document.getElementById("fAnticipo").addEventListener("input",calcSaldo);
-document.getElementById("fPagoAnticipo").addEventListener("change",function(){resPagoChange("anticipo");});
-document.getElementById("fPagoSaldo").addEventListener("change",function(){resPagoChange("saldo");});
-document.getElementById("fValFxAnt").addEventListener("input",calcFxAnt);
-document.getElementById("fTaxaAnt").addEventListener("input",calcFxAnt);
-document.getElementById("fValFxSaldo").addEventListener("input",calcFxSaldo);
-document.getElementById("fTaxaSaldo").addEventListener("input",calcFxSaldo);
-
-// Gestao nav
-document.getElementById("gestBtnBack").addEventListener("click",goToDash);
-document.getElementById("gestBtnSair").addEventListener("click",doLogout);
-document.getElementById("gestBtnNovo").addEventListener("click",openGestForm);
-document.getElementById("gestBtnFornec").addEventListener("click",openProvModal);
-document.getElementById("gestBtnExcel").addEventListener("click",exportExcel);
-document.getElementById("gestPrev").addEventListener("click",function(){gestMonth--;if(gestMonth<0){gestMonth=11;gestYear--;}renderGestao();});
-document.getElementById("gestNext").addEventListener("click",function(){gestMonth++;if(gestMonth>11){gestMonth=0;gestYear++;}renderGestao();});
-document.getElementById("gestTab0").addEventListener("click",function(){setGestView("dashboard");});
-document.getElementById("gestTab1").addEventListener("click",function(){setGestView("list");});
-document.getElementById("gestTab2").addEventListener("click",function(){setGestView("report");});
-document.getElementById("gestCloseForm").addEventListener("click",function(){document.getElementById("gestFormOverlay").classList.remove("open");});
-document.getElementById("gBtnIncome").addEventListener("click",function(){setGFormType("income");});
-document.getElementById("gBtnExpense").addEventListener("click",function(){setGFormType("expense");});
-document.getElementById("gFormIncomeGroup").addEventListener("change",gUpdateIncomeCats);
-document.getElementById("gFormGroup").addEventListener("change",gUpdateSubcats);
-document.getElementById("gFormCategory").addEventListener("change",gUpdateProvSelect);
-document.getElementById("gFormProv").addEventListener("change",gOnProvChange);
-document.getElementById("gBtnSave").addEventListener("click",saveGestEntry);
-document.getElementById("provClose").addEventListener("click",function(){document.getElementById("provOverlay").classList.remove("open");});
-document.getElementById("provCatSel").addEventListener("change",renderProvList);
-document.getElementById("provBtnAdd").addEventListener("click",addProv);
-
-// Usuarios
-document.getElementById("usersBtnBack").addEventListener("click",goToDash);
-document.getElementById("btnAddUser").addEventListener("click",openNewUser);
-document.getElementById("userFormClose").addEventListener("click",function(){document.getElementById("userFormOverlay").classList.remove("open");});
-document.getElementById("userFormSave").addEventListener("click",saveUser);
-
-// Start
-checkSession();
-
-})();
-</script>
+<!-- Librería para exportar a Excel (SheetJS) -->
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
