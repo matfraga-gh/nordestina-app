@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-06 18:41 -->
+<!-- BUILD_STAMP: v2026-07-06 19:05 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -327,6 +327,17 @@ canvas{max-width:100%}
         <div id="opsHistoryContent"></div>
       </div>
     </div>
+    <div class="ops-card" id="projCard" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+        <span class="sec-title" style="margin-bottom:0">Projecao do Mes</span>
+        <span style="font-size:9px;color:var(--text-soft);letter-spacing:1px">STAYS COM CHECKIN NO MES</span>
+      </div>
+      <div id="projStatus"></div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--sand-mid)">
+        <div style="font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;font-weight:600">Estado de cobranza</div>
+        <div id="projPagos"></div>
+      </div>
+    </div>
     <div id="gestViewDashboard">
       <div class="card"><span class="sec-title">Ultimos 6 meses</span><canvas id="barChart" height="175"></canvas></div>
       <div class="card" id="pieCard"><span class="sec-title">Despesas por Grupo</span><canvas id="pieChart" height="200"></canvas></div>
@@ -585,7 +596,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-06 18:41");
+console.log("Nordestina build v2026-07-06 19:05");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -1081,6 +1092,46 @@ function computeOpsMetrics(year,month){
   return{noites:noites,noitesPagas:noitesPagas,noitesCortesia:noites-noitesPagas,capacidade:capacidade,ocupacao:capacidade>0?(noites/capacidade)*100:0,preco:noitesPagas>0?vendasProrat/noitesPagas:0,receita:vendasProrat,vendasProrat:vendasProrat,vendasByCanal:vendasByCanal,despesas:despesas};
 }
 
+function computeProjecao(year,month){
+  var monRes=(allRes||[]).filter(function(r){
+    if(!r.checkin||!r.checkout||r.status==="cancelada")return false;
+    var ci=new Date(r.checkin+"T12:00:00");
+    return ci.getFullYear()===year&&ci.getMonth()===month;
+  });
+  var realizado=0,emCurso=0,confirmado=0,anticipos=0,saldosCob=0,saldosPend=0,projecaoTotal=0;
+  monRes.forEach(function(r){
+    var total=Number(r.total||0),anticipo=Number(r.anticipo||0),saldoCob=Number(r.saldo_cobrado||0);
+    projecaoTotal+=total;anticipos+=anticipo;saldosCob+=saldoCob;
+    var pending=total-anticipo-saldoCob;if(pending<0)pending=0;
+    saldosPend+=pending;
+    if(r.status==="checkout")realizado+=total;
+    else if(r.status==="checkin")emCurso+=total;
+    else confirmado+=total;
+  });
+  return{realizado:realizado,emCurso:emCurso,confirmado:confirmado,projecaoTotal:projecaoTotal,anticipos:anticipos,saldosCobrados:saldosCob,saldosPendientes:saldosPend,count:monRes.length};
+}
+
+function renderProjecao(year,month){
+  var el=document.getElementById("projCard");if(!el)return;
+  var pj=computeProjecao(year,month);
+  if(pj.count===0){el.style.display="none";return;}
+  el.style.display="block";
+  var h="";
+  h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\" style=\"color:var(--green)\">&#10003; Realizado (checkout done)</span><span class=\"detail-value\" style=\"color:var(--green);font-weight:600\">"+fmt(pj.realizado)+"</span></div>";
+  h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\" style=\"color:var(--ocean)\">&#8635; Em curso (checkin, sem checkout)</span><span class=\"detail-value\" style=\"color:var(--ocean);font-weight:600\">"+fmt(pj.emCurso)+"</span></div>";
+  h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\" style=\"color:var(--sand-dark)\">&#128197; Confirmado (sem checkin ainda)</span><span class=\"detail-value\" style=\"color:var(--sand-dark);font-weight:600\">"+fmt(pj.confirmado)+"</span></div>";
+  h+="<div class=\"detail-row\" style=\"padding:8px 0;border-top:1.5px solid var(--sand-mid);margin-top:4px\"><span class=\"detail-label\" style=\"font-weight:700;color:var(--ocean);text-transform:uppercase;font-size:11px;letter-spacing:1px\">Projecao total do mes</span><span class=\"detail-value\" style=\"font-weight:700;color:var(--ocean);font-size:14px\">"+fmt(pj.projecaoTotal)+"</span></div>";
+  document.getElementById("projStatus").innerHTML=h;
+  var p="";
+  p+="<div class=\"detail-row\" style=\"padding:4px 0;font-size:12px\"><span class=\"detail-label\" style=\"font-size:11px\">Anticipos ya cobrados</span><span class=\"detail-value\" style=\"color:var(--green);font-weight:600\">"+fmt(pj.anticipos)+"</span></div>";
+  p+="<div class=\"detail-row\" style=\"padding:4px 0;font-size:12px\"><span class=\"detail-label\" style=\"font-size:11px\">Saldos cobrados en checkin</span><span class=\"detail-value\" style=\"color:var(--ocean);font-weight:600\">"+fmt(pj.saldosCobrados)+"</span></div>";
+  p+="<div class=\"detail-row\" style=\"padding:4px 0;font-size:12px\"><span class=\"detail-label\" style=\"font-size:11px\">Saldos pendientes de cobrar</span><span class=\"detail-value\" style=\"color:var(--yellow);font-weight:600\">"+fmt(pj.saldosPendientes)+"</span></div>";
+  var pagosTotal=pj.anticipos+pj.saldosCobrados;
+  var pctCob=pj.projecaoTotal>0?(pagosTotal/pj.projecaoTotal*100).toFixed(0):0;
+  p+="<div class=\"detail-row\" style=\"padding:6px 0;font-size:12px;border-top:1px solid var(--sand-mid);margin-top:2px\"><span class=\"detail-label\" style=\"font-size:11px;font-weight:700\">Total cobrado ("+pctCob+"%)</span><span class=\"detail-value\" style=\"font-weight:700\">"+fmt(pagosTotal)+"</span></div>";
+  document.getElementById("projPagos").innerHTML=p;
+}
+
 function renderOpsHistory(){
   var el=document.getElementById("opsHistoryContent");if(!el)return;
   var rows=[];
@@ -1126,6 +1177,7 @@ function renderGestao(){
   document.querySelectorAll(".kpi")[2].style.background=bal>=0?"var(--green-bg)":"var(--red-bg)";document.getElementById("kpiResultado").style.color=bal>=0?"var(--green)":"var(--red)";
   document.getElementById("opsNoites").innerHTML=(cm.noites||"&#8212;")+(cm.noitesCortesia>0?"<div style='font-size:9px;color:var(--text-soft);font-family:Jost,sans-serif;font-weight:400;margin-top:2px'>("+cm.noitesCortesia+" cortesia)</div>":"");document.getElementById("opsOcupacao").innerHTML=cm.capacidade>0&&cm.noites>0?cm.ocupacao.toFixed(0)+"%":"&#8212;";document.getElementById("opsPreco").innerHTML=cm.noitesPagas>0?fmt(cm.preco):"&#8212;";
   renderOpsHistory();
+  renderProjecao(gestYear,gestMonth);
   if(gestTab==="dashboard")renderGestDash(f,tI,tE);
   else if(gestTab==="list")renderGestList(f);
   else renderGestReport(f,tI,tE,bal,ren,cm);
