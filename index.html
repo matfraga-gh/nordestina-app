@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-06 18:37 -->
+<!-- BUILD_STAMP: v2026-07-06 18:41 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -585,7 +585,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-06 18:37");
+console.log("Nordestina build v2026-07-06 18:41");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -1053,7 +1053,7 @@ function computeOpsMetrics(year,month){
     var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");
     return ci<monEnd&&co>monStart;
   });
-  var noites=0,noitesPagas=0,vendasProrat=0;
+  var noites=0,noitesPagas=0,vendasProrat=0,vendasByCanal={};
   monRes.forEach(function(r){
     var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");
     var totalN=(co-ci)/86400000;
@@ -1063,7 +1063,14 @@ function computeOpsMetrics(year,month){
     if(d>0){
       noites+=d;
       var totalVal=Number(r.total||0);
-      if(totalVal>0){noitesPagas+=d;vendasProrat+=totalVal*(d/totalN);}
+      if(totalVal>0){
+        noitesPagas+=d;
+        var contrib=totalVal*(d/totalN);
+        vendasProrat+=contrib;
+        var canal=r.canal||"Outro";
+        var key="Vendas "+canal;
+        vendasByCanal[key]=(vendasByCanal[key]||0)+contrib;
+      }
     }
   });
   noites=Math.round(noites);
@@ -1071,7 +1078,7 @@ function computeOpsMetrics(year,month){
   var monExp=(allEntries||[]).filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===month&&d.getFullYear()===year&&e.type==="expense";});
   var despesas=monExp.reduce(function(s,e){return s+Number(e.amount);},0);
   var capacidade=diasP*APTOS.length;
-  return{noites:noites,noitesPagas:noitesPagas,noitesCortesia:noites-noitesPagas,capacidade:capacidade,ocupacao:capacidade>0?(noites/capacidade)*100:0,preco:noitesPagas>0?vendasProrat/noitesPagas:0,receita:vendasProrat,vendasProrat:vendasProrat,despesas:despesas};
+  return{noites:noites,noitesPagas:noitesPagas,noitesCortesia:noites-noitesPagas,capacidade:capacidade,ocupacao:capacidade>0?(noites/capacidade)*100:0,preco:noitesPagas>0?vendasProrat/noitesPagas:0,receita:vendasProrat,vendasProrat:vendasProrat,vendasByCanal:vendasByCanal,despesas:despesas};
 }
 
 function renderOpsHistory(){
@@ -1158,10 +1165,10 @@ function renderGestList(f){
 }
 
 function renderGestReport(f,tI,tE,bal,ren,cm){
-  var sc=[];f.filter(function(e){return e.type==="income"&&e.reserva_id;}).forEach(function(e){if(sc.indexOf(e.category)<0)sc.push(e.category);});
-  var ac=INCOME_CATS_RES.concat(INCOME_CATS_OUT);sc.forEach(function(c){if(ac.indexOf(c)<0)ac.push(c);});
-  var rH="<span class='sec-title'>Receita</span>";
-  ac.forEach(function(cat){var t=f.filter(function(e){return e.type==="income"&&e.category===cat;}).reduce(function(s,e){return s+Number(e.amount);},0);if(t>0)rH+=rRow(cat,fmt(t),(tI>0?(t/tI*100).toFixed(1):0)+"%",false,false);});
+  var rH="<span class='sec-title'>Receita (prorateada, apenas estadias com checkout)</span>";
+  var canals=Object.keys(cm.vendasByCanal||{}).sort(function(a,b){return cm.vendasByCanal[b]-cm.vendasByCanal[a];});
+  canals.forEach(function(cat){var t=cm.vendasByCanal[cat];if(t>0)rH+=rRow(cat,fmt(t),(tI>0?(t/tI*100).toFixed(1):0)+"%",false,false);});
+  if(!canals.length)rH+="<div style=\"font-size:12px;color:var(--text-soft);padding:8px 0\">Nenhuma estadia com checkout neste mes.</div>";
   rH+=rRow("TOTAL RECEITAS",fmt(tI),"100%",true,false);
   document.getElementById("gestRepReceita").innerHTML=rH;
   var dH="<span class='sec-title'>Despesas</span>";
