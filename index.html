@@ -206,6 +206,7 @@ textarea{resize:vertical;min-height:65px}
 .rol-checkin{background:#f0e6f6;color:#6b1a6b}
 .rol-auditor{background:#f0f0f0;color:#555}
 .rol-housekeeping{background:#fff3e0;color:#e65100}
+.rol-propietario{background:#e6f0f7;color:#1a4a6b}
 .btn-sm{background:none;border:1px solid var(--sand-dark);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text-soft);cursor:pointer;font-family:'Jost',sans-serif}
 .btn-sm-red{background:none;border:1px solid var(--red);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--red);cursor:pointer;font-family:'Jost',sans-serif}
 .prov-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--sand-mid);font-size:13px}
@@ -341,6 +342,35 @@ canvas{max-width:100%}
       <div class="card" id="gestRepDespesas"></div>
       <div class="card" id="gestRepResumo"></div>
     </div>
+  </div>
+</div>
+
+<!-- ══ CONSORCIO ══════════════════════════════════════════════════════════ -->
+<div id="viewConsorcio" class="view">
+  <div class="app-header">
+    <div><div class="app-brand">&#127970; NORDESTINA</div><div class="app-sub">Consorcio</div></div>
+    <div class="app-btns">
+      <span class="app-user" id="consUser"></span>
+      <button class="abtn abtn-outline" id="consBtnBack">&#8592; Painel</button>
+      <button class="abtn abtn-sand" id="consBtnNovo">+ Novo</button>
+      <button class="abtn abtn-mid" id="consBtnConfig">&#9881;</button>
+      <button class="abtn abtn-outline" id="consBtnSair">Sair</button>
+    </div>
+  </div>
+  <div class="month-nav">
+    <button class="nav-arrow" id="consPrev">&#8249;</button>
+    <span class="month-label" id="consMonthLabel"></span>
+    <button class="nav-arrow" id="consNext">&#8250;</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="consTab0">&#128202; Dashboard</button>
+    <button class="tab" id="consTab1">&#128176; Cobros</button>
+    <button class="tab" id="consTab2">&#128203; Movimentos</button>
+  </div>
+  <div class="content">
+    <div id="consDash"></div>
+    <div id="consCobros" style="display:none"></div>
+    <div id="consMovs" style="display:none"></div>
   </div>
 </div>
 
@@ -492,10 +522,61 @@ canvas{max-width:100%}
     <label>Usuario (login)</label><input type="text" id="ufUsuario" placeholder="Ex: agustina"/>
     <label>Senha</label><input type="password" id="ufSenha" placeholder="Minimo 6 caracteres"/>
     <label>Rol</label>
-    <select id="ufRol"><option value="">Selecionar...</option><option value="master">Master</option><option value="administrativa">Administrativa</option><option value="comercial">Comercial</option><option value="checkin">Check-in</option><option value="housekeeping">Housekeeping</option><option value="auditor">Auditor</option></select>
+    <select id="ufRol"><option value="">Selecionar...</option><option value="master">Master</option><option value="administrativa">Administrativa</option><option value="comercial">Comercial</option><option value="checkin">Check-in</option><option value="housekeeping">Housekeeping</option><option value="auditor">Auditor</option><option value="propietario">Propietario</option></select>
     <label>Ativo</label>
     <select id="ufAtivo"><option value="true">Sim</option><option value="false">Nao</option></select>
     <button class="btn-save" id="userFormSave">Salvar</button>
+  </div>
+</div>
+
+<!-- ══ MODALS CONSORCIO ═══════════════════════════════════════════════ -->
+<div class="overlay" id="consFormOverlay">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">Novo Movimento</span><button class="btn-x" id="consCloseForm">&#215;</button></div>
+    <div class="type-row">
+      <button class="type-btn income-active" id="consBtnIncome">Receita</button>
+      <button class="type-btn" id="consBtnExpense">Despesa</button>
+    </div>
+    <div id="consIncomeGroupWrap"><label>Tipo de Receita</label><select id="consFormIncomeGroup"><option value="">Selecionar...</option></select></div>
+    <div id="consExpenseGroupWrap" style="display:none"><label>Grupo de Despesa</label><select id="consFormGroup"><option value="">Selecionar...</option></select></div>
+    <label>Categoria</label><select id="consFormCategory"><option value="">Categoria...</option></select>
+    <label>Valor (R$)</label><input type="number" id="consFormAmount" placeholder="0,00"/>
+    <label>Data</label><input type="date" id="consFormDate"/>
+    <label>Descricao</label><input type="text" id="consFormDesc" placeholder="Descricao (opcional)"/>
+    <button class="btn-save" id="consFormSave">Salvar</button>
+  </div>
+</div>
+
+<div class="overlay" id="consPagoOverlay">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title" id="consPagoTitle">Cobro</span><button class="btn-x" id="consPagoClose">&#215;</button></div>
+    <div id="consPagoInfo" style="font-size:14px;margin-bottom:16px;font-weight:600"></div>
+    <div class="cafe-row"><input type="checkbox" id="consPagoPago" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="consPagoPago" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Marcar como pago</label></div>
+    <label>Data do Pagamento</label><input type="date" id="consPagoData"/>
+    <label>Forma de Pagamento</label><select id="consPagoForma"><option value="">Selecionar...</option><option>Pix</option><option>Transferencia</option><option>Deposito</option><option>Contado em R$</option><option>Cartao</option><option>Outros</option></select>
+    <label>Observacao</label><textarea id="consPagoObs" placeholder="Notas..."></textarea>
+    <button class="btn-save" id="consPagoSave">Salvar</button>
+  </div>
+</div>
+
+<div class="overlay" id="consConfigOverlay">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">Configuracao</span><button class="btn-x" id="consConfigClose">&#215;</button></div>
+    <div class="form-section">
+      <div class="fsec-title">&#128176; Valores Mensais</div>
+      <label>Valor Expensa Mensal (R$)</label><input type="number" id="cfgValorExpensa" step="0.01"/>
+      <label>Aluguel Deposito de Praia (R$)</label><input type="number" id="cfgAluguelDep" step="0.01"/>
+      <label>Aluguel Area de Praia (R$)</label><input type="number" id="cfgAluguelArea" step="0.01"/>
+    </div>
+    <div class="form-section">
+      <div class="fsec-title">&#127970; Unidades e %</div>
+      <div id="cfgUnidadesList"></div>
+    </div>
+    <div class="form-section">
+      <div class="fsec-title">&#128101; Grupos e Cor</div>
+      <div id="cfgGruposList"></div>
+    </div>
+    <button class="btn-save" id="consConfigSave">Salvar Configuracao</button>
   </div>
 </div>
 
@@ -517,10 +598,12 @@ var RES_SL={pendiente:"Pendente",confirmada:"Confirmada",checkin:"Check-in feito
 var RES_SC={pendiente:"chip-pendiente",confirmada:"chip-confirmada",checkin:"chip-checkin",checkout:"chip-checkout",cancelada:"chip-cancelada"};
 var CAL_COLORS=["#1a4a6b","#2e6e9e","#c9b48a","#8b6340","#5a9ec9","#1a6b3a","#4a8ab0","#a07850","#6b3a6b","#2e7a5e"];
 var CO_ITEMS=[{id:"roupas",label:"Roupas de cama e toalhas verificadas"},{id:"eletro",label:"Eletrodomesticos funcionando"},{id:"inventario",label:"Inventario completo (louca, controles, etc)"},{id:"chave",label:"Chave / acesso entregado"}];
-var ROL_ICONS={master:"👑",administrativa:"💼",comercial:"📋",checkin:"🏠",housekeeping:"🧹",auditor:"👁"};
-var ROL_LABELS={master:"Master",administrativa:"Administrativa",comercial:"Comercial",checkin:"Check-in",housekeeping:"Housekeeping",auditor:"Auditor"};
+var ROL_ICONS={master:"👑",administrativa:"💼",comercial:"📋",checkin:"🏠",housekeeping:"🧹",auditor:"👁",propietario:"🏢"};
+var ROL_LABELS={master:"Master",administrativa:"Administrativa",comercial:"Comercial",checkin:"Check-in",housekeeping:"Housekeeping",auditor:"Auditor",propietario:"Propietario"};
 var INCOME_CATS_RES=["Vendas WhatsApp","Vendas Walk Inn","Vendas Booking","Vendas Cafe da Manha","Vendas Outras"];
 var INCOME_CATS_OUT=["Aluguel de Espaco para Evento","Venda Avulsa","Outros Ingressos"];
+var CONS_INCOME_GROUPS={"Expensa Ordinaria":["Cobro Expensa Mensal","Multa por Atraso","Juros"],"Expensa Extraordinaria":["Aporte Extraordinario","Obras","Fundo de Reserva"],"Aluguel Areas Comuns":["Deposito de Praia","Area de Praia","Outros"]};
+var CONS_INCOME_GROUP_KEYS=Object.keys(CONS_INCOME_GROUPS);
 var EXP_CATS={"Salarios e Remuneracoes":["Salarios pessoal permanente","Salarios diarios funcionarios","Salarios pessoal part-time"],"Honorarios Profissionais":["Contador","Outros honorarios"],"Honorarios de Servicos":["Servico de Lavanderia","Servicos de Manutencao","Servico de Cafe da Manha","Outros servicos"],"Consorcio":["Despesas ordinarias","Despesas extraordinarias"],"Impostos":["Simples Nacional","FGTS Funcionarios","Receita Federal","Parcelamento Simples"],"Servicos":["Energia","Gas","Servico de Internet","Telefone","Sistema de Gestao","Hosting Web"],"Comissoes de Venda":["Gestao de Vendas - Agustina","Comissoes Booking","Carol","Outras Comissoes"],"Bens de Uso":["Produtos de Limpeza","Produtos Jardim e Piscina","Suprimentos de Manutencao","Substituicao Roupas de Cama","Substituicao de Louca","Substituicao de Mobiliario","Substituicao de Fardamentos"],"Outros Gastos":["Comissoes Cartao de Credito","Comissoes Bancarias","Publicidade e Propaganda","Frete e Correio","Devolucao de Valores","Lanche Funcionarios","Parcela Emprestimo","Outros"]};
 var EXP_GROUPS=Object.keys(EXP_CATS);
 var PIE_COLORS=["#1a4a6b","#2e6e9e","#c9b48a","#8b6340","#5a9ec9","#e8d9c0","#1a6b3a","#4a8ab0","#a07850"];
@@ -535,9 +618,14 @@ var allEntries=[], allMetrics={}, allProvs=[];
 var gestMonth=new Date().getMonth(), gestYear=new Date().getFullYear();
 var gestTab="dashboard", gestFormType="income";
 var barChartInst=null, pieChartInst=null;
+// Consorcio state
+var allGrupos=[], allPropietarios=[], allUnidades=[], allCobros=[], allConsEntries=[];
+var consConfig={valor_expensa_mensal:15000,aluguel_deposito_playa:1000,aluguel_area_playa:3000};
+var consYear=new Date().getFullYear(), consMonth=new Date().getMonth();
+var consTab="dashboard", consFormType="income", consEditingPagoId=null;
 
 // ── UTILS ────────────────────────────────────────────────────────────────────
-function fmt(n){return "R$\u00a0"+Number(n||0).toLocaleString("pt-BR",{minimumFractionDigits:2});}
+function fmt(n){return "R$\u00a0"+Number(n||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtD(s){return s?s.split("-").reverse().join("/"):"—";}
 function normApto(x){return (x==null?"":String(x)).trim().toLowerCase().replace(/\s+/g," ").replace(/([a-zaaiou\u00e1\u00e9\u00ed\u00f3\u00fa\u00f1])(\d)/g,"$1 $2").replace(/(\D)0+(\d)/g,"$1$2").replace(/^(apto|apartamento|loft|departamento|depto|dep|apt)\s+/,"");}
 function nights(a,b){if(!a||!b)return 0;var d=(new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/86400000;return d>0?d:0;}
@@ -569,7 +657,7 @@ function showView(id){
   if(id==="viewLogin") document.getElementById("viewLogin").classList.add("active");
 }
 
-function isReadonly(){ return curUser && curUser.rol==="auditor"; }
+function isReadonly(){ return curUser && (curUser.rol==="auditor"||curUser.rol==="propietario"); }
 
 async function doLogin(){
   var user=document.getElementById("loginUser").value.trim().toLowerCase();
@@ -591,10 +679,12 @@ function goToDash(){
   var h="";
   if(acc.reservas) h+="<div class='dash-card' id='dcReservas'><div class='dash-icon'>&#127958;</div><div class='dash-title'>Reservas</div><div class='dash-desc'>Gestao de reservas e disponibilidade</div><span class='dash-badge "+(acc.readonly?"badge-blue":"badge-green")+"'>"+(acc.readonly?"Somente leitura":"Acesso completo")+"</span></div>";
   if(acc.admin)    h+="<div class='dash-card' id='dcGestao'><div class='dash-icon'>&#128200;</div><div class='dash-title'>Gestao Administrativa</div><div class='dash-desc'>Financas, despesas e relatorios</div><span class='dash-badge "+(acc.readonly?"badge-blue":"badge-blue")+"'>"+(acc.readonly?"Somente leitura":"Acesso completo")+"</span></div>";
+  if(acc.consorcio){var consFull=(!acc.reservas&&!acc.admin&&!acc.users)?" full":"";h+="<div class='dash-card"+consFull+"' id='dcConsorcio'><div class='dash-icon'>&#127970;</div><div class='dash-title'>Consorcio</div><div class='dash-desc'>Expensas e areas comuns</div><span class='dash-badge "+(acc.readonly?"badge-blue":"badge-green")+"'>"+(acc.readonly?"Somente leitura":"Acesso completo")+"</span></div>";}
   if(acc.users)    h+="<div class='dash-card full' id='dcUsuarios'><div class='dash-icon'>&#128101;</div><div class='dash-title'>Usuarios</div><div class='dash-desc'>Gerenciar usuarios e permissoes</div><span class='dash-badge badge-amber'>Master</span></div>";
   document.getElementById("dashGrid").innerHTML=h;
   if(acc.reservas) document.getElementById("dcReservas").addEventListener("click",openReservas);
   if(acc.admin)    document.getElementById("dcGestao").addEventListener("click",openGestao);
+  if(acc.consorcio)document.getElementById("dcConsorcio").addEventListener("click",openConsorcio);
   if(acc.users)    document.getElementById("dcUsuarios").addEventListener("click",openUsuarios);
   showView("viewDash");
 }
@@ -604,8 +694,9 @@ function getAccess(){
   return{
     reservas:["master","comercial","checkin","auditor","housekeeping"].indexOf(r)>=0,
     admin:["master","administrativa","auditor"].indexOf(r)>=0,
+    consorcio:["master","administrativa","auditor","propietario"].indexOf(r)>=0,
     users:r==="master",
-    readonly:r==="auditor"
+    readonly:r==="auditor"||r==="propietario"
   };
 }
 
@@ -955,18 +1046,20 @@ function computeOpsMetrics(year,month){
     var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");
     return ci<=monEnd&&co>monStart;
   });
-  var noites=0;
+  var noites=0,vendasProrat=0;
   monRes.forEach(function(r){
     var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");
+    var totalN=(co-ci)/86400000;
+    if(totalN<=0)return;
     var s2=ci<monStart?monStart:ci,e2=co>monEnd?monEnd:co;
     var d=(e2-s2)/86400000;
-    if(d>0)noites+=d;
+    if(d>0){noites+=d;vendasProrat+=Number(r.total||0)*(d/totalN);}
   });
   noites=Math.round(noites);
   var monEntries=(allEntries||[]).filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===month&&d.getFullYear()===year&&e.type==="income";});
   var receita=monEntries.reduce(function(s,e){return s+Number(e.amount);},0);
   var capacidade=diasP*APTOS.length;
-  return{noites:noites,capacidade:capacidade,ocupacao:capacidade>0?(noites/capacidade)*100:0,preco:noites>0?receita/noites:0,receita:receita};
+  return{noites:noites,capacidade:capacidade,ocupacao:capacidade>0?(noites/capacidade)*100:0,preco:noites>0?vendasProrat/noites:0,receita:receita,vendasProrat:vendasProrat};
 }
 
 function renderOpsHistory(){
@@ -1007,7 +1100,7 @@ function renderGestao(){
   document.getElementById("kpiReceita").textContent=fmt(tI);document.getElementById("kpiDespesas").textContent=fmt(tE);document.getElementById("kpiResultado").textContent=fmt(bal);document.getElementById("kpiRentab").textContent=ren.toFixed(1)+"%";
   document.querySelectorAll(".kpi")[2].style.background=bal>=0?"var(--green-bg)":"var(--red-bg)";document.getElementById("kpiResultado").style.color=bal>=0?"var(--green)":"var(--red)";
   var cm=computeOpsMetrics(gestYear,gestMonth);
-  document.getElementById("opsNoites").innerHTML=cm.noites||"&#8212;";document.getElementById("opsOcupacao").innerHTML=cm.capacidade>0&&cm.noites>0?cm.ocupacao.toFixed(0)+"%":"&#8212;";document.getElementById("opsPreco").innerHTML=cm.noites>0?fmt(tI/cm.noites):"&#8212;";
+  document.getElementById("opsNoites").innerHTML=cm.noites||"&#8212;";document.getElementById("opsOcupacao").innerHTML=cm.capacidade>0&&cm.noites>0?cm.ocupacao.toFixed(0)+"%":"&#8212;";document.getElementById("opsPreco").innerHTML=cm.noites>0?fmt(cm.preco):"&#8212;";
   renderOpsHistory();
   if(gestTab==="dashboard")renderGestDash(f,tI,tE);
   else if(gestTab==="list")renderGestList(f);
@@ -1059,8 +1152,9 @@ function renderGestReport(f,tI,tE,bal,ren,cm){
   dH+=rRow("TOTAL DESPESAS",fmt(tE),"100%",true,false);
   document.getElementById("gestRepDespesas").innerHTML=dH;
   var rs=document.getElementById("gestRepResumo");rs.style.background=bal>=0?"var(--green-bg)":"var(--red-bg)";
-  var ocup=cm.capacidade>0?(cm.noites/cm.capacidade*100).toFixed(0)+"%":"—",preco=cm.noites>0?fmt(tI/cm.noites):"—";
+  var ocup=cm.capacidade>0?(cm.noites/cm.capacidade*100).toFixed(0)+"%":"—",preco=cm.noites>0?fmt(cm.preco):"—";
   var sH=rRow("RESULTADO",fmt(bal),"",true,false)+rRow("Rentabilidade",ren.toFixed(1)+"%","",false,false);
+  if(cm.vendasProrat>0)sH+=rRow("Vendas do mes (prorateado)",fmt(cm.vendasProrat),"",false,false);
   if(cm.noites>0)sH+=rRow("Noites Vendidas",cm.noites,"",false,false);
   if(cm.capacidade>0)sH+=rRow("% Ocupacao",ocup,"",false,false);
   if(cm.noites>0)sH+=rRow("Preco Medio/Noite",preco,"",false,false);
@@ -1198,6 +1292,294 @@ async function exportExcel(){
   setTimeout(function(){dl(toCSV(res[2]||[],[{k:"categoria",l:"Categoria"},{k:"nome",l:"Fornecedor"}]),"nordestina_fornecedores_"+stamp+".csv");showToast("3 arquivos exportados!");},800);
 }
 
+// ── CONSORCIO ────────────────────────────────────────────────────────────────
+function openConsorcio(){
+  document.getElementById("consUser").textContent=curUser.nome;
+  var ro=isReadonly();
+  document.getElementById("consBtnNovo").style.display=ro?"none":"inline-block";
+  document.getElementById("consBtnConfig").style.display=(curUser.rol==="master")?"inline-block":"none";
+  showView("viewConsorcio");
+  loadConsorcio();
+}
+
+async function loadConsorcio(){
+  var res=await Promise.all([
+    api("cons_grupos?select=*&order=nome.asc"),
+    api("cons_propietarios?select=*&order=nome.asc"),
+    api("cons_unidades?select=*&order=ordem.asc"),
+    api("cons_config?select=*&limit=1"),
+    api("cons_cobros?select=*&order=mes_ref.desc"),
+    api("cons_entries?select=*&order=date.desc")
+  ]);
+  allGrupos=res[0]||[];
+  allPropietarios=res[1]||[];
+  allUnidades=res[2]||[];
+  if(res[3]&&res[3][0]) consConfig=res[3][0];
+  allCobros=res[4]||[];
+  allConsEntries=res[5]||[];
+  renderConsorcio();
+}
+
+function grupoOf(unidadeId){
+  var u=allUnidades.find(function(x){return x.id===unidadeId;});if(!u)return null;
+  var p=allPropietarios.find(function(x){return x.id===u.propietario_id;});if(!p)return null;
+  return allGrupos.find(function(x){return x.id===p.grupo_id;});
+}
+function cobroFor(unidadeId,mesRef){return allCobros.find(function(c){return c.unidade_id===unidadeId&&c.mes_ref===mesRef;});}
+function currentConsMesRef(){return consYear+"-"+(consMonth+1<10?"0":"")+(consMonth+1);}
+
+function renderConsorcio(){
+  document.getElementById("consMonthLabel").textContent=MONTHS[consMonth]+" "+consYear;
+  ["dashboard","cobros","movimentos"].forEach(function(t,i){document.getElementById("consTab"+i).className="tab"+(consTab===t?" active":"");});
+  document.getElementById("consDash").style.display=consTab==="dashboard"?"block":"none";
+  document.getElementById("consCobros").style.display=consTab==="cobros"?"block":"none";
+  document.getElementById("consMovs").style.display=consTab==="movimentos"?"block":"none";
+  if(consTab==="dashboard")renderConsDash();
+  else if(consTab==="cobros")renderConsCobros();
+  else renderConsMovs();
+}
+
+function renderConsDash(){
+  var mes=currentConsMesRef();
+  var mesCobros=allCobros.filter(function(c){return c.mes_ref===mes;});
+  var totalEsperado=mesCobros.reduce(function(s,c){return s+Number(c.valor);},0);
+  var totalRecebido=mesCobros.filter(function(c){return c.pago;}).reduce(function(s,c){return s+Number(c.valor);},0);
+  var mora=totalEsperado-totalRecebido;
+  if(mesCobros.length===0) totalEsperado=Number(consConfig.valor_expensa_mensal||0);
+  var mesEntries=allConsEntries.filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===consMonth&&d.getFullYear()===consYear;});
+  var tI=mesEntries.filter(function(e){return e.type==="income";}).reduce(function(s,e){return s+Number(e.amount);},0);
+  var tE=mesEntries.filter(function(e){return e.type==="expense";}).reduce(function(s,e){return s+Number(e.amount);},0);
+  var extras=Number(consConfig.aluguel_deposito_playa||0)+Number(consConfig.aluguel_area_playa||0);
+  var totalReceita=totalRecebido+tI;
+  var resultado=totalReceita-tE;
+  var h="<div class=\"kpi-grid\" style=\"grid-template-columns:1fr 1fr\">";
+  h+="<div class=\"kpi\" style=\"background:var(--green-bg)\"><div class=\"kpi-label\">Recebido</div><div class=\"kpi-value\" style=\"color:var(--green)\">"+fmt(totalRecebido)+"</div></div>";
+  h+="<div class=\"kpi\" style=\"background:var(--yellow-bg)\"><div class=\"kpi-label\">Em Mora</div><div class=\"kpi-value\" style=\"color:var(--yellow)\">"+fmt(mora)+"</div></div>";
+  h+="<div class=\"kpi\" style=\"background:var(--red-bg)\"><div class=\"kpi-label\">Despesas</div><div class=\"kpi-value\" style=\"color:var(--red)\">"+fmt(tE)+"</div></div>";
+  h+="<div class=\"kpi\" style=\"background:"+(resultado>=0?"var(--green-bg)":"var(--red-bg)")+"\"><div class=\"kpi-label\">Resultado</div><div class=\"kpi-value\" style=\"color:"+(resultado>=0?"var(--green)":"var(--red)")+"\">"+fmt(resultado)+"</div></div>";
+  h+="</div>";
+  var moraByGrupo={};
+  mesCobros.filter(function(c){return !c.pago;}).forEach(function(c){var g=grupoOf(c.unidade_id);if(!g)return;if(!moraByGrupo[g.id])moraByGrupo[g.id]={grupo:g,total:0,count:0};moraByGrupo[g.id].total+=Number(c.valor);moraByGrupo[g.id].count++;});
+  var moraArr=Object.values(moraByGrupo).sort(function(a,b){return b.total-a.total;});
+  h+="<div class=\"card\"><span class=\"sec-title\">Propietarios em Mora</span>";
+  if(!moraArr.length){h+="<div style=\"font-size:12px;color:var(--green);padding:8px 0\">&#10003; Todos em dia</div>";}
+  else moraArr.forEach(function(m){h+="<div style=\"display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--sand-mid);border-left:4px solid "+m.grupo.cor+";padding-left:10px\"><div><div style=\"font-weight:600;color:"+m.grupo.cor+"\">"+m.grupo.nome+"</div><div style=\"font-size:11px;color:var(--text-soft)\">"+m.count+" unidade"+(m.count!==1?"s":"")+"</div></div><div style=\"font-size:14px;font-weight:700;color:var(--red)\">"+fmt(m.total)+"</div></div>";});
+  h+="</div>";
+  h+="<div class=\"card\"><span class=\"sec-title\">Ingressos Extras (mensais)</span>";
+  h+="<div style=\"display:flex;justify-content:space-between;padding:4px 0;font-size:13px\"><span>Aluguel deposito de praia</span><span style=\"font-weight:600\">"+fmt(consConfig.aluguel_deposito_playa)+"</span></div>";
+  h+="<div style=\"display:flex;justify-content:space-between;padding:4px 0;font-size:13px\"><span>Aluguel area de praia</span><span style=\"font-weight:600\">"+fmt(consConfig.aluguel_area_playa)+"</span></div>";
+  h+="<div style=\"display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--sand-mid);margin-top:4px;font-size:13px;font-weight:700;color:var(--ocean)\"><span>Total Extras</span><span>"+fmt(extras)+"</span></div>";
+  h+="</div>";
+  document.getElementById("consDash").innerHTML=h;
+}
+
+function renderConsCobros(){
+  var mes=currentConsMesRef();
+  var mesCobros=allCobros.filter(function(c){return c.mes_ref===mes;});
+  var ro=isReadonly();
+  var h="";
+  if(mesCobros.length===0){
+    if(!ro){h+="<div class=\"card\" style=\"text-align:center;padding:24px 12px\"><div style=\"color:var(--text-soft);font-size:13px;margin-bottom:12px\">Ainda nao ha cobros gerados para "+MONTHS[consMonth]+" "+consYear+"</div><button class=\"btn-save\" id=\"btnGerarCobros\" style=\"max-width:280px;margin:0 auto\">Gerar cobros do mes</button></div>";}
+    else{h+="<div class=\"card empty\">Ainda nao ha cobros gerados para "+MONTHS[consMonth]+" "+consYear+"</div>";}
+    document.getElementById("consCobros").innerHTML=h;
+    var b=document.getElementById("btnGerarCobros");if(b)b.addEventListener("click",gerarCobrosMes);
+    return;
+  }
+  var byGrupo={};
+  allUnidades.forEach(function(u){var g=grupoOf(u.id);if(!g)return;if(!byGrupo[g.id])byGrupo[g.id]={grupo:g,unidades:[]};byGrupo[g.id].unidades.push(u);});
+  var grupoArr=Object.values(byGrupo).sort(function(a,b){return a.grupo.nome.localeCompare(b.grupo.nome);});
+  grupoArr.forEach(function(gr){
+    var groupCobros=gr.unidades.map(function(u){return cobroFor(u.id,mes);}).filter(function(c){return c;});
+    var totalG=groupCobros.reduce(function(s,c){return s+Number(c.valor);},0);
+    var paidG=groupCobros.filter(function(c){return c.pago;}).reduce(function(s,c){return s+Number(c.valor);},0);
+    h+="<div class=\"card\" style=\"border-left:5px solid "+gr.grupo.cor+"\">";
+    h+="<div style=\"display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px\"><div><div style=\"font-family:Cormorant Garamond,serif;font-size:16px;font-weight:700;color:"+gr.grupo.cor+"\">"+gr.grupo.nome+"</div><div style=\"font-size:10px;color:var(--text-soft)\">"+gr.unidades.length+" unidade"+(gr.unidades.length!==1?"s":"")+"</div></div><div style=\"text-align:right\"><div style=\"font-size:13px;font-weight:700;color:"+gr.grupo.cor+"\">"+fmt(totalG)+"</div><div style=\"font-size:10px;color:"+(paidG>=totalG?"var(--green)":"var(--yellow)")+"\">"+fmt(paidG)+" recebido</div></div></div>";
+    gr.unidades.forEach(function(u){
+      var c=cobroFor(u.id,mes);if(!c)return;
+      var chip=c.pago?"chip-checkin":"chip-pendiente";
+      var chipL=c.pago?"Pago":"Pendente";
+      h+="<div class=\"detail-row\" style=\"cursor:"+(ro?"default":"pointer")+";padding:8px 0\" "+(ro?"":"data-cbid=\""+c.id+"\"")+"><span class=\"detail-label\">"+u.nome+" &middot; "+Number(u.percentual).toFixed(2)+"%</span><span class=\"detail-value\">"+fmt(c.valor)+" <span class=\"chip "+chip+"\">"+chipL+"</span>"+(c.pago&&c.data_pagamento?"<br><span style=\"font-size:10px;color:var(--text-soft)\">"+fmtD(c.data_pagamento)+(c.forma_pagamento?" &middot; "+c.forma_pagamento:"")+"</span>":"")+"</span></div>";
+    });
+    h+="</div>";
+  });
+  document.getElementById("consCobros").innerHTML=h;
+  document.querySelectorAll("[data-cbid]").forEach(function(el){el.addEventListener("click",function(){openPagoModal(parseInt(el.dataset.cbid));});});
+}
+
+async function gerarCobrosMes(){
+  var mes=currentConsMesRef();
+  var total=Number(consConfig.valor_expensa_mensal||15000);
+  var toCreate=allUnidades.map(function(u){return{unidade_id:u.id,mes_ref:mes,valor:Number((total*Number(u.percentual)/100).toFixed(2)),pago:false};});
+  var res=await api("cons_cobros","POST",toCreate);
+  if(res){await loadConsorcio();showToast("Cobros gerados: "+toCreate.length+" unidades");}
+  else showToast("Erro ao gerar cobros");
+}
+
+function openPagoModal(cobroId){
+  consEditingPagoId=cobroId;
+  var c=allCobros.find(function(x){return x.id===cobroId;});if(!c)return;
+  var u=allUnidades.find(function(x){return x.id===c.unidade_id;});
+  var g=grupoOf(c.unidade_id);
+  document.getElementById("consPagoTitle").textContent=(u?u.nome:"")+" &middot; "+MONTHS[consMonth]+" "+consYear;
+  document.getElementById("consPagoInfo").innerHTML="<span style=\"color:"+(g?g.cor:"var(--ocean)")+"\">"+(g?g.nome:"")+"</span> &middot; "+fmt(c.valor);
+  document.getElementById("consPagoData").value=c.data_pagamento||new Date().toISOString().slice(0,10);
+  document.getElementById("consPagoForma").value=c.forma_pagamento||"";
+  document.getElementById("consPagoObs").value=c.observacao||"";
+  document.getElementById("consPagoPago").checked=!!c.pago;
+  document.getElementById("consPagoOverlay").classList.add("open");
+}
+
+async function savePago(){
+  var c=allCobros.find(function(x){return x.id===consEditingPagoId;});if(!c)return;
+  var pago=document.getElementById("consPagoPago").checked;
+  var dataP=document.getElementById("consPagoData").value;
+  var patch={pago:pago,data_pagamento:pago?dataP:null,forma_pagamento:pago?document.getElementById("consPagoForma").value:null,observacao:document.getElementById("consPagoObs").value};
+  var res=await api("cons_cobros?id=eq."+consEditingPagoId,"PATCH",patch);
+  if(res){
+    if(pago){
+      var u=allUnidades.find(function(x){return x.id===c.unidade_id;});
+      var g=grupoOf(c.unidade_id);
+      var e={type:"income",group_name:"Expensa Ordinaria",category:"Cobro Expensa Mensal",amount:Number(c.valor),date:dataP,description:"Cobro "+MONTHS[consMonth]+" "+consYear+" \u2014 "+(u?u.nome:"")+" ("+(g?g.nome:"")+")",cobro_id:consEditingPagoId};
+      var ex=await api("cons_entries?cobro_id=eq."+consEditingPagoId);
+      if(ex&&ex.length){await api("cons_entries?id=eq."+ex[0].id,"PATCH",e);}
+      else{await api("cons_entries","POST",e);}
+    } else {
+      await api("cons_entries?cobro_id=eq."+consEditingPagoId,"DELETE");
+    }
+    document.getElementById("consPagoOverlay").classList.remove("open");
+    await loadConsorcio();
+    showToast("Pagamento atualizado");
+  } else showToast("Erro ao salvar");
+}
+
+function renderConsMovs(){
+  var mesEntries=allConsEntries.filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===consMonth&&d.getFullYear()===consYear;});
+  var ro=isReadonly();
+  var h="<div class=\"card\"><span class=\"sec-title\">Movimentos - "+MONTHS[consMonth]+" "+consYear+"</span>";
+  if(!mesEntries.length){h+="<div class=\"empty\">Nenhum movimento neste mes.</div>";}
+  else mesEntries.forEach(function(e){
+    var isI=e.type==="income";
+    h+="<div class=\"entry-row\"><div class=\"entry-dot\" style=\"background:"+(isI?"#2e6e9e":"#c9b48a")+"\"></div><div class=\"entry-info\"><div class=\"entry-cat\">"+e.category+"</div>";
+    if(e.group_name)h+="<div class=\"entry-group\">"+e.group_name+"</div>";
+    if(e.description)h+="<div class=\"entry-desc\">"+e.description+"</div>";
+    h+="<div class=\"entry-date\">"+e.date+"</div>";
+    if(e.cobro_id)h+="<span class=\"entry-source\">&#128279; Cobro</span>";
+    h+="</div><div class=\"entry-amt\" style=\"color:"+(isI?"var(--green)":"var(--red)")+"\">"+(isI?"+":"-")+fmt(e.amount)+"</div>";
+    if(!e.cobro_id&&!ro)h+="<button class=\"btn-del-ce\" data-cid=\""+e.id+"\" style=\"background:none;border:none;cursor:pointer;color:#c8a0a0;font-size:16px\">&#128465;</button>";
+    else h+="<div style=\"width:24px\"></div>";
+    h+="</div>";
+  });
+  h+="</div>";
+  document.getElementById("consMovs").innerHTML=h;
+  document.querySelectorAll(".btn-del-ce").forEach(function(btn){btn.addEventListener("click",function(){delConsEntry(parseInt(btn.dataset.cid));});});
+}
+
+async function delConsEntry(id){
+  if(!window.confirm("Apagar este movimento?"))return;
+  await api("cons_entries?id=eq."+id,"DELETE");
+  await loadConsorcio();
+  showToast("Removido");
+}
+
+function openConsForm(){
+  document.getElementById("consFormDate").value=new Date().toISOString().slice(0,10);
+  document.getElementById("consFormAmount").value="";
+  document.getElementById("consFormDesc").value="";
+  setConsFormType("income");
+  document.getElementById("consFormOverlay").classList.add("open");
+}
+
+function setConsFormType(t){
+  consFormType=t;
+  document.getElementById("consBtnIncome").className="type-btn"+(t==="income"?" income-active":"");
+  document.getElementById("consBtnExpense").className="type-btn"+(t==="expense"?" expense-active":"");
+  if(t==="income"){
+    document.getElementById("consIncomeGroupWrap").style.display="block";
+    document.getElementById("consExpenseGroupWrap").style.display="none";
+    var h="<option value=''>Selecionar...</option>";CONS_INCOME_GROUP_KEYS.forEach(function(g){h+="<option>"+g+"</option>";});
+    document.getElementById("consFormIncomeGroup").innerHTML=h;
+    document.getElementById("consFormIncomeGroup").value="";
+    document.getElementById("consFormCategory").innerHTML="<option value=''>Selecionar grupo primeiro...</option>";
+  } else {
+    document.getElementById("consIncomeGroupWrap").style.display="none";
+    document.getElementById("consExpenseGroupWrap").style.display="block";
+    var h="<option value=''>Selecionar...</option>";EXP_GROUPS.forEach(function(g){h+="<option>"+g+"</option>";});
+    document.getElementById("consFormGroup").innerHTML=h;
+    document.getElementById("consFormGroup").value="";
+    document.getElementById("consFormCategory").innerHTML="<option value=''>Selecionar grupo primeiro...</option>";
+  }
+}
+
+function consUpdateIncomeCats(){
+  var g=document.getElementById("consFormIncomeGroup").value;
+  var cats=CONS_INCOME_GROUPS[g]||[];
+  var h="<option value=''>Categoria...</option>";cats.forEach(function(c){h+="<option>"+c+"</option>";});
+  document.getElementById("consFormCategory").innerHTML=h;
+}
+
+function consUpdateSubcats(){
+  var g=document.getElementById("consFormGroup").value;
+  var cats=g?EXP_CATS[g]||[]:[];
+  var h="<option value=''>Categoria...</option>";cats.forEach(function(c){h+="<option>"+c+"</option>";});
+  document.getElementById("consFormCategory").innerHTML=h;
+}
+
+async function saveConsEntry(){
+  var cat=document.getElementById("consFormCategory").value;
+  var amt=document.getElementById("consFormAmount").value;
+  var date=document.getElementById("consFormDate").value;
+  var grp=consFormType==="expense"?document.getElementById("consFormGroup").value:document.getElementById("consFormIncomeGroup").value;
+  var desc=document.getElementById("consFormDesc").value;
+  if(!cat||!amt||!date){showToast("Preencha todos os campos");return;}
+  var res=await api("cons_entries","POST",{type:consFormType,group_name:grp,category:cat,amount:parseFloat(amt),date:date,description:desc});
+  if(res){document.getElementById("consFormOverlay").classList.remove("open");await loadConsorcio();showToast("Salvo!");}
+  else showToast("Erro ao salvar");
+}
+
+function openConsConfig(){
+  document.getElementById("cfgValorExpensa").value=Number(consConfig.valor_expensa_mensal||15000);
+  document.getElementById("cfgAluguelDep").value=Number(consConfig.aluguel_deposito_playa||0);
+  document.getElementById("cfgAluguelArea").value=Number(consConfig.aluguel_area_playa||0);
+  renderCfgUnidades();
+  renderCfgGrupos();
+  document.getElementById("consConfigOverlay").classList.add("open");
+}
+
+function renderCfgUnidades(){
+  var h="";
+  allUnidades.forEach(function(u){
+    var g=grupoOf(u.id);
+    h+="<div style=\"display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--sand-mid);border-left:3px solid "+(g?g.cor:"var(--ocean)")+";padding-left:8px\"><span style=\"font-size:12px\">"+u.nome+"</span><span style=\"display:flex;gap:4px;align-items:center\"><input type=\"number\" step=\"0.01\" data-uid=\""+u.id+"\" class=\"cfg-uid\" value=\""+Number(u.percentual).toFixed(2)+"\" style=\"width:70px;padding:4px 6px;margin:0;font-size:12px\"/><span style=\"font-size:11px\">%</span></span></div>";
+  });
+  var total=allUnidades.reduce(function(s,u){return s+Number(u.percentual);},0);
+  h+="<div style=\"display:flex;justify-content:space-between;padding:8px 0;font-weight:700\"><span style=\"font-size:12px\">TOTAL</span><span style=\"color:"+(Math.abs(total-100)<0.1?"var(--green)":"var(--red)")+";font-size:13px\">"+total.toFixed(2)+"%</span></div>";
+  document.getElementById("cfgUnidadesList").innerHTML=h;
+}
+
+function renderCfgGrupos(){
+  var h="";
+  allGrupos.forEach(function(g){
+    h+="<div style=\"display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--sand-mid)\"><input type=\"color\" data-gcid=\""+g.id+"\" class=\"cfg-gcolor\" value=\""+g.cor+"\" style=\"width:40px;height:32px;padding:0;margin:0;border:1px solid var(--sand-dark);cursor:pointer\"/><input type=\"text\" data-gnid=\""+g.id+"\" class=\"cfg-gname\" value=\""+g.nome+"\" style=\"flex:1;padding:6px;margin:0;font-size:13px\"/></div>";
+  });
+  document.getElementById("cfgGruposList").innerHTML=h;
+}
+
+async function saveConsConfig(){
+  var valorExp=parseFloat(document.getElementById("cfgValorExpensa").value)||15000;
+  var alugDep=parseFloat(document.getElementById("cfgAluguelDep").value)||0;
+  var alugArea=parseFloat(document.getElementById("cfgAluguelArea").value)||0;
+  await api("cons_config?id=eq.1","PATCH",{valor_expensa_mensal:valorExp,aluguel_deposito_playa:alugDep,aluguel_area_playa:alugArea});
+  var uidUpdates=[];
+  document.querySelectorAll(".cfg-uid").forEach(function(inp){uidUpdates.push({id:parseInt(inp.dataset.uid),percentual:parseFloat(inp.value)||0});});
+  for(var i=0;i<uidUpdates.length;i++){await api("cons_unidades?id=eq."+uidUpdates[i].id,"PATCH",{percentual:uidUpdates[i].percentual});}
+  var grupos=[];
+  document.querySelectorAll(".cfg-gcolor").forEach(function(inp){var id=parseInt(inp.dataset.gcid);var nameInp=document.querySelector(".cfg-gname[data-gnid='"+id+"']");grupos.push({id:id,cor:inp.value,nome:nameInp.value});});
+  for(var i=0;i<grupos.length;i++){await api("cons_grupos?id=eq."+grupos[i].id,"PATCH",{cor:grupos[i].cor,nome:grupos[i].nome});}
+  document.getElementById("consConfigOverlay").classList.remove("open");
+  await loadConsorcio();
+  showToast("Configuracao salva");
+}
+
 // ── USUARIOS ─────────────────────────────────────────────────────────────────
 function openUsuarios(){showView("viewUsuarios");loadUsers();}
 async function loadUsers(){var d=await api("usuarios?select=*&order=rol.asc,nome.asc");allUsers=d||[];renderUsers();}
@@ -1293,6 +1675,27 @@ document.getElementById("usersBtnBack").addEventListener("click",goToDash);
 document.getElementById("btnAddUser").addEventListener("click",openNewUser);
 document.getElementById("userFormClose").addEventListener("click",function(){document.getElementById("userFormOverlay").classList.remove("open");});
 document.getElementById("userFormSave").addEventListener("click",saveUser);
+
+// Consorcio
+document.getElementById("consBtnBack").addEventListener("click",goToDash);
+document.getElementById("consBtnSair").addEventListener("click",doLogout);
+document.getElementById("consBtnNovo").addEventListener("click",openConsForm);
+document.getElementById("consBtnConfig").addEventListener("click",openConsConfig);
+document.getElementById("consPrev").addEventListener("click",function(){consMonth--;if(consMonth<0){consMonth=11;consYear--;}renderConsorcio();});
+document.getElementById("consNext").addEventListener("click",function(){consMonth++;if(consMonth>11){consMonth=0;consYear++;}renderConsorcio();});
+document.getElementById("consTab0").addEventListener("click",function(){consTab="dashboard";renderConsorcio();});
+document.getElementById("consTab1").addEventListener("click",function(){consTab="cobros";renderConsorcio();});
+document.getElementById("consTab2").addEventListener("click",function(){consTab="movimentos";renderConsorcio();});
+document.getElementById("consCloseForm").addEventListener("click",function(){document.getElementById("consFormOverlay").classList.remove("open");});
+document.getElementById("consBtnIncome").addEventListener("click",function(){setConsFormType("income");});
+document.getElementById("consBtnExpense").addEventListener("click",function(){setConsFormType("expense");});
+document.getElementById("consFormIncomeGroup").addEventListener("change",consUpdateIncomeCats);
+document.getElementById("consFormGroup").addEventListener("change",consUpdateSubcats);
+document.getElementById("consFormSave").addEventListener("click",saveConsEntry);
+document.getElementById("consPagoClose").addEventListener("click",function(){document.getElementById("consPagoOverlay").classList.remove("open");});
+document.getElementById("consPagoSave").addEventListener("click",savePago);
+document.getElementById("consConfigClose").addEventListener("click",function(){document.getElementById("consConfigOverlay").classList.remove("open");});
+document.getElementById("consConfigSave").addEventListener("click",saveConsConfig);
 
 // Start
 checkSession();
