@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!-- BUILD_STAMP: v2026-07-06 18:37 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -87,7 +88,7 @@ body{background:var(--sand);font-family:'Jost',sans-serif;color:var(--text);min-
 .kpi-label{font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;font-weight:600}
 .kpi-value{font-size:12px;font-weight:600;line-height:1.2;word-break:break-all}
 .ops-card{background:var(--white);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 2px 12px rgba(26,74,107,.08);border:1px solid rgba(26,74,107,.06)}
-.ops-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;text-align:center;padding:4px 0}
+.ops-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;padding:4px 0}
 .ops-value{font-size:17px;font-weight:700;color:var(--ocean);font-family:'Cormorant Garamond',serif}
 .ops-label{font-size:10px;color:var(--text-soft);margin-top:2px}
 
@@ -320,7 +321,6 @@ canvas{max-width:100%}
         <div><div class="ops-value" id="opsNoites">&#8212;</div><div class="ops-label">Noites Vendidas</div></div>
         <div><div class="ops-value" id="opsOcupacao">&#8212;</div><div class="ops-label">% Ocupacao</div></div>
         <div><div class="ops-value" id="opsPreco">&#8212;</div><div class="ops-label">Preco Medio</div></div>
-        <div><div class="ops-value" id="opsVendas">&#8212;</div><div class="ops-label">Vendas Mes</div></div>
       </div>
       <div id="opsHistory" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--sand-mid)">
         <div style="font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;font-weight:600">Ultimos 6 meses</div>
@@ -585,6 +585,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
+console.log("Nordestina build v2026-07-06 18:37");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -1040,11 +1041,15 @@ async function loadGestao(){
 }
 
 function computeOpsMetrics(year,month){
-  // Align month boundaries with the T12:00:00 convention used by checkin/checkout
+  // Only stays where CHECKOUT has already occurred count (economic report, not financial).
+  // Future stays and stays in progress do NOT contribute noites/vendas/ocupacao until they check out.
+  var td=new Date();
+  var todayStr=td.getFullYear()+"-"+(td.getMonth()+1<10?"0":"")+(td.getMonth()+1)+"-"+(td.getDate()<10?"0":"")+td.getDate();
   var monStart=new Date(year,month,1,12,0,0),monEnd=new Date(year,month+1,1,12,0,0);
   var diasP=dim(year,month);
   var monRes=(allRes||[]).filter(function(r){
     if(!r.checkin||!r.checkout||r.status==="cancelada"||r.status==="pendiente")return false;
+    if(r.checkout>todayStr)return false; // stay not yet completed
     var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");
     return ci<monEnd&&co>monStart;
   });
@@ -1063,12 +1068,10 @@ function computeOpsMetrics(year,month){
   });
   noites=Math.round(noites);
   noitesPagas=Math.round(noitesPagas);
-  var monEntries=(allEntries||[]).filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===month&&d.getFullYear()===year&&e.type==="income";});
-  var receita=monEntries.reduce(function(s,e){return s+Number(e.amount);},0);
-  var receitaManual=monEntries.filter(function(e){return !e.reserva_id;}).reduce(function(s,e){return s+Number(e.amount);},0);
-  var receitaTotal=vendasProrat+receitaManual;
+  var monExp=(allEntries||[]).filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===month&&d.getFullYear()===year&&e.type==="expense";});
+  var despesas=monExp.reduce(function(s,e){return s+Number(e.amount);},0);
   var capacidade=diasP*APTOS.length;
-  return{noites:noites,noitesPagas:noitesPagas,noitesCortesia:noites-noitesPagas,capacidade:capacidade,ocupacao:capacidade>0?(noites/capacidade)*100:0,preco:noitesPagas>0?vendasProrat/noitesPagas:0,receita:receita,vendasProrat:vendasProrat,receitaTotal:receitaTotal,receitaManual:receitaManual};
+  return{noites:noites,noitesPagas:noitesPagas,noitesCortesia:noites-noitesPagas,capacidade:capacidade,ocupacao:capacidade>0?(noites/capacidade)*100:0,preco:noitesPagas>0?vendasProrat/noitesPagas:0,receita:vendasProrat,vendasProrat:vendasProrat,despesas:despesas};
 }
 
 function renderOpsHistory(){
@@ -1084,8 +1087,8 @@ function renderOpsHistory(){
   h+="<th style='text-align:center;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px'>Noites</th>";
   h+="<th style='text-align:center;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px'>Ocup.</th>";
   h+="<th style='text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px'>Preco Medio</th>";
-  h+="<th style='text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px'>Vendas</th>";
   h+="<th style='text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px'>Receita</th>";
+  h+="<th style='text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px'>Despesas</th>";
   h+="</tr></thead><tbody>";
   rows.forEach(function(r){
     var m=r.metrics;
@@ -1095,9 +1098,9 @@ function renderOpsHistory(){
     h+="<td style='padding:6px 4px;"+cellCol+"'>"+r.label+"</td>";
     h+="<td style='text-align:center;padding:6px 4px'>"+(m.noites>0?m.noites:"&#8212;")+"</td>";
     h+="<td style='text-align:center;padding:6px 4px'>"+(m.capacidade>0&&m.noites>0?m.ocupacao.toFixed(0)+"%":"&#8212;")+"</td>";
-    h+="<td style='text-align:right;padding:6px 4px'>"+(m.noites>0?fmt(m.preco):"&#8212;")+"</td>";
-    h+="<td style='text-align:right;padding:6px 4px;font-weight:600'>"+(m.vendasProrat>0?fmt(m.vendasProrat):"&#8212;")+"</td>";
-    h+="<td style='text-align:right;padding:6px 4px;font-weight:700;color:var(--green)'>"+(m.receitaTotal>0?fmt(m.receitaTotal):"&#8212;")+"</td>";
+    h+="<td style='text-align:right;padding:6px 4px'>"+(m.noitesPagas>0?fmt(m.preco):"&#8212;")+"</td>";
+    h+="<td style='text-align:right;padding:6px 4px;font-weight:700;color:var(--green)'>"+(m.receita>0?fmt(m.receita):"&#8212;")+"</td>";
+    h+="<td style='text-align:right;padding:6px 4px;font-weight:600;color:var(--red)'>"+(m.despesas>0?fmt(m.despesas):"&#8212;")+"</td>";
     h+="</tr>";
   });
   h+="</tbody></table>";
@@ -1108,15 +1111,13 @@ function renderGestao(){
   document.getElementById("gestMonthLabel").textContent=MONTHS[gestMonth]+" "+gestYear;
   var cm=computeOpsMetrics(gestYear,gestMonth);
   var f=allEntries.filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===gestMonth&&d.getFullYear()===gestYear;});
-  // Receita = vendas prorateadas de reservas + income manual sem reserva_id (evitando contar anticipos como vendas)
-  var tIManual=f.filter(function(e){return e.type==="income"&&!e.reserva_id;}).reduce(function(s,e){return s+Number(e.amount);},0);
-  var tI=Number(cm.vendasProrat||0)+tIManual;
-  var tE=f.filter(function(e){return e.type==="expense";}).reduce(function(s,e){return s+Number(e.amount);},0);
+  // Receita = vendas prorateadas de estadias que ja fizeram checkout (nao conta anticipos nem estadias futuras)
+  var tI=Number(cm.receita||0);
+  var tE=Number(cm.despesas||0);
   var bal=tI-tE,ren=tI>0?(bal/tI)*100:0;
   document.getElementById("kpiReceita").textContent=fmt(tI);document.getElementById("kpiDespesas").textContent=fmt(tE);document.getElementById("kpiResultado").textContent=fmt(bal);document.getElementById("kpiRentab").textContent=ren.toFixed(1)+"%";
   document.querySelectorAll(".kpi")[2].style.background=bal>=0?"var(--green-bg)":"var(--red-bg)";document.getElementById("kpiResultado").style.color=bal>=0?"var(--green)":"var(--red)";
   document.getElementById("opsNoites").innerHTML=(cm.noites||"&#8212;")+(cm.noitesCortesia>0?"<div style='font-size:9px;color:var(--text-soft);font-family:Jost,sans-serif;font-weight:400;margin-top:2px'>("+cm.noitesCortesia+" cortesia)</div>":"");document.getElementById("opsOcupacao").innerHTML=cm.capacidade>0&&cm.noites>0?cm.ocupacao.toFixed(0)+"%":"&#8212;";document.getElementById("opsPreco").innerHTML=cm.noitesPagas>0?fmt(cm.preco):"&#8212;";
-  document.getElementById("opsVendas").innerHTML=cm.vendasProrat>0?fmt(cm.vendasProrat):"&#8212;";
   renderOpsHistory();
   if(gestTab==="dashboard")renderGestDash(f,tI,tE);
   else if(gestTab==="list")renderGestList(f);
