@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-07 08:43 -->
+<!-- BUILD_STAMP: v2026-07-07 09:23 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -605,7 +605,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-07 08:43");
+console.log("Nordestina build v2026-07-07 09:23");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -1528,10 +1528,30 @@ function renderConsDash(){
   if(!moraArr.length){h+="<div style=\"font-size:12px;color:var(--green);padding:8px 0\">&#10003; Todos em dia</div>";}
   else moraArr.forEach(function(m){h+="<div style=\"display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--sand-mid);border-left:4px solid "+m.grupo.cor+";padding-left:10px\"><div><div style=\"font-weight:600;color:"+m.grupo.cor+"\">"+m.grupo.nome+"</div><div style=\"font-size:11px;color:var(--text-soft)\">"+m.count+" unidade"+(m.count!==1?"s":"")+"</div></div><div style=\"font-size:14px;font-weight:700;color:var(--red)\">"+fmt(m.total)+"</div></div>";});
   h+="</div>";
-  h+="<div class=\"card\"><span class=\"sec-title\">Ingressos Extras (mensais)</span>";
-  h+="<div style=\"display:flex;justify-content:space-between;padding:4px 0;font-size:13px\"><span>Aluguel deposito de praia</span><span style=\"font-weight:600\">"+fmt(consConfig.aluguel_deposito_playa)+"</span></div>";
-  h+="<div style=\"display:flex;justify-content:space-between;padding:4px 0;font-size:13px\"><span>Aluguel area de praia</span><span style=\"font-weight:600\">"+fmt(consConfig.aluguel_area_playa)+"</span></div>";
-  h+="<div style=\"display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--sand-mid);margin-top:4px;font-size:13px;font-weight:700;color:var(--ocean)\"><span>Total Extras</span><span>"+fmt(extras)+"</span></div>";
+  h+="<div class=\"card\"><span class=\"sec-title\">Aluguéis Extras (mensais)</span>";
+  var depC=mesCobros.find(function(c){return c.tipo==='aluguel_deposito';});
+  var areaC=mesCobros.find(function(c){return c.tipo==='aluguel_area';});
+  function extraRow(label,cobro,configVal){
+    var valor,chip,chipL,cobroId=null;
+    if(cobro){valor=Number(cobro.valor);chip=cobro.pago?'chip-checkin':'chip-pendiente';chipL=cobro.pago?'Pago':'Pendente';cobroId=cobro.id;}
+    else if(Number(configVal||0)>0){valor=Number(configVal);chip='chip-cancelada';chipL='Sem cobro';}
+    else return '';
+    var attr=cobroId?' data-cbid=\''+cobroId+'\' style=\'cursor:pointer\'':'';
+    var html='';
+    html+='<div'+attr+' style=\'display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px\'>';
+    html+='<span>'+label+' <span class=\''+('chip '+chip)+'\' style=\'margin-left:6px;font-size:9px\'>'+chipL+'</span>';
+    if(cobro&&cobro.pago&&cobro.data_pagamento)html+='<div style=\'font-size:10px;color:var(--text-soft);margin-top:2px\'>'+fmtD(cobro.data_pagamento)+(cobro.forma_pagamento?' &middot; '+cobro.forma_pagamento:'')+'</div>';
+    html+='</span>';
+    html+='<span style=\'font-weight:600\'>'+fmt(valor)+'</span>';
+    html+='</div>';
+    return html;
+  }
+  h+=extraRow("Aluguel depósito de praia",depC,consConfig.aluguel_deposito_playa);
+  h+=extraRow("Aluguel área de praia",areaC,consConfig.aluguel_area_playa);
+  var totExtras=(depC?Number(depC.valor):Number(consConfig.aluguel_deposito_playa||0))+(areaC?Number(areaC.valor):Number(consConfig.aluguel_area_playa||0));
+  var recExtras=(depC&&depC.pago?Number(depC.valor):0)+(areaC&&areaC.pago?Number(areaC.valor):0);
+  h+="<div style=\"display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--sand-mid);margin-top:4px;font-size:13px;font-weight:700;color:var(--ocean)\"><span>Total esperado</span><span>"+fmt(totExtras)+"</span></div>";
+  h+="<div style=\"display:flex;justify-content:space-between;padding:4px 0;font-size:11px;color:var(--green)\"><span>Recebido</span><span>"+fmt(recExtras)+"</span></div>";
   h+="</div>";
   document.getElementById("consDash").innerHTML=h;
 }
@@ -1565,6 +1585,21 @@ function renderConsCobros(){
     });
     h+="</div>";
   });
+  // Aluguéis Extras card
+  var extrasCobros=mesCobros.filter(function(c){return c.tipo&&c.tipo!=='expensa';});
+  if(extrasCobros.length>0){
+    var totalE=extrasCobros.reduce(function(s,c){return s+Number(c.valor);},0);
+    var paidE=extrasCobros.filter(function(c){return c.pago;}).reduce(function(s,c){return s+Number(c.valor);},0);
+    h+="<div class=\"card\" style=\"border-left:5px solid var(--sand-dark)\">";
+    h+="<div style=\"display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px\"><div><div style=\"font-family:Cormorant Garamond,serif;font-size:16px;font-weight:700;color:var(--sand-dark)\">Aluguéis Extras</div><div style=\"font-size:10px;color:var(--text-soft)\">"+extrasCobros.length+" item"+(extrasCobros.length!==1?"s":"")+"</div></div><div style=\"text-align:right\"><div style=\"font-size:13px;font-weight:700;color:var(--sand-dark)\">"+fmt(totalE)+"</div><div style=\"font-size:10px;color:"+(paidE>=totalE?"var(--green)":"var(--yellow)")+"\">"+fmt(paidE)+" recebido</div></div></div>";
+    extrasCobros.forEach(function(c){
+      var label=c.tipo==='aluguel_deposito'?'Depósito de Praia':c.tipo==='aluguel_area'?'Área de Praia':'Extras';
+      var chip=c.pago?"chip-checkin":"chip-pendiente";
+      var chipL=c.pago?"Pago":"Pendente";
+      h+="<div class=\"detail-row\" style=\"cursor:"+(ro?"default":"pointer")+";padding:8px 0\" "+(ro?"":"data-cbid=\""+c.id+"\"")+"><span class=\"detail-label\">"+label+"</span><span class=\"detail-value\">"+fmt(c.valor)+" <span class=\"chip "+chip+"\">"+chipL+"</span>"+(c.pago&&c.data_pagamento?"<br><span style=\"font-size:10px;color:var(--text-soft)\">"+fmtD(c.data_pagamento)+(c.forma_pagamento?" &middot; "+c.forma_pagamento:"")+"</span>":"")+"</span></div>";
+    });
+    h+="</div>";
+  }
   document.getElementById("consCobros").innerHTML=h;
   document.querySelectorAll("[data-cbid]").forEach(function(el){el.addEventListener("click",function(){openPagoModal(parseInt(el.dataset.cbid));});});
 }
@@ -1572,19 +1607,25 @@ function renderConsCobros(){
 async function gerarCobrosMes(){
   var mes=currentConsMesRef();
   var total=Number(consConfig.valor_expensa_mensal||15000);
-  var toCreate=allUnidades.map(function(u){return{unidade_id:u.id,mes_ref:mes,valor:Number((total*Number(u.percentual)/100).toFixed(2)),pago:false};});
+  var toCreate=allUnidades.map(function(u){return{unidade_id:u.id,mes_ref:mes,valor:Number((total*Number(u.percentual)/100).toFixed(2)),pago:false,tipo:'expensa'};});
+  var dep=Number(consConfig.aluguel_deposito_playa||0);
+  if(dep>0)toCreate.push({unidade_id:null,mes_ref:mes,valor:dep,pago:false,tipo:'aluguel_deposito'});
+  var area=Number(consConfig.aluguel_area_playa||0);
+  if(area>0)toCreate.push({unidade_id:null,mes_ref:mes,valor:area,pago:false,tipo:'aluguel_area'});
   var res=await api("cons_cobros","POST",toCreate);
-  if(res){await loadConsorcio();showToast("Cobros gerados: "+toCreate.length+" unidades");}
+  if(res){await loadConsorcio();showToast("Cobros gerados: "+toCreate.length+" itens");}
   else showToast("Erro ao gerar cobros");
 }
 
 function openPagoModal(cobroId){
   consEditingPagoId=cobroId;
   var c=allCobros.find(function(x){return x.id===cobroId;});if(!c)return;
-  var u=allUnidades.find(function(x){return x.id===c.unidade_id;});
-  var g=grupoOf(c.unidade_id);
-  document.getElementById("consPagoTitle").textContent=(u?u.nome:"")+" &middot; "+MONTHS[consMonth]+" "+consYear;
-  document.getElementById("consPagoInfo").innerHTML="<span style=\"color:"+(g?g.cor:"var(--ocean)")+"\">"+(g?g.nome:"")+"</span> &middot; "+fmt(c.valor);
+  var title,info;
+  if(c.tipo==='aluguel_deposito'){title="Depósito de Praia · "+MONTHS[consMonth]+" "+consYear;info="<span style=\"color:var(--sand-dark)\">Aluguéis Extras</span> &middot; "+fmt(c.valor);}
+  else if(c.tipo==='aluguel_area'){title="Área de Praia · "+MONTHS[consMonth]+" "+consYear;info="<span style=\"color:var(--sand-dark)\">Aluguéis Extras</span> &middot; "+fmt(c.valor);}
+  else{var u=allUnidades.find(function(x){return x.id===c.unidade_id;});var g=grupoOf(c.unidade_id);title=(u?u.nome:"")+" · "+MONTHS[consMonth]+" "+consYear;info="<span style=\"color:"+(g?g.cor:"var(--ocean)")+"\">"+(g?g.nome:"")+"</span> &middot; "+fmt(c.valor);}
+  document.getElementById("consPagoTitle").textContent=title;
+  document.getElementById("consPagoInfo").innerHTML=info;
   document.getElementById("consPagoData").value=c.data_pagamento||new Date().toISOString().slice(0,10);
   document.getElementById("consPagoForma").value=c.forma_pagamento||"";
   document.getElementById("consPagoObs").value=c.observacao||"";
@@ -1600,9 +1641,10 @@ async function savePago(){
   var res=await api("cons_cobros?id=eq."+consEditingPagoId,"PATCH",patch);
   if(res){
     if(pago){
-      var u=allUnidades.find(function(x){return x.id===c.unidade_id;});
-      var g=grupoOf(c.unidade_id);
-      var e={type:"income",group_name:"Expensa Ordinaria",category:"Cobro Expensa Mensal",amount:Number(c.valor),date:dataP,description:"Cobro "+MONTHS[consMonth]+" "+consYear+" \u2014 "+(u?u.nome:"")+" ("+(g?g.nome:"")+")",cobro_id:consEditingPagoId};
+      var e;
+      if(c.tipo==='aluguel_deposito'){e={type:"income",group_name:"Aluguel Areas Comuns",category:"Deposito de Praia",amount:Number(c.valor),date:dataP,description:"Aluguel Depósito de Praia "+MONTHS[consMonth]+" "+consYear,cobro_id:consEditingPagoId};}
+      else if(c.tipo==='aluguel_area'){e={type:"income",group_name:"Aluguel Areas Comuns",category:"Area de Praia",amount:Number(c.valor),date:dataP,description:"Aluguel Área de Praia "+MONTHS[consMonth]+" "+consYear,cobro_id:consEditingPagoId};}
+      else{var u=allUnidades.find(function(x){return x.id===c.unidade_id;});var g=grupoOf(c.unidade_id);e={type:"income",group_name:"Expensa Ordinaria",category:"Cobro Expensa Mensal",amount:Number(c.valor),date:dataP,description:"Cobro "+MONTHS[consMonth]+" "+consYear+" \u2014 "+(u?u.nome:"")+" ("+(g?g.nome:"")+")",cobro_id:consEditingPagoId};}
       var ex=await api("cons_entries?cobro_id=eq."+consEditingPagoId);
       if(ex&&ex.length){await api("cons_entries?id=eq."+ex[0].id,"PATCH",e);}
       else{await api("cons_entries","POST",e);}
