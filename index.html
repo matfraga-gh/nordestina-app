@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-06 19:05 -->
+<!-- BUILD_STAMP: v2026-07-07 08:43 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -338,6 +338,13 @@ canvas{max-width:100%}
         <div id="projPagos"></div>
       </div>
     </div>
+    <div class="ops-card" id="cashInCard" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+        <span class="sec-title" style="margin-bottom:0">Ingressos Bancarios do Mes</span>
+        <span style="font-size:9px;color:var(--text-soft);letter-spacing:1px">CASH IN REAL</span>
+      </div>
+      <div id="cashInList"></div>
+    </div>
     <div id="gestViewDashboard">
       <div class="card"><span class="sec-title">Ultimos 6 meses</span><canvas id="barChart" height="175"></canvas></div>
       <div class="card" id="pieCard"><span class="sec-title">Despesas por Grupo</span><canvas id="pieChart" height="200"></canvas></div>
@@ -430,6 +437,7 @@ canvas{max-width:100%}
     <div class="form-section">
       <div class="fsec-title">&#128176; Anticipo</div>
       <label>Valor Anticipo (R$)</label><input type="number" id="fAnticipo" placeholder="0,00"/>
+      <label>Data do Anticipo</label><input type="date" id="fDataAnt"/>
       <label>Forma de Pagamento</label><select id="fPagoAnticipo"><option value="">Selecionar...</option></select>
       <div class="fx-box" id="fxAnticipo">
         <div class="fx-title" id="fxAntLabel">Cotacao</div>
@@ -445,6 +453,7 @@ canvas{max-width:100%}
     <div class="form-section" id="secCheckinForm" style="display:none">
       <div class="fsec-title">&#127968; Check-in</div>
       <label>Saldo Cobrado (R$)</label><input type="number" id="fSaldoCob" placeholder="0,00"/>
+      <label>Data do Saldo</label><input type="date" id="fDataSaldo"/>
       <label>Forma de Pagamento Saldo</label><select id="fPagoSaldo"><option value="">Selecionar...</option></select>
       <div class="fx-box" id="fxSaldo">
         <div class="fx-title" id="fxSaldoLabel">Cotacao</div>
@@ -596,7 +605,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-06 19:05");
+console.log("Nordestina build v2026-07-07 08:43");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -606,6 +615,7 @@ var H={"Content-Type":"application/json","apikey":SB_KEY,"Authorization":"Bearer
 var APTOS=["Loft 04","Loft 09","Loft 01","Loft 07","Loft 08","Loft 10","Loft 05","Loft 11","Loft 02","Loft 03","Loft 06","Casa Nordestina"];
 var MONTHS=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 var PAGOS=["Pendente","Contado em R$","Contado em USD","Contado em EU$","Contado em USD (Arg)","Contado em AR$ (Arg)","Cartao de Credito","Link Stripe","KamiPay","Pix","Booking Pagamentos"];
+var PAGOS_BANK=["Cartao de Credito","Link Stripe","KamiPay","Pix","Booking Pagamentos"]; // formas que caem no banco
 var PAGOS_FX={"Contado em USD":{moeda:"USD",label:"Cotacao USD -> R$"},"Contado em EU$":{moeda:"EUR",label:"Cotacao EUR -> R$"},"Contado em USD (Arg)":{moeda:"USD",label:"Cotacao USD (Arg) -> R$"},"Contado em AR$ (Arg)":{moeda:"ARS",label:"Cotacao ARS -> R$"}};
 var RES_SL={pendiente:"Pendente",confirmada:"Confirmada",checkin:"Check-in feito",checkout:"Checkout feito",cancelada:"Cancelada"};
 var RES_SC={pendiente:"chip-pendiente",confirmada:"chip-confirmada",checkin:"chip-checkin",checkout:"chip-checkout",cancelada:"chip-cancelada"};
@@ -933,7 +943,10 @@ function resPopulateSelects(){
 
 function resResetForm(){
   resPopulateSelects();
-  ["fCheckin","fCheckout","fNome","fDoc","fTotal","fAnticipo","fObsCom","fSaldoCob","fObsCheckin","fValFxAnt","fTaxaAnt","fValFxSaldo","fTaxaSaldo"].forEach(function(id){document.getElementById(id).value="";});
+  ["fCheckin","fCheckout","fNome","fDoc","fTotal","fAnticipo","fObsCom","fSaldoCob","fObsCheckin","fValFxAnt","fTaxaAnt","fValFxSaldo","fTaxaSaldo","fDataAnt","fDataSaldo"].forEach(function(id){document.getElementById(id).value="";});
+  var td=new Date();var todayStr=td.getFullYear()+"-"+(td.getMonth()+1<10?"0":"")+(td.getMonth()+1)+"-"+(td.getDate()<10?"0":"")+td.getDate();
+  document.getElementById("fDataAnt").value=todayStr;
+  document.getElementById("fDataSaldo").value=todayStr;
   document.getElementById("fCanal").value="";document.getElementById("fAdultos").value="2";document.getElementById("fCriancas").value="0";document.getElementById("fCafe").checked=false;
   document.getElementById("noitesCalc").textContent="—";document.getElementById("saldoCalc").textContent="R$ 0,00";
   document.getElementById("fxAnticipo").style.display="none";document.getElementById("fxSaldo").style.display="none";
@@ -949,6 +962,8 @@ function resFillForm(r){
   document.getElementById("fObsCom").value=r.obs_comercial||"";document.getElementById("fSaldoCob").value=r.saldo_cobrado||"";document.getElementById("fPagoSaldo").value=r.pago_saldo||"";
   document.getElementById("fObsCheckin").value=r.obs_checkin||"";document.getElementById("fAdultos").value=r.adultos!=null?r.adultos:"2";document.getElementById("fCriancas").value=r.criancas!=null?r.criancas:"0";
   document.getElementById("fCafe").checked=r.cafe||false;
+  document.getElementById("fDataAnt").value=r.data_anticipo||"";
+  document.getElementById("fDataSaldo").value=r.data_saldo||"";
   calcNoites();calcSaldo();resPagoChange("anticipo");resPagoChange("saldo");
 }
 
@@ -977,7 +992,7 @@ function getFxD(tipo){
 
 function resGetBaseData(){
   var fxA=getFxD("anticipo");
-  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,canal:document.getElementById("fCanal").value,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked};
+  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,canal:document.getElementById("fCanal").value,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,data_anticipo:document.getElementById("fDataAnt").value||null,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked};
 }
 
 function checkSolap(apto,ci,co,exId){
@@ -993,14 +1008,14 @@ async function syncAnticipo(rid,reserva){
   if(!reserva.anticipo||reserva.anticipo<=0)return;
   var ex=await api("entries?reserva_id=eq."+rid+"&tipo_receita=eq.anticipo");
   var fxD=reserva.fx_moeda_anticipo?" ["+reserva.fx_moeda_anticipo+" "+reserva.fx_valor_anticipo+" x "+reserva.fx_taxa_anticipo+"]":"";
-  var e={type:"income",group_name:"",category:"Vendas "+(reserva.canal||"WhatsApp"),amount:reserva.anticipo,date:reserva.checkin||new Date().toISOString().slice(0,10),description:"Anticipo — "+(reserva.nome||"")+" — "+(reserva.apto||"")+" ("+fmtD(reserva.checkin)+"->"+fmtD(reserva.checkout)+") "+(reserva.pago_anticipo||"")+fxD,reserva_id:rid,tipo_receita:"anticipo"};
+  var e={type:"income",group_name:"",category:"Vendas "+(reserva.canal||"WhatsApp"),amount:reserva.anticipo,date:reserva.data_anticipo||reserva.checkin||new Date().toISOString().slice(0,10),description:"Anticipo — "+(reserva.nome||"")+" — "+(reserva.apto||"")+" ("+fmtD(reserva.checkin)+"->"+fmtD(reserva.checkout)+") "+(reserva.pago_anticipo||"")+fxD,reserva_id:rid,tipo_receita:"anticipo"};
   if(ex&&ex.length>0)await api("entries?id=eq."+ex[0].id,"PATCH",e);else await api("entries","POST",e);
 }
 async function syncSaldo(rid,reserva){
   if(!reserva.saldo_cobrado||reserva.saldo_cobrado<=0)return;
   var ex=await api("entries?reserva_id=eq."+rid+"&tipo_receita=eq.saldo");
   var fxD=reserva.fx_moeda_saldo?" ["+reserva.fx_moeda_saldo+" "+reserva.fx_valor_saldo+" x "+reserva.fx_taxa_saldo+"]":"";
-  var e={type:"income",group_name:"",category:"Vendas "+(reserva.canal||"WhatsApp"),amount:reserva.saldo_cobrado,date:reserva.checkin||new Date().toISOString().slice(0,10),description:"Saldo — "+(reserva.nome||"")+" — "+(reserva.apto||"")+" ("+fmtD(reserva.checkin)+"->"+fmtD(reserva.checkout)+") "+(reserva.pago_saldo||"")+fxD,reserva_id:rid,tipo_receita:"saldo"};
+  var e={type:"income",group_name:"",category:"Vendas "+(reserva.canal||"WhatsApp"),amount:reserva.saldo_cobrado,date:reserva.data_saldo||reserva.checkin||new Date().toISOString().slice(0,10),description:"Saldo — "+(reserva.nome||"")+" — "+(reserva.apto||"")+" ("+fmtD(reserva.checkin)+"->"+fmtD(reserva.checkout)+") "+(reserva.pago_saldo||"")+fxD,reserva_id:rid,tipo_receita:"saldo"};
   if(ex&&ex.length>0)await api("entries?id=eq."+ex[0].id,"PATCH",e);else await api("entries","POST",e);
 }
 
@@ -1016,7 +1031,7 @@ async function resSaveNew(status){
 }
 async function resSaveCheckin(){
   var saldo=parseFloat(document.getElementById("fSaldoCob").value)||0,fxS=getFxD("saldo");
-  var patch={saldo_cobrado:saldo,pago_saldo:document.getElementById("fPagoSaldo").value,obs_checkin:document.getElementById("fObsCheckin").value,status:"checkin",fx_moeda_saldo:fxS?fxS.moeda:null,fx_valor_saldo:fxS?fxS.valor_fx:null,fx_taxa_saldo:fxS?fxS.taxa:null};
+  var patch={saldo_cobrado:saldo,pago_saldo:document.getElementById("fPagoSaldo").value,data_saldo:document.getElementById("fDataSaldo").value||null,obs_checkin:document.getElementById("fObsCheckin").value,status:"checkin",fx_moeda_saldo:fxS?fxS.moeda:null,fx_valor_saldo:fxS?fxS.valor_fx:null,fx_taxa_saldo:fxS?fxS.taxa:null};
   var res=await api("reservas?id=eq."+resEditingId,"PATCH",patch);
   if(res){var r=allRes.find(function(x){return x.id===resEditingId;});await syncSaldo(resEditingId,Object.assign({},r,patch));document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Check-in registrado!");}
   else showToast("Erro ao salvar");
@@ -1026,7 +1041,7 @@ async function resUpdateRes(){
   if(new Date(d.checkout+"T12:00:00")<=new Date(d.checkin+"T12:00:00")){showToast("Check-out deve ser posterior ao check-in");return;}
   if(checkSolap(d.apto,d.checkin,d.checkout,resEditingId)){showToast("Conflito: "+d.apto+" ja tem reserva nessas datas");return;}
   var fxS=getFxD("saldo");
-  d.saldo_cobrado=parseFloat(document.getElementById("fSaldoCob").value)||null;d.pago_saldo=document.getElementById("fPagoSaldo").value;d.obs_checkin=document.getElementById("fObsCheckin").value;
+  d.saldo_cobrado=parseFloat(document.getElementById("fSaldoCob").value)||null;d.pago_saldo=document.getElementById("fPagoSaldo").value;d.data_saldo=document.getElementById("fDataSaldo").value||null;d.obs_checkin=document.getElementById("fObsCheckin").value;
   d.fx_moeda_saldo=fxS?fxS.moeda:null;d.fx_valor_saldo=fxS?fxS.valor_fx:null;d.fx_taxa_saldo=fxS?fxS.taxa:null;
   var res=await api("reservas?id=eq."+resEditingId,"PATCH",d);
   if(res){await syncAnticipo(resEditingId,Object.assign({},d,{id:resEditingId}));if(d.saldo_cobrado)await syncSaldo(resEditingId,Object.assign({},d,{id:resEditingId}));document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Atualizado!");}
@@ -1132,6 +1147,77 @@ function renderProjecao(year,month){
   document.getElementById("projPagos").innerHTML=p;
 }
 
+function computeCashIn(year,month){
+  var monEntries=(allEntries||[]).filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===month&&d.getFullYear()===year&&e.type==="income";});
+  var anticipos=0,saldos=0; // bank only
+  var antDeste=0,antFuturos=0,antPasados=0;
+  var cashAnt=0,cashSaldo=0; // cash from reservas (goes to Otros)
+  var cashAntDeste=0,cashAntFuturos=0,cashAntPasados=0;
+  var otrosManual=0; // manual entries (Aluguel Espaco, etc.)
+  var monStart=new Date(year,month,1),monEnd=new Date(year,month+1,0,23,59,59);
+  monEntries.forEach(function(e){
+    var amt=Number(e.amount||0);
+    if(e.reserva_id&&e.tipo_receita==="anticipo"){
+      var res=(allRes||[]).find(function(r){return r.id===e.reserva_id;});
+      var pago=res?res.pago_anticipo:"";
+      var isBank=PAGOS_BANK.indexOf(pago)>=0;
+      var bucket="d";
+      if(res&&res.checkin){var ci=new Date(res.checkin+"T12:00:00");if(ci>monEnd)bucket="f";else if(ci<monStart)bucket="p";}
+      if(isBank){
+        anticipos+=amt;
+        if(bucket==="d")antDeste+=amt;else if(bucket==="f")antFuturos+=amt;else antPasados+=amt;
+      }else{
+        cashAnt+=amt;
+        if(bucket==="d")cashAntDeste+=amt;else if(bucket==="f")cashAntFuturos+=amt;else cashAntPasados+=amt;
+      }
+    }else if(e.reserva_id&&e.tipo_receita==="saldo"){
+      var res=(allRes||[]).find(function(r){return r.id===e.reserva_id;});
+      var pago=res?res.pago_saldo:"";
+      if(PAGOS_BANK.indexOf(pago)>=0)saldos+=amt;else cashSaldo+=amt;
+    }else if(!e.reserva_id){otrosManual+=amt;}
+  });
+  var totalBancario=anticipos+saldos;
+  var totalCash=cashAnt+cashSaldo;
+  var totalOtros=totalCash+otrosManual;
+  var totalGeral=totalBancario+totalOtros;
+  return{anticipos:anticipos,saldos:saldos,antDeste:antDeste,antFuturos:antFuturos,antPasados:antPasados,totalBancario:totalBancario,cashAnt:cashAnt,cashSaldo:cashSaldo,cashAntDeste:cashAntDeste,cashAntFuturos:cashAntFuturos,cashAntPasados:cashAntPasados,totalCash:totalCash,otrosManual:otrosManual,totalOtros:totalOtros,totalGeral:totalGeral};
+}
+
+function renderCashIn(year,month){
+  var el=document.getElementById("cashInCard");if(!el)return;
+  var ci=computeCashIn(year,month);
+  if(ci.totalGeral===0){el.style.display="none";return;}
+  el.style.display="block";
+  var h="";
+  // BANK section (Simples Nacional base)
+  h+="<div style=\"font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;font-weight:600\">Formas bancarias (Pix, cartao, transferencia, Booking)</div>";
+  h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\" style=\"color:var(--green);font-weight:600\">Anticipos recebidos</span><span class=\"detail-value\" style=\"color:var(--green);font-weight:700\">"+fmt(ci.anticipos)+"</span></div>";
+  if(ci.antDeste>0)h+="<div style=\"display:flex;justify-content:space-between;padding:3px 0 3px 14px;font-size:11px;color:var(--text-soft)\"><span>&middot; para stays deste mes</span><span>"+fmt(ci.antDeste)+"</span></div>";
+  if(ci.antFuturos>0)h+="<div style=\"display:flex;justify-content:space-between;padding:3px 0 3px 14px;font-size:11px;color:var(--text-soft)\"><span>&middot; para stays futuros</span><span>"+fmt(ci.antFuturos)+"</span></div>";
+  if(ci.antPasados>0)h+="<div style=\"display:flex;justify-content:space-between;padding:3px 0 3px 14px;font-size:11px;color:var(--text-soft)\"><span>&middot; para stays passados</span><span>"+fmt(ci.antPasados)+"</span></div>";
+  h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\" style=\"color:var(--ocean);font-weight:600\">Saldos cobrados</span><span class=\"detail-value\" style=\"color:var(--ocean);font-weight:700\">"+fmt(ci.saldos)+"</span></div>";
+  h+="<div class=\"detail-row\" style=\"padding:8px 0;border-top:1.5px solid var(--sand-mid);margin-top:4px\"><span class=\"detail-label\" style=\"font-weight:700;color:var(--ocean);text-transform:uppercase;font-size:11px;letter-spacing:1px\">TOTAL BANCARIO</span><span class=\"detail-value\" style=\"font-weight:700;color:var(--ocean);font-size:14px\">"+fmt(ci.totalBancario)+"</span></div>";
+  h+="<div style=\"font-size:10px;color:var(--text-soft);padding-top:4px;font-style:italic\">Base para Simples Nacional. Debe coincidir com seu extrato bancario do mes.</div>";
+  // OTROS section (non-bank, informative)
+  if(ci.totalOtros>0){
+    h+="<div style=\"margin-top:16px;padding-top:12px;border-top:1px dashed var(--sand-mid)\">";
+    h+="<div style=\"font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;font-weight:600\">Otros Ingresos (nao bancarios)</div>";
+    if(ci.cashAnt>0){
+      h+="<div class=\"detail-row\" style=\"padding:5px 0;font-size:12px\"><span class=\"detail-label\" style=\"font-size:11px\">Anticipos em dinheiro</span><span class=\"detail-value\" style=\"color:var(--sand-dark);font-weight:600\">"+fmt(ci.cashAnt)+"</span></div>";
+      if(ci.cashAntDeste>0)h+="<div style=\"display:flex;justify-content:space-between;padding:2px 0 2px 14px;font-size:10px;color:var(--text-soft)\"><span>&middot; stays deste mes</span><span>"+fmt(ci.cashAntDeste)+"</span></div>";
+      if(ci.cashAntFuturos>0)h+="<div style=\"display:flex;justify-content:space-between;padding:2px 0 2px 14px;font-size:10px;color:var(--text-soft)\"><span>&middot; stays futuros</span><span>"+fmt(ci.cashAntFuturos)+"</span></div>";
+      if(ci.cashAntPasados>0)h+="<div style=\"display:flex;justify-content:space-between;padding:2px 0 2px 14px;font-size:10px;color:var(--text-soft)\"><span>&middot; stays passados</span><span>"+fmt(ci.cashAntPasados)+"</span></div>";
+    }
+    if(ci.cashSaldo>0)h+="<div class=\"detail-row\" style=\"padding:5px 0;font-size:12px\"><span class=\"detail-label\" style=\"font-size:11px\">Saldos em dinheiro</span><span class=\"detail-value\" style=\"color:var(--sand-dark);font-weight:600\">"+fmt(ci.cashSaldo)+"</span></div>";
+    if(ci.otrosManual>0)h+="<div class=\"detail-row\" style=\"padding:5px 0;font-size:12px\"><span class=\"detail-label\" style=\"font-size:11px\">Entradas manuais</span><span class=\"detail-value\" style=\"color:var(--sand-dark);font-weight:600\">"+fmt(ci.otrosManual)+"</span></div>";
+    h+="<div class=\"detail-row\" style=\"padding:6px 0;border-top:1px solid var(--sand-mid);margin-top:2px;font-size:12px\"><span class=\"detail-label\" style=\"font-size:11px;font-weight:700\">TOTAL OTROS</span><span class=\"detail-value\" style=\"font-weight:700;color:var(--sand-dark)\">"+fmt(ci.totalOtros)+"</span></div>";
+    h+="</div>";
+    // Grand total
+    h+="<div style=\"margin-top:10px;padding-top:8px;border-top:2px solid var(--sand-mid);display:flex;justify-content:space-between\"><span style=\"font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px\">Total ingresos do mes</span><span style=\"font-weight:700;font-size:14px;color:var(--text)\">"+fmt(ci.totalGeral)+"</span></div>";
+  }
+  document.getElementById("cashInList").innerHTML=h;
+}
+
 function renderOpsHistory(){
   var el=document.getElementById("opsHistoryContent");if(!el)return;
   var rows=[];
@@ -1178,6 +1264,7 @@ function renderGestao(){
   document.getElementById("opsNoites").innerHTML=(cm.noites||"&#8212;")+(cm.noitesCortesia>0?"<div style='font-size:9px;color:var(--text-soft);font-family:Jost,sans-serif;font-weight:400;margin-top:2px'>("+cm.noitesCortesia+" cortesia)</div>":"");document.getElementById("opsOcupacao").innerHTML=cm.capacidade>0&&cm.noites>0?cm.ocupacao.toFixed(0)+"%":"&#8212;";document.getElementById("opsPreco").innerHTML=cm.noitesPagas>0?fmt(cm.preco):"&#8212;";
   renderOpsHistory();
   renderProjecao(gestYear,gestMonth);
+  renderCashIn(gestYear,gestMonth);
   if(gestTab==="dashboard")renderGestDash(f,tI,tE);
   else if(gestTab==="list")renderGestList(f);
   else renderGestReport(f,tI,tE,bal,ren,cm);
