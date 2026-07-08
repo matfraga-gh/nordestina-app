@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-08 12:37 -->
+<!-- BUILD_STAMP: v2026-07-08 12:45 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -605,7 +605,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-08 12:37");
+console.log("Nordestina build v2026-07-08 12:45");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -783,7 +783,7 @@ function renderResList(){
 
 function renderResCal(){
   var d2=dim(resYear,resMonth),today=new Date();
-  var mrs=allRes.filter(function(r){if(!r.checkin||r.status==="cancelada")return false;var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");return ci<=new Date(resYear,resMonth+1,0)&&co>=new Date(resYear,resMonth,1);});
+  var mrs=allRes.filter(function(r){if(!r.checkin||r.status==="cancelada")return false;var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");var mS=new Date(resYear,resMonth,1,12,0,0),mE=new Date(resYear,resMonth+1,1,12,0,0);return ci<mE&&co>mS;});
   // Build aptos list: APTOS + any "orphans" from reservations not matching APTOS via normalized comparison
   var aptosList=APTOS.slice();
   var aptosNorm=APTOS.map(normApto);
