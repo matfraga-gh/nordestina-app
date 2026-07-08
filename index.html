@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-08 12:45 -->
+<!-- BUILD_STAMP: v2026-07-08 13:00 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -146,11 +146,11 @@ body{background:var(--sand);font-family:'Jost',sans-serif;color:var(--text);min-
 .cal-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .cal-table{border-collapse:collapse;min-width:max-content;width:100%}
 .cal-head-apto{font-size:10px;font-weight:600;color:var(--text-soft);text-transform:uppercase;padding:8px 10px 6px;background:var(--white);position:sticky;left:0;z-index:2;min-width:90px;border-right:2px solid var(--sand-mid)}
-.cal-head-day{font-size:10px;color:var(--text-soft);text-align:center;padding:4px 0 2px;min-width:26px;line-height:1.2}
+.cal-head-day{font-size:10px;color:var(--text-soft);text-align:center;padding:4px 0 2px;min-width:30px;line-height:1.2}
 .cal-head-day.today{color:var(--ocean);font-weight:700}
 .cal-head-dow{font-size:8px;color:var(--sand-dark);text-align:center;padding-bottom:4px}
 .cal-apto-label{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:700;color:var(--ocean);padding:4px 10px;background:var(--white);position:sticky;left:0;z-index:2;border-right:2px solid var(--sand-mid);white-space:nowrap}
-.cal-cell{height:26px;min-width:26px;border-left:1px solid rgba(232,217,192,.6)}
+.cal-cell{height:26px;min-width:30px;border-left:1px solid rgba(232,217,192,.6)}
 .cal-cell.weekend{background:rgba(201,180,138,.1)}
 .cal-cell.today-col{background:rgba(46,110,158,.07)}
 .cal-bar{height:26px;display:flex;align-items:center;width:100%}
@@ -605,7 +605,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-08 12:45");
+console.log("Nordestina build v2026-07-08 13:00");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -789,7 +789,7 @@ function renderResCal(){
   var aptosNorm=APTOS.map(normApto);
   var seenOrph={};
   mrs.forEach(function(r){var na=normApto(r.apto);if(!na)return;if(aptosNorm.indexOf(na)<0&&!seenOrph[na]){seenOrph[na]=true;aptosList.push(r.apto);}});
-  var dow0=["D","S","T","Q","Q","S","S"];
+  var dow0=["Dom","Seg","Ter","Qua","Qui","Sex","Sab"];
   var h="<div style='background:var(--white);border-bottom:1px solid var(--sand-mid);padding:10px 12px 6px;display:flex;justify-content:space-between'><span style='font-size:11px;font-weight:600;color:var(--ocean);text-transform:uppercase;letter-spacing:1px'>"+MONTHS[resMonth]+" "+resYear+"</span><span style='font-size:10px;color:var(--text-soft)'>"+aptosList.length+" unidades</span></div>";
   h+="<div class='cal-wrap'><table class='cal-table'><thead><tr><th class='cal-head-apto'>Unidade</th>";
   for(var d=1;d<=d2;d++){var dt=new Date(resYear,resMonth,d,12,0,0),dw=dt.getDay(),isT=dt.getDate()===today.getDate()&&dt.getMonth()===today.getMonth()&&dt.getFullYear()===today.getFullYear();h+="<th><div class='cal-head-day"+(isT?" today":"")+"'>"+d+"</div><div class='cal-head-dow'>"+dow0[dw]+"</div></th>";}
@@ -800,7 +800,7 @@ function renderResCal(){
     h+="<tr><td class='cal-apto-label'"+(isOrphan?" style='color:var(--yellow);font-style:italic' title='Nome nao bate com APTOS padrao'":"")+">"+aptosList[ai]+(isOrphan?" *":"")+"</td>";
     for(var d=1;d<=d2;d++){
       var dt=new Date(resYear,resMonth,d,12,0,0),dw=dt.getDay(),isT=dt.getDate()===today.getDate()&&dt.getMonth()===today.getMonth()&&dt.getFullYear()===today.getFullYear();
-      var cc="cal-cell"+(dw===0||dw===6?" weekend":"")+(isT?" today-col":"");
+      var cc="cal-cell"+(dw===5||dw===6?" weekend":"")+(isT?" today-col":"");
       var res=null;for(var ri=0;ri<mrs.length;ri++){if(normApto(mrs[ri].apto)!==rowNorm)continue;var ci2=new Date(mrs[ri].checkin+"T12:00:00"),co2=new Date(mrs[ri].checkout+"T12:00:00");if(dt>=ci2&&dt<co2){res=mrs[ri];break;}}
       var bar="";
       if(res){var isS=dt.getTime()===new Date(res.checkin+"T12:00:00").getTime(),isE=new Date(new Date(res.checkout+"T12:00:00").getTime()-86400000).getTime()===dt.getTime();var cls="occ"+(isS&&isE?" occ-single":isS?" occ-start":isE?" occ-end":"");bar="<div class='"+cls+"' style='background:"+CAL_COLORS[ai%CAL_COLORS.length]+"' data-calrid='"+res.id+"'></div>";}
