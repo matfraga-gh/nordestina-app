@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-08 12:18 -->
+<!-- BUILD_STAMP: v2026-07-08 12:37 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -605,7 +605,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-08 12:18");
+console.log("Nordestina build v2026-07-08 12:37");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -1101,36 +1101,32 @@ async function loadGestao(){
 }
 
 function computeOpsMetrics(year,month){
-  // Only stays where CHECKOUT has already occurred count (economic report, not financial).
-  // Future stays and stays in progress do NOT contribute noites/vendas/ocupacao until they check out.
+  // Convencao hoteleira / Booking: venda e receita se atribuem ao MES DE CHECKIN.
+  // Contam apenas reservas onde o hospede efetivamente entrou (status checkin ou checkout)
+  // e cuja data de checkin ja passou. Confirmadas sem checkin NAO contam ainda.
   var td=new Date();
   var todayStr=td.getFullYear()+"-"+(td.getMonth()+1<10?"0":"")+(td.getMonth()+1)+"-"+(td.getDate()<10?"0":"")+td.getDate();
-  var monStart=new Date(year,month,1,12,0,0),monEnd=new Date(year,month+1,1,12,0,0);
   var diasP=dim(year,month);
   var monRes=(allRes||[]).filter(function(r){
-    if(!r.checkin||!r.checkout||r.status==="cancelada"||r.status==="pendiente")return false;
-    if(r.checkout>todayStr)return false; // stay not yet completed
-    var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");
-    return ci<monEnd&&co>monStart;
+    if(!r.checkin||!r.checkout)return false;
+    if(r.status!=="checkin"&&r.status!=="checkout")return false; // guest actually arrived
+    if(r.checkin>todayStr)return false;
+    var ci=new Date(r.checkin+"T12:00:00");
+    return ci.getFullYear()===year&&ci.getMonth()===month;
   });
-  var noites=0,noitesPagas=0,vendasProrat=0,vendasByCanal={};
+  var noites=0,noitesPagas=0,vendas=0,vendasByCanal={};
   monRes.forEach(function(r){
     var ci=new Date(r.checkin+"T12:00:00"),co=new Date(r.checkout+"T12:00:00");
     var totalN=(co-ci)/86400000;
     if(totalN<=0)return;
-    var s2=ci<monStart?monStart:ci,e2=co>monEnd?monEnd:co;
-    var d=(e2-s2)/86400000;
-    if(d>0){
-      noites+=d;
-      var totalVal=Number(r.total||0);
-      if(totalVal>0){
-        noitesPagas+=d;
-        var contrib=totalVal*(d/totalN);
-        vendasProrat+=contrib;
-        var canal=r.canal||"Outro";
-        var key="Vendas "+canal;
-        vendasByCanal[key]=(vendasByCanal[key]||0)+contrib;
-      }
+    noites+=totalN;
+    var totalVal=Number(r.total||0);
+    if(totalVal>0){
+      noitesPagas+=totalN;
+      vendas+=totalVal;
+      var canal=r.canal||"Outro";
+      var key="Vendas "+canal;
+      vendasByCanal[key]=(vendasByCanal[key]||0)+totalVal;
     }
   });
   noites=Math.round(noites);
@@ -1138,7 +1134,7 @@ function computeOpsMetrics(year,month){
   var monExp=(allEntries||[]).filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===month&&d.getFullYear()===year&&e.type==="expense";});
   var despesas=monExp.reduce(function(s,e){return s+Number(e.amount);},0);
   var capacidade=diasP*APTOS.length;
-  return{noites:noites,noitesPagas:noitesPagas,noitesCortesia:noites-noitesPagas,capacidade:capacidade,ocupacao:capacidade>0?(noites/capacidade)*100:0,preco:noitesPagas>0?vendasProrat/noitesPagas:0,receita:vendasProrat,vendasProrat:vendasProrat,vendasByCanal:vendasByCanal,despesas:despesas};
+  return{noites:noites,noitesPagas:noitesPagas,noitesCortesia:noites-noitesPagas,capacidade:capacidade,ocupacao:capacidade>0?(noites/capacidade)*100:0,preco:noitesPagas>0?vendas/noitesPagas:0,receita:vendas,vendasProrat:vendas,vendasByCanal:vendasByCanal,despesas:despesas};
 }
 
 function computeProjecao(year,month){
@@ -1344,7 +1340,7 @@ function renderGestList(f){
 }
 
 function renderGestReport(f,tI,tE,bal,ren,cm){
-  var rH="<span class='sec-title'>Receita (prorateada, apenas estadias com checkout)</span>";
+  var rH="<span class='sec-title'>Receita (por data de checkin)</span>";
   var canals=Object.keys(cm.vendasByCanal||{}).sort(function(a,b){return cm.vendasByCanal[b]-cm.vendasByCanal[a];});
   canals.forEach(function(cat){var t=cm.vendasByCanal[cat];if(t>0)rH+=rRow(cat,fmt(t),(tI>0?(t/tI*100).toFixed(1):0)+"%",false,false);});
   if(!canals.length)rH+="<div style=\"font-size:12px;color:var(--text-soft);padding:8px 0\">Nenhuma estadia com checkout neste mes.</div>";
