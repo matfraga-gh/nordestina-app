@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-08 09:22 -->
+<!-- BUILD_STAMP: v2026-07-08 09:41 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -605,7 +605,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-08 09:22");
+console.log("Nordestina build v2026-07-08 09:41");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -985,7 +985,14 @@ function calcNoites(){
   if(ci){var m=new Date(ci+"T12:00:00");m.setDate(m.getDate()+1);document.getElementById("fCheckout").min=m.toISOString().slice(0,10);if(co&&new Date(co+"T12:00:00")<=new Date(ci+"T12:00:00")){document.getElementById("fCheckout").value="";document.getElementById("noitesCalc").textContent="—";return;}}
   document.getElementById("noitesCalc").textContent=nights(ci,co)||"—";
 }
-function calcSaldo(){var t=parseFloat(document.getElementById("fTotal").value)||0,a=parseFloat(document.getElementById("fAnticipo").value)||0;document.getElementById("saldoCalc").textContent=fmt(Math.max(0,t-a));}
+function calcSaldo(){
+  var t=parseFloat(document.getElementById("fTotal").value)||0;
+  var a=parseFloat(document.getElementById("fAnticipo").value)||0;
+  var el=document.getElementById("saldoCalc");
+  var box=el.parentElement;
+  if(a>t){el.textContent=fmt(t-a)+" \u26a0";el.style.color="var(--red)";box.style.background="var(--red-bg)";}
+  else{el.textContent=fmt(Math.max(0,t-a));el.style.color="var(--ocean)";box.style.background="var(--ocean-light)";}
+}
 
 function resPagoChange(tipo){
   var sId=tipo==="anticipo"?"fPagoAnticipo":"fPagoSaldo",bId=tipo==="anticipo"?"fxAnticipo":"fxSaldo",lId=tipo==="anticipo"?"fxAntLabel":"fxSaldoLabel";
@@ -1036,6 +1043,7 @@ async function resSaveNew(status){
   var d=resGetBaseData();
   if(!d.apto||!d.checkin||!d.checkout||!d.nome){showToast("Preencha os campos obrigatorios");return;}
   if(new Date(d.checkout+"T12:00:00")<=new Date(d.checkin+"T12:00:00")){showToast("Check-out deve ser posterior ao check-in");return;}
+  if(Number(d.anticipo||0)>Number(d.total||0)){showToast("Anticipo nao pode ser maior que o total da reserva");return;}
   if(checkSolap(d.apto,d.checkin,d.checkout,null)){showToast("Conflito: "+d.apto+" ja tem reserva nessas datas");return;}
   d.status=status;
   var res=await api("reservas","POST",d);
@@ -1052,6 +1060,7 @@ async function resSaveCheckin(){
 async function resUpdateRes(){
   var d=resGetBaseData();
   if(new Date(d.checkout+"T12:00:00")<=new Date(d.checkin+"T12:00:00")){showToast("Check-out deve ser posterior ao check-in");return;}
+  if(Number(d.anticipo||0)>Number(d.total||0)){showToast("Anticipo nao pode ser maior que o total da reserva");return;}
   if(checkSolap(d.apto,d.checkin,d.checkout,resEditingId)){showToast("Conflito: "+d.apto+" ja tem reserva nessas datas");return;}
   var fxS=getFxD("saldo");
   d.saldo_cobrado=parseFloat(document.getElementById("fSaldoCob").value)||null;d.pago_saldo=document.getElementById("fPagoSaldo").value;d.data_saldo=document.getElementById("fDataSaldo").value||null;d.obs_checkin=document.getElementById("fObsCheckin").value;
