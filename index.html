@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-08 09:41 -->
+<!-- BUILD_STAMP: v2026-07-08 12:18 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -605,7 +605,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-08 09:41");
+console.log("Nordestina build v2026-07-08 12:18");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -904,14 +904,26 @@ function openResDetail(id){
 async function resChangeStatus(id,status){
   var msgs={cancelada:"Cancelar esta reserva?",pendiente:"Reativar esta reserva?",confirmada:"Confirmar esta reserva?"};
   if(!window.confirm(msgs[status]||"Continuar?")) return;
-  document.getElementById("resDetailOverlay").classList.remove("open");
   var prevRes=allRes.find(function(x){return x.id===id;});
-  await api("reservas?id=eq."+id,"PATCH",{status:status});
-  // Se cancelada: borrar entries huerfanas (anticipos/saldos que ya no son ingresos reales)
-  if(status==="cancelada"){
-    await api("entries?reserva_id=eq."+id,"DELETE");
+  // Se cancelada com anticipo cobrado: perguntar se quer reter como multa (no-show)
+  var reter=false;
+  if(status==="cancelada"&&prevRes&&Number(prevRes.anticipo||0)>0){
+    reter=window.confirm("Reter o anticipo de "+fmt(prevRes.anticipo)+" como MULTA por no-show?\n\nOK = manter o valor como receita de multa\nCancelar = deletar o anticipo (guest sera reembolsado)");
   }
-  // Si se reactiva desde cancelada: re-sync entries
+  document.getElementById("resDetailOverlay").classList.remove("open");
+  await api("reservas?id=eq."+id,"PATCH",{status:status});
+  if(status==="cancelada"){
+    if(reter){
+      // Deletar saldo (nao aplica), converter anticipo em multa unlinked
+      await api("entries?reserva_id=eq."+id+"&tipo_receita=eq.saldo","DELETE");
+      var extAnt=await api("entries?reserva_id=eq."+id+"&tipo_receita=eq.anticipo");
+      if(extAnt&&extAnt.length>0){
+        await api("entries?id=eq."+extAnt[0].id,"PATCH",{category:"Multa por Cancelamento",group_name:"",description:"Multa por Cancelamento \u2014 "+(prevRes.nome||"")+" \u2014 "+(prevRes.apto||"")+" ("+fmtD(prevRes.checkin)+"\u2192"+fmtD(prevRes.checkout)+")",tipo_receita:null,reserva_id:null});
+      }
+    }else{
+      await api("entries?reserva_id=eq."+id,"DELETE");
+    }
+  }
   else if(prevRes&&prevRes.status==="cancelada"){
     var newRes=await api("reservas?id=eq."+id+"&select=*");
     if(newRes&&newRes[0]){
@@ -920,7 +932,7 @@ async function resChangeStatus(id,status){
     }
   }
   await loadReservas();
-  showToast(RES_SL[status]);
+  showToast(reter?"Cancelada com retencao de multa":RES_SL[status]);
 }
 
 // ── CHECKOUT ─────────────────────────────────────────────────────────────────
