@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-08 09:17 -->
+<!-- BUILD_STAMP: v2026-07-08 09:22 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -605,7 +605,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-08 09:17");
+console.log("Nordestina build v2026-07-08 09:22");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -792,14 +792,14 @@ function renderResCal(){
   var dow0=["D","S","T","Q","Q","S","S"];
   var h="<div style='background:var(--white);border-bottom:1px solid var(--sand-mid);padding:10px 12px 6px;display:flex;justify-content:space-between'><span style='font-size:11px;font-weight:600;color:var(--ocean);text-transform:uppercase;letter-spacing:1px'>"+MONTHS[resMonth]+" "+resYear+"</span><span style='font-size:10px;color:var(--text-soft)'>"+aptosList.length+" unidades</span></div>";
   h+="<div class='cal-wrap'><table class='cal-table'><thead><tr><th class='cal-head-apto'>Unidade</th>";
-  for(var d=1;d<=d2;d++){var dt=new Date(resYear,resMonth,d),dw=dt.getDay(),isT=dt.getDate()===today.getDate()&&dt.getMonth()===today.getMonth()&&dt.getFullYear()===today.getFullYear();h+="<th><div class='cal-head-day"+(isT?" today":"")+"'>"+d+"</div><div class='cal-head-dow'>"+dow0[dw]+"</div></th>";}
+  for(var d=1;d<=d2;d++){var dt=new Date(resYear,resMonth,d,12,0,0),dw=dt.getDay(),isT=dt.getDate()===today.getDate()&&dt.getMonth()===today.getMonth()&&dt.getFullYear()===today.getFullYear();h+="<th><div class='cal-head-day"+(isT?" today":"")+"'>"+d+"</div><div class='cal-head-dow'>"+dow0[dw]+"</div></th>";}
   h+="</tr></thead><tbody>";
   for(var ai=0;ai<aptosList.length;ai++){
     var rowNorm=normApto(aptosList[ai]);
     var isOrphan=aptosNorm.indexOf(rowNorm)<0;
     h+="<tr><td class='cal-apto-label'"+(isOrphan?" style='color:var(--yellow);font-style:italic' title='Nome nao bate com APTOS padrao'":"")+">"+aptosList[ai]+(isOrphan?" *":"")+"</td>";
     for(var d=1;d<=d2;d++){
-      var dt=new Date(resYear,resMonth,d),dw=dt.getDay(),isT=dt.getDate()===today.getDate()&&dt.getMonth()===today.getMonth()&&dt.getFullYear()===today.getFullYear();
+      var dt=new Date(resYear,resMonth,d,12,0,0),dw=dt.getDay(),isT=dt.getDate()===today.getDate()&&dt.getMonth()===today.getMonth()&&dt.getFullYear()===today.getFullYear();
       var cc="cal-cell"+(dw===0||dw===6?" weekend":"")+(isT?" today-col":"");
       var res=null;for(var ri=0;ri<mrs.length;ri++){if(normApto(mrs[ri].apto)!==rowNorm)continue;var ci2=new Date(mrs[ri].checkin+"T12:00:00"),co2=new Date(mrs[ri].checkout+"T12:00:00");if(dt>=ci2&&dt<co2){res=mrs[ri];break;}}
       var bar="";
