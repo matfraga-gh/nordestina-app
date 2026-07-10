@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-10 10:33 -->
+<!-- BUILD_STAMP: v2026-07-10 10:54 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -658,7 +658,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-10 10:33");
+console.log("Nordestina build v2026-07-10 10:54");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -777,7 +777,7 @@ function getAccess(){
   return{
     reservas:["master","comercial","checkin","auditor","housekeeping"].indexOf(r)>=0,
     admin:["master","administrativa","auditor"].indexOf(r)>=0,
-    reportes:["master","administrativa","auditor"].indexOf(r)>=0,
+    reportes:["master","administrativa","auditor","comercial"].indexOf(r)>=0,
     consorcio:["master","administrativa","auditor","propietario"].indexOf(r)>=0,
     users:r==="master",
     readonly:r==="auditor"||r==="propietario"
@@ -1573,6 +1573,10 @@ async function exportExcel(){
 function openReportes(){
   document.getElementById("repUser").textContent=curUser.nome;
   document.getElementById("repBtnConfig").style.display=(curUser.rol==="master"||curUser.rol==="administrativa")?"inline-block":"none";
+  // Comercial: ocultar tab Simples Nacional (dato financiero/fiscal), default Comissões
+  var isComercial=curUser.rol==="comercial";
+  document.getElementById("repTab2").style.display=isComercial?"none":"inline-block";
+  if(isComercial&&repTab==="simples")repTab="comissoes";
   showView("viewReportes");
   loadReportes();
 }
