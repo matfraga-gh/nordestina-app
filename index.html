@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-08 13:00 -->
+<!-- BUILD_STAMP: v2026-07-10 09:17 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -120,15 +120,13 @@ body{background:var(--sand);font-family:'Jost',sans-serif;color:var(--text);min-
 .sec-title{font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:2px;margin-bottom:11px;display:block;font-weight:600}
 .empty{color:var(--text-soft);font-size:13px;text-align:center;padding:24px 0}
 .sync-badge{display:inline-flex;align-items:center;gap:4px;background:var(--ocean-light);color:var(--ocean);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:600;margin-bottom:10px}
-.entry-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--sand-mid)}
-.entry-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
-.entry-info{flex:1;min-width:0}
-.entry-cat{font-size:13px;color:var(--text);font-weight:600}
-.entry-group{font-size:11px;color:var(--text-soft)}
-.entry-desc{font-size:11px;color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.entry-date{font-size:10px;color:var(--sand-dark);margin-top:2px}
-.entry-source{font-size:9px;background:var(--ocean-light);color:var(--ocean);border-radius:8px;padding:1px 5px;margin-top:2px;display:inline-block}
-.entry-amt{font-size:13px;font-weight:600;flex-shrink:0}
+.entry-row{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(232,217,192,0.5)}
+.entry-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.entry-info{flex:1;min-width:0;line-height:1.25}
+.entry-cat{font-size:11px;color:var(--text);font-weight:600}
+.entry-desc{font-size:10px;color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry-source{font-size:8px;background:var(--ocean-light);color:var(--ocean);border-radius:6px;padding:1px 4px;margin-left:4px;font-weight:600}
+.entry-amt{font-size:11px;font-weight:700;flex-shrink:0;white-space:nowrap}
 .report-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--sand-mid)}
 .rl{font-size:13px;color:var(--text);flex:1}
 .rl.indent{font-size:11px;color:var(--text-soft);padding-left:14px}
@@ -312,32 +310,6 @@ canvas{max-width:100%}
       <div class="kpi" style="background:var(--green-bg)"><div class="kpi-label">Resultado</div><div class="kpi-value" style="color:var(--green)" id="kpiResultado">R$ 0</div></div>
       <div class="kpi" style="background:var(--ocean-light)"><div class="kpi-label">Rentab.</div><div class="kpi-value" style="color:var(--ocean)" id="kpiRentab">0%</div></div>
     </div>
-    <div class="ops-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
-        <span class="sec-title" style="margin-bottom:0">Metricas Operacionais</span>
-        <span style="font-size:9px;color:var(--text-soft);letter-spacing:1px">AUTO · Reservas</span>
-      </div>
-      <div class="ops-grid">
-        <div><div class="ops-value" id="opsNoites">&#8212;</div><div class="ops-label">Noites Vendidas</div></div>
-        <div><div class="ops-value" id="opsOcupacao">&#8212;</div><div class="ops-label">% Ocupacao</div></div>
-        <div><div class="ops-value" id="opsPreco">&#8212;</div><div class="ops-label">Preco Medio</div></div>
-      </div>
-      <div id="opsHistory" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--sand-mid)">
-        <div style="font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;font-weight:600">Ultimos 6 meses</div>
-        <div id="opsHistoryContent"></div>
-      </div>
-    </div>
-    <div class="ops-card" id="projCard" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
-        <span class="sec-title" style="margin-bottom:0">Projecao do Mes</span>
-        <span style="font-size:9px;color:var(--text-soft);letter-spacing:1px">STAYS COM CHECKIN NO MES</span>
-      </div>
-      <div id="projStatus"></div>
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--sand-mid)">
-        <div style="font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;font-weight:600">Estado de cobranza</div>
-        <div id="projPagos"></div>
-      </div>
-    </div>
     <div class="ops-card" id="cashInCard" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
         <span class="sec-title" style="margin-bottom:0">Ingressos Bancarios do Mes</span>
@@ -361,6 +333,36 @@ canvas{max-width:100%}
       <div class="card" id="gestRepDespesas"></div>
       <div class="card" id="gestRepResumo"></div>
     </div>
+  </div>
+</div>
+
+<!-- ══ REPORTES ══════════════════════════════════════════════════════════ -->
+<div id="viewReportes" class="view">
+  <div class="app-header">
+    <div><div class="app-brand">&#128202; NORDESTINA</div><div class="app-sub">Reportes</div></div>
+    <div class="app-btns">
+      <span class="app-user" id="repUser"></span>
+      <button class="abtn abtn-outline" id="repBtnBack">&#8592; Painel</button>
+      <button class="abtn abtn-mid" id="repBtnConfig">&#9881;</button>
+      <button class="abtn abtn-outline" id="repBtnSair">Sair</button>
+    </div>
+  </div>
+  <div class="month-nav">
+    <button class="nav-arrow" id="repPrev">&#8249;</button>
+    <span class="month-label" id="repMonthLabel"></span>
+    <button class="nav-arrow" id="repNext">&#8250;</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="repTab0">&#127968; Ocupação</button>
+    <button class="tab" id="repTab1">&#128200; Projeção</button>
+    <button class="tab" id="repTab2">&#128181; Simples</button>
+    <button class="tab" id="repTab3">&#129309; Comissões</button>
+  </div>
+  <div class="content">
+    <div id="repOcupacao"></div>
+    <div id="repProjecao" style="display:none"></div>
+    <div id="repSimples" style="display:none"></div>
+    <div id="repComissoes" style="display:none"></div>
   </div>
 </div>
 
@@ -421,6 +423,8 @@ canvas{max-width:100%}
       <label>CPF / Passaporte</label><input type="text" id="fDoc" placeholder="Ex: 123.456.789-00"/>
       <label>Canal de Venda</label>
       <select id="fCanal"><option value="">Selecionar...</option><option>WhatsApp</option><option>Booking.com</option><option>Walk-in</option><option>Indicacao</option><option>Instagram</option><option>Outro</option></select>
+      <label>Agente (opcional)</label>
+      <select id="fAgente"><option value="">Nenhum</option></select>
       <label>Valor Total (R$)</label><input type="number" id="fTotal" placeholder="0,00"/>
     </div>
     <div class="form-section">
@@ -601,11 +605,45 @@ canvas{max-width:100%}
   </div>
 </div>
 
+<!-- ══ MODALS REPORTES ═══════════════════════════════════════════════════ -->
+<div class="overlay" id="repConfigOverlay">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">Configuração Reportes</span><button class="btn-x" id="repConfigClose">&#215;</button></div>
+    <div class="form-section">
+      <div class="fsec-title">&#128181; Impostos e Comissões (%)</div>
+      <label>Simples Nacional (%)</label><input type="number" step="0.01" id="cfgSimplesPct" placeholder="6.00"/>
+      <label>Comissão Booking (%)</label><input type="number" step="0.01" id="cfgBookingPct" placeholder="15.00"/>
+      <label>Comissão Gestão Comercial (%)</label><input type="number" step="0.01" id="cfgGestaoPct" placeholder="0.00"/>
+    </div>
+    <div class="form-section">
+      <div class="fsec-title">&#129309; Agentes</div>
+      <div id="cfgAgentesList"></div>
+      <button class="btn-secondary" id="cfgBtnAddAgente" style="margin-top:6px">+ Novo Agente</button>
+    </div>
+    <button class="btn-save" id="repConfigSave">Salvar Configuração</button>
+  </div>
+</div>
+
+<div class="overlay" id="agenteFormOverlay">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title" id="agenteFormTitle">Novo Agente</span><button class="btn-x" id="agenteFormClose">&#215;</button></div>
+    <label>Nome</label><input type="text" id="agFormNome" placeholder="Ex: Second Wind"/>
+    <label>Comissão (%)</label><input type="number" step="0.01" id="agFormPct" placeholder="10.00"/>
+    <label>CPF/CNPJ</label><input type="text" id="agFormCpf" placeholder="Opcional"/>
+    <label>Email</label><input type="email" id="agFormEmail" placeholder="Opcional"/>
+    <label>Telefone</label><input type="text" id="agFormTel" placeholder="Opcional"/>
+    <label>Observação</label><textarea id="agFormObs" placeholder="Notas..."></textarea>
+    <label>Ativo</label>
+    <select id="agFormAtivo"><option value="true">Sim</option><option value="false">Não</option></select>
+    <button class="btn-save" id="agFormSave">Salvar Agente</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-08 13:00");
+console.log("Nordestina build v2026-07-10 09:17");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -615,7 +653,7 @@ var H={"Content-Type":"application/json","apikey":SB_KEY,"Authorization":"Bearer
 var APTOS=["Loft 04","Loft 09","Loft 01","Loft 07","Loft 08","Loft 10","Loft 05","Loft 11","Loft 02","Loft 03","Loft 06","Casa Nordestina"];
 var MONTHS=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 var PAGOS=["Pendente","Contado em R$","Contado em USD","Contado em EU$","Contado em USD (Arg)","Contado em AR$ (Arg)","Cartao de Credito","Link Stripe","KamiPay","Pix","Booking Pagamentos"];
-var PAGOS_BANK=["Cartao de Credito","Link Stripe","KamiPay","Pix","Booking Pagamentos"]; // formas que caem no banco
+var PAGOS_BANK=["Cartao de Credito","Link Stripe","Pix","Booking Pagamentos"]; // formas que caem no banco (KamiPay e Contado nao)
 var PAGOS_FX={"Contado em USD":{moeda:"USD",label:"Cotacao USD -> R$"},"Contado em EU$":{moeda:"EUR",label:"Cotacao EUR -> R$"},"Contado em USD (Arg)":{moeda:"USD",label:"Cotacao USD (Arg) -> R$"},"Contado em AR$ (Arg)":{moeda:"ARS",label:"Cotacao ARS -> R$"}};
 var RES_SL={pendiente:"Pendente",confirmada:"Confirmada",checkin:"Check-in feito",checkout:"Checkout feito",cancelada:"Cancelada"};
 var RES_SC={pendiente:"chip-pendiente",confirmada:"chip-confirmada",checkin:"chip-checkin",checkout:"chip-checkout",cancelada:"chip-cancelada"};
@@ -641,6 +679,11 @@ var allEntries=[], allMetrics={}, allProvs=[];
 var gestMonth=new Date().getMonth(), gestYear=new Date().getFullYear();
 var gestTab="dashboard", gestFormType="income";
 var barChartInst=null, pieChartInst=null;
+// Reportes state
+var appConfig={simples_nacional_pct:6.00,booking_comissao_pct:15.00,gestao_comercial_pct:0.00};
+var allAgentes=[];
+var repYear=new Date().getFullYear(), repMonth=new Date().getMonth(), repTab="ocupacao";
+var editingAgenteId=null;
 // Consorcio state
 var allGrupos=[], allPropietarios=[], allUnidades=[], allCobros=[], allConsEntries=[];
 var consConfig={valor_expensa_mensal:15000,aluguel_deposito_playa:1000,aluguel_area_playa:3000};
@@ -702,11 +745,13 @@ function goToDash(){
   var h="";
   if(acc.reservas) h+="<div class='dash-card' id='dcReservas'><div class='dash-icon'>&#127958;</div><div class='dash-title'>Reservas</div><div class='dash-desc'>Gestao de reservas e disponibilidade</div><span class='dash-badge "+(acc.readonly?"badge-blue":"badge-green")+"'>"+(acc.readonly?"Somente leitura":"Acesso completo")+"</span></div>";
   if(acc.admin)    h+="<div class='dash-card' id='dcGestao'><div class='dash-icon'>&#128200;</div><div class='dash-title'>Gestao Administrativa</div><div class='dash-desc'>Financas, despesas e relatorios</div><span class='dash-badge "+(acc.readonly?"badge-blue":"badge-blue")+"'>"+(acc.readonly?"Somente leitura":"Acesso completo")+"</span></div>";
+  if(acc.reportes) h+="<div class='dash-card' id='dcReportes'><div class='dash-icon'>&#128202;</div><div class='dash-title'>Reportes</div><div class='dash-desc'>Ocupacao, projecoes, impostos e comissoes</div><span class='dash-badge "+(acc.readonly?"badge-blue":"badge-blue")+"'>"+(acc.readonly?"Somente leitura":"Acesso completo")+"</span></div>";
   if(acc.consorcio){var consFull=(!acc.reservas&&!acc.admin&&!acc.users)?" full":"";h+="<div class='dash-card"+consFull+"' id='dcConsorcio'><div class='dash-icon'>&#127970;</div><div class='dash-title'>Consorcio</div><div class='dash-desc'>Expensas e areas comuns</div><span class='dash-badge "+(acc.readonly?"badge-blue":"badge-green")+"'>"+(acc.readonly?"Somente leitura":"Acesso completo")+"</span></div>";}
   if(acc.users)    h+="<div class='dash-card full' id='dcUsuarios'><div class='dash-icon'>&#128101;</div><div class='dash-title'>Usuarios</div><div class='dash-desc'>Gerenciar usuarios e permissoes</div><span class='dash-badge badge-amber'>Master</span></div>";
   document.getElementById("dashGrid").innerHTML=h;
   if(acc.reservas) document.getElementById("dcReservas").addEventListener("click",openReservas);
   if(acc.admin)    document.getElementById("dcGestao").addEventListener("click",openGestao);
+  if(acc.reportes) document.getElementById("dcReportes").addEventListener("click",openReportes);
   if(acc.consorcio)document.getElementById("dcConsorcio").addEventListener("click",openConsorcio);
   if(acc.users)    document.getElementById("dcUsuarios").addEventListener("click",openUsuarios);
   showView("viewDash");
@@ -717,6 +762,7 @@ function getAccess(){
   return{
     reservas:["master","comercial","checkin","auditor","housekeeping"].indexOf(r)>=0,
     admin:["master","administrativa","auditor"].indexOf(r)>=0,
+    reportes:["master","administrativa","auditor"].indexOf(r)>=0,
     consorcio:["master","administrativa","auditor","propietario"].indexOf(r)>=0,
     users:r==="master",
     readonly:r==="auditor"||r==="propietario"
@@ -964,6 +1010,7 @@ function resPopulateSelects(){
   var a=document.getElementById("fApto");a.innerHTML="<option value=''>Selecionar...</option>";APTOS.forEach(function(x){a.innerHTML+="<option>"+x+"</option>";});
   var opts="<option value=''>Selecionar...</option>";PAGOS.forEach(function(p){opts+="<option>"+p+"</option>";});
   document.getElementById("fPagoAnticipo").innerHTML=opts;document.getElementById("fPagoSaldo").innerHTML=opts;
+  var ag=document.getElementById("fAgente");if(ag){var h="<option value=''>Nenhum</option>";(allAgentes||[]).filter(function(a){return a.ativo;}).forEach(function(a){h+="<option value='"+a.id+"'>"+a.nome+" ("+Number(a.comissao_pct).toFixed(1)+"%)</option>";});ag.innerHTML=h;}
 }
 
 function resResetForm(){
@@ -989,6 +1036,7 @@ function resFillForm(r){
   document.getElementById("fCafe").checked=r.cafe||false;
   document.getElementById("fDataAnt").value=r.data_anticipo||"";
   document.getElementById("fDataSaldo").value=r.data_saldo||"";
+  document.getElementById("fAgente").value=r.agente_id||"";
   calcNoites();calcSaldo();resPagoChange("anticipo");resPagoChange("saldo");
 }
 
@@ -1024,7 +1072,7 @@ function getFxD(tipo){
 
 function resGetBaseData(){
   var fxA=getFxD("anticipo");
-  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,canal:document.getElementById("fCanal").value,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,data_anticipo:document.getElementById("fDataAnt").value||null,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked};
+  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,canal:document.getElementById("fCanal").value,agente_id:document.getElementById("fAgente").value?parseInt(document.getElementById("fAgente").value):null,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,data_anticipo:document.getElementById("fDataAnt").value||null,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked};
 }
 
 function checkSolap(apto,ci,co,exId){
@@ -1297,9 +1345,6 @@ function renderGestao(){
   var bal=tI-tE,ren=tI>0?(bal/tI)*100:0;
   document.getElementById("kpiReceita").textContent=fmt(tI);document.getElementById("kpiDespesas").textContent=fmt(tE);document.getElementById("kpiResultado").textContent=fmt(bal);document.getElementById("kpiRentab").textContent=ren.toFixed(1)+"%";
   document.querySelectorAll(".kpi")[2].style.background=bal>=0?"var(--green-bg)":"var(--red-bg)";document.getElementById("kpiResultado").style.color=bal>=0?"var(--green)":"var(--red)";
-  document.getElementById("opsNoites").innerHTML=(cm.noites||"&#8212;")+(cm.noitesCortesia>0?"<div style='font-size:9px;color:var(--text-soft);font-family:Jost,sans-serif;font-weight:400;margin-top:2px'>("+cm.noitesCortesia+" cortesia)</div>":"");document.getElementById("opsOcupacao").innerHTML=cm.capacidade>0&&cm.noites>0?cm.ocupacao.toFixed(0)+"%":"&#8212;";document.getElementById("opsPreco").innerHTML=cm.noitesPagas>0?fmt(cm.preco):"&#8212;";
-  renderOpsHistory();
-  renderProjecao(gestYear,gestMonth);
   renderCashIn(gestYear,gestMonth);
   if(gestTab==="dashboard")renderGestDash(f,tI,tE);
   else if(gestTab==="list")renderGestList(f);
@@ -1325,14 +1370,17 @@ function renderGestList(f){
   var h="";
   f.forEach(function(e){
     var isI=e.type==="income";
-    h+="<div class='entry-row'><div class='entry-dot' style='background:"+(isI?"#2e6e9e":"#c9b48a")+"'></div><div class='entry-info'><div class='entry-cat'>"+e.category+"</div>";
-    if(e.group_name)h+="<div class='entry-group'>"+e.group_name+"</div>";
-    if(e.description)h+="<div class='entry-desc'>"+e.description+"</div>";
-    h+="<div class='entry-date'>"+e.date+"</div>";
-    if(e.reserva_id)h+="<span class='entry-source'>&#128279; Reservas</span>";
-    h+="</div><div class='entry-amt' style='color:"+(isI?"var(--green)":"var(--red)")+"'>"+(isI?"+":"-")+fmt(e.amount)+"</div>";
-    if(!e.reserva_id && !isReadonly())h+="<button class='btn-del-e' data-eid='"+e.id+"' style='background:none;border:none;cursor:pointer;color:#c8a0a0;font-size:16px'>&#128465;</button>";
-    else h+="<div style='width:24px'></div>";
+    var meta="";
+    if(e.description)meta+=e.description;
+    if(e.group_name)meta+=(meta?" · ":"")+e.group_name;
+    if(e.date)meta+=(meta?" · ":"")+fmtD(e.date);
+    h+="<div class='entry-row'>";
+    h+="<div class='entry-dot' style='background:"+(isI?"#2e6e9e":"#c9b48a")+"'></div>";
+    h+="<div class='entry-info'><div><span class='entry-cat'>"+e.category+"</span>"+(e.reserva_id?"<span class='entry-source'>Res</span>":"")+"</div>";
+    if(meta)h+="<div class='entry-desc'>"+meta+"</div>";
+    h+="</div>";
+    h+="<div class='entry-amt' style='color:"+(isI?"var(--green)":"var(--red)")+"'>"+(isI?"+":"-")+fmt(e.amount)+"</div>";
+    if(!e.reserva_id&&!isReadonly())h+="<button class='btn-del-e' data-eid='"+e.id+"' style='background:none;border:none;cursor:pointer;color:#c8a0a0;font-size:12px;padding:0 4px'>&#128465;</button>";
     h+="</div>";
   });
   el.innerHTML=h;
@@ -1489,6 +1537,330 @@ async function exportExcel(){
   dl(toCSV(res[0]||[],[{k:"date",l:"Data"},{k:"type",l:"Tipo"},{k:"group_name",l:"Grupo"},{k:"category",l:"Categoria"},{k:"amount",l:"Valor (R$)"},{k:"description",l:"Descricao"},{k:"reserva_id",l:"ID Reserva"}]),"nordestina_movimentos_"+stamp+".csv");
   setTimeout(function(){dl(toCSV(res[1]||[],[{k:"id",l:"ID"},{k:"apto",l:"Apto"},{k:"nome",l:"Hospede"},{k:"canal",l:"Canal"},{k:"checkin",l:"Check-in"},{k:"checkout",l:"Check-out"},{k:"total",l:"Total"},{k:"anticipo",l:"Anticipo"},{k:"saldo_cobrado",l:"Saldo"},{k:"status",l:"Status"}]),"nordestina_reservas_"+stamp+".csv");},400);
   setTimeout(function(){dl(toCSV(res[2]||[],[{k:"categoria",l:"Categoria"},{k:"nome",l:"Fornecedor"}]),"nordestina_fornecedores_"+stamp+".csv");showToast("3 arquivos exportados!");},800);
+}
+
+// ── REPORTES ─────────────────────────────────────────────────────────────────
+function openReportes(){
+  document.getElementById("repUser").textContent=curUser.nome;
+  document.getElementById("repBtnConfig").style.display=(curUser.rol==="master"||curUser.rol==="administrativa")?"inline-block":"none";
+  showView("viewReportes");
+  loadReportes();
+}
+
+async function loadReportes(){
+  var res=await Promise.all([
+    api("app_config?select=*&limit=1"),
+    api("agentes?select=*&order=nome.asc"),
+    api("reservas?select=*&order=checkin.asc"),
+    api("entries?select=*&order=date.desc"),
+    api("cons_grupos?select=*&order=nome.asc"),
+    api("cons_propietarios?select=*&order=nome.asc"),
+    api("cons_unidades?select=*&order=ordem.asc")
+  ]);
+  if(res[0]&&res[0][0])appConfig=res[0][0];
+  allAgentes=res[1]||[];
+  allRes=res[2]||[];
+  allEntries=res[3]||[];
+  allGrupos=res[4]||[];
+  allPropietarios=res[5]||[];
+  allUnidades=res[6]||[];
+  renderReportes();
+}
+
+function renderReportes(){
+  document.getElementById("repMonthLabel").textContent=MONTHS[repMonth]+" "+repYear;
+  ["ocupacao","projecao","simples","comissoes"].forEach(function(t,i){document.getElementById("repTab"+i).className="tab"+(repTab===t?" active":"");});
+  document.getElementById("repOcupacao").style.display=repTab==="ocupacao"?"block":"none";
+  document.getElementById("repProjecao").style.display=repTab==="projecao"?"block":"none";
+  document.getElementById("repSimples").style.display=repTab==="simples"?"block":"none";
+  document.getElementById("repComissoes").style.display=repTab==="comissoes"?"block":"none";
+  if(repTab==="ocupacao")renderRepOcupacao();
+  else if(repTab==="projecao")renderRepProjecao();
+  else if(repTab==="simples")renderRepSimples();
+  else renderRepComissoes();
+}
+
+// Helper: identificar grupo del propietario por nome del apto de la reserva
+function grupoOfApto(apto){
+  if(!apto)return null;
+  var na=normApto(apto);
+  // Special case: Casa Nordestina no está en cons_unidades pero pertenece a Nordestina
+  if(na==="casa nordestina"||na==="casa"){var gN=(allGrupos||[]).find(function(g){return g.nome==="Nordestina";});return gN||null;}
+  // Buscar cons_unidade por nombre normalizado
+  var u=(allUnidades||[]).find(function(x){return normApto(x.nome)===na;});
+  if(!u)return null;
+  var p=(allPropietarios||[]).find(function(x){return x.id===u.propietario_id;});
+  if(!p)return null;
+  return (allGrupos||[]).find(function(x){return x.id===p.grupo_id;});
+}
+
+// ── OCUPACAO tab ─────
+function renderRepOcupacao(){
+  var cm=computeOpsMetrics(repYear,repMonth);
+  var h="<div class=\"ops-card\">";
+  h+="<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:11px\"><span class=\"sec-title\" style=\"margin-bottom:0\">Métricas Operacionais</span><span style=\"font-size:9px;color:var(--text-soft);letter-spacing:1px\">"+MONTHS[repMonth]+" "+repYear+"</span></div>";
+  h+="<div class=\"ops-grid\">";
+  h+="<div><div class=\"ops-value\">"+(cm.noites||"&#8212;")+(cm.noitesCortesia>0?"<div style=\'font-size:9px;color:var(--text-soft);font-family:Jost,sans-serif;font-weight:400;margin-top:2px\'>("+cm.noitesCortesia+" cortesia)</div>":"")+"</div><div class=\"ops-label\">Noites Vendidas</div></div>";
+  h+="<div><div class=\"ops-value\">"+(cm.capacidade>0&&cm.noites>0?cm.ocupacao.toFixed(0)+"%":"&#8212;")+"</div><div class=\"ops-label\">% Ocupação</div></div>";
+  h+="<div><div class=\"ops-value\">"+(cm.noitesPagas>0?fmt(cm.preco):"&#8212;")+"</div><div class=\"ops-label\">Preço Médio (ADR)</div></div>";
+  h+="</div>";
+  // Ultimos 6 meses table
+  var rows=[];
+  for(var i=5;i>=0;i--){var d=new Date(repYear,repMonth-i,1);var y=d.getFullYear(),m=d.getMonth();rows.push({label:MONTHS[m]+" "+String(y).slice(-2),isCurrent:i===0,metrics:computeOpsMetrics(y,m)});}
+  h+="<div style=\"margin-top:14px;padding-top:12px;border-top:1px solid var(--sand-mid)\"><div style=\"font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;font-weight:600\">Últimos 6 meses</div>";
+  h+="<table style=\"width:100%;border-collapse:collapse;font-size:11px\"><thead><tr style=\"border-bottom:1px solid var(--sand-mid)\">";
+  h+="<th style=\"text-align:left;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px\">Mês</th>";
+  h+="<th style=\"text-align:center;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px\">Noites</th>";
+  h+="<th style=\"text-align:center;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px\">Ocup.</th>";
+  h+="<th style=\"text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px\">ADR</th>";
+  h+="<th style=\"text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px\">Receita</th>";
+  h+="<th style=\"text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px\">Despesas</th>";
+  h+="</tr></thead><tbody>";
+  rows.forEach(function(r){
+    var m=r.metrics;var rowStyle=r.isCurrent?"background:var(--ocean-light);":"";var cellCol=r.isCurrent?"color:var(--ocean);font-weight:700":"color:var(--text)";
+    h+="<tr style=\"border-bottom:1px solid rgba(232,217,192,0.5);"+rowStyle+"\">";
+    h+="<td style=\"padding:6px 4px;"+cellCol+"\">"+r.label+"</td>";
+    h+="<td style=\"text-align:center;padding:6px 4px\">"+(m.noites>0?m.noites:"&#8212;")+"</td>";
+    h+="<td style=\"text-align:center;padding:6px 4px\">"+(m.capacidade>0&&m.noites>0?m.ocupacao.toFixed(0)+"%":"&#8212;")+"</td>";
+    h+="<td style=\"text-align:right;padding:6px 4px\">"+(m.noitesPagas>0?fmt(m.preco):"&#8212;")+"</td>";
+    h+="<td style=\"text-align:right;padding:6px 4px;font-weight:700;color:var(--green)\">"+(m.receita>0?fmt(m.receita):"&#8212;")+"</td>";
+    h+="<td style=\"text-align:right;padding:6px 4px;font-weight:600;color:var(--red)\">"+(m.despesas>0?fmt(m.despesas):"&#8212;")+"</td>";
+    h+="</tr>";
+  });
+  h+="</tbody></table></div>";
+  h+="</div>";
+  document.getElementById("repOcupacao").innerHTML=h;
+}
+
+// ── PROJECAO tab ─────
+function renderRepProjecao(){
+  var pj=computeProjecao(repYear,repMonth);
+  var cm=computeOpsMetrics(repYear,repMonth);
+  var h="";
+  // Projeção card
+  h+="<div class=\"ops-card\">";
+  h+="<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:11px\"><span class=\"sec-title\" style=\"margin-bottom:0\">Projeção do Mês</span><span style=\"font-size:9px;color:var(--text-soft);letter-spacing:1px\">STAYS COM CHECKIN NO MES</span></div>";
+  if(pj.count===0){h+="<div class=\"empty\">Sem reservas com checkin em "+MONTHS[repMonth]+" "+repYear+"</div>";}
+  else{
+    h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\" style=\"color:var(--green)\">&#10003; Realizado (checkout done)</span><span class=\"detail-value\" style=\"color:var(--green);font-weight:600\">"+fmt(pj.realizado)+"</span></div>";
+    h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\" style=\"color:var(--ocean)\">&#8635; Em curso (sem checkout)</span><span class=\"detail-value\" style=\"color:var(--ocean);font-weight:600\">"+fmt(pj.emCurso)+"</span></div>";
+    h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\" style=\"color:var(--sand-dark)\">&#128197; Confirmado (sem checkin ainda)</span><span class=\"detail-value\" style=\"color:var(--sand-dark);font-weight:600\">"+fmt(pj.confirmado)+"</span></div>";
+    h+="<div class=\"detail-row\" style=\"padding:8px 0;border-top:1.5px solid var(--sand-mid);margin-top:4px\"><span class=\"detail-label\" style=\"font-weight:700;color:var(--ocean);text-transform:uppercase;font-size:11px;letter-spacing:1px\">Projeção total do mês</span><span class=\"detail-value\" style=\"font-weight:700;color:var(--ocean);font-size:14px\">"+fmt(pj.projecaoTotal)+"</span></div>";
+    h+="<div style=\"margin-top:10px;padding-top:10px;border-top:1px solid var(--sand-mid)\">";
+    h+="<div style=\"font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;font-weight:600\">Estado de cobrança</div>";
+    h+="<div class=\"detail-row\" style=\"padding:4px 0;font-size:12px\"><span class=\"detail-label\" style=\"font-size:11px\">Anticipos ya cobrados</span><span class=\"detail-value\" style=\"color:var(--green);font-weight:600\">"+fmt(pj.anticipos)+"</span></div>";
+    h+="<div class=\"detail-row\" style=\"padding:4px 0;font-size:12px\"><span class=\"detail-label\" style=\"font-size:11px\">Saldos cobrados em checkin</span><span class=\"detail-value\" style=\"color:var(--ocean);font-weight:600\">"+fmt(pj.saldosCobrados)+"</span></div>";
+    h+="<div class=\"detail-row\" style=\"padding:4px 0;font-size:12px\"><span class=\"detail-label\" style=\"font-size:11px\">Saldos pendentes de cobrar</span><span class=\"detail-value\" style=\"color:var(--yellow);font-weight:600\">"+fmt(pj.saldosPendientes)+"</span></div>";
+    var pagosTotal=pj.anticipos+pj.saldosCobrados;var pctCob=pj.projecaoTotal>0?(pagosTotal/pj.projecaoTotal*100).toFixed(0):0;
+    h+="<div class=\"detail-row\" style=\"padding:6px 0;font-size:12px;border-top:1px solid var(--sand-mid);margin-top:2px\"><span class=\"detail-label\" style=\"font-size:11px;font-weight:700\">Total cobrado ("+pctCob+"%)</span><span class=\"detail-value\" style=\"font-weight:700\">"+fmt(pagosTotal)+"</span></div>";
+    h+="</div>";
+  }
+  h+="</div>";
+  // Rentabilidade card
+  var receita=Number(cm.receita||0);var despesas=Number(cm.despesas||0);var resultado=receita-despesas;var rentab=receita>0?(resultado/receita*100):0;
+  h+="<div class=\"ops-card\"><span class=\"sec-title\">Rentabilidade do Mês</span>";
+  h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\">Receita</span><span class=\"detail-value\" style=\"color:var(--green);font-weight:600\">"+fmt(receita)+"</span></div>";
+  h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\">Despesas</span><span class=\"detail-value\" style=\"color:var(--red);font-weight:600\">"+fmt(despesas)+"</span></div>";
+  h+="<div class=\"detail-row\" style=\"padding:8px 0;border-top:1.5px solid var(--sand-mid);margin-top:4px\"><span class=\"detail-label\" style=\"font-weight:700\">Resultado</span><span class=\"detail-value\" style=\"font-weight:700;color:"+(resultado>=0?"var(--green)":"var(--red)")+";font-size:14px\">"+fmt(resultado)+"</span></div>";
+  h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\">Rentabilidade</span><span class=\"detail-value\" style=\"font-weight:700;color:"+(rentab>=0?"var(--green)":"var(--red)")+"\">"+rentab.toFixed(1)+"%</span></div>";
+  h+="</div>";
+  document.getElementById("repProjecao").innerHTML=h;
+}
+
+// ── SIMPLES NACIONAL tab ─────
+function computeSNBase(year,month){
+  // Ingressos bancarios NET (descontando comissao Booking)
+  var ci=computeCashIn(year,month);
+  var totalBank=Number(ci.totalBancario||0);
+  // Descontar comissao Booking (solo sobre entries de Booking Pagamentos que ya suman en totalBancario)
+  var pctBK=Number(appConfig.booking_comissao_pct||0)/100;
+  var monEntries=(allEntries||[]).filter(function(e){var d=new Date(e.date+"T12:00:00");if(d.getMonth()!==month||d.getFullYear()!==year||e.type!=="income")return false;if(e.reserva_id){var res=(allRes||[]).find(function(r){return r.id===e.reserva_id;});if(res&&res.status==="cancelada")return false;}return true;});
+  var bookingBruto=0;
+  monEntries.forEach(function(e){
+    if(!e.reserva_id)return;
+    var res=(allRes||[]).find(function(r){return r.id===e.reserva_id;});if(!res)return;
+    var pago=e.tipo_receita==="anticipo"?res.pago_anticipo:res.pago_saldo;
+    if(pago==="Booking Pagamentos")bookingBruto+=Number(e.amount||0);
+  });
+  var bookingComissao=bookingBruto*pctBK;
+  var baseNet=totalBank-bookingComissao;
+  return{totalBank:totalBank,bookingBruto:bookingBruto,bookingComissao:bookingComissao,baseNet:baseNet};
+}
+
+function renderRepSimples(){
+  var pctSN=Number(appConfig.simples_nacional_pct||0);
+  var sn=computeSNBase(repYear,repMonth);
+  var imposto=sn.baseNet*(pctSN/100);
+  var h="";
+  h+="<div class=\"ops-card\"><span class=\"sec-title\">Simples Nacional · "+MONTHS[repMonth]+" "+repYear+"</span>";
+  h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\">Ingressos bancários brutos</span><span class=\"detail-value\">"+fmt(sn.totalBank)+"</span></div>";
+  if(sn.bookingBruto>0){
+    h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\" style=\"font-size:11px;color:var(--text-soft)\">&nbsp;&nbsp;&nbsp;&nbsp;Bruto Booking Pagamentos</span><span class=\"detail-value\" style=\"font-size:11px;color:var(--text-soft)\">"+fmt(sn.bookingBruto)+"</span></div>";
+    h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\" style=\"color:var(--red)\">(−) Comissão Booking ("+Number(appConfig.booking_comissao_pct).toFixed(2)+"%)</span><span class=\"detail-value\" style=\"color:var(--red);font-weight:600\">-"+fmt(sn.bookingComissao)+"</span></div>";
+  }
+  h+="<div class=\"detail-row\" style=\"padding:8px 0;border-top:1.5px solid var(--sand-mid);margin-top:4px\"><span class=\"detail-label\" style=\"font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:1px\">Base para declaração</span><span class=\"detail-value\" style=\"font-weight:700;color:var(--ocean);font-size:14px\">"+fmt(sn.baseNet)+"</span></div>";
+  h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\">Alíquota SN</span><span class=\"detail-value\">"+pctSN.toFixed(2)+"%</span></div>";
+  h+="<div class=\"detail-row\" style=\"padding:8px 0;border-top:1.5px solid var(--sand-mid);margin-top:4px\"><span class=\"detail-label\" style=\"font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:1px;color:var(--red)\">Imposto a pagar</span><span class=\"detail-value\" style=\"font-weight:700;color:var(--red);font-size:16px\">"+fmt(imposto)+"</span></div>";
+  h+="</div>";
+  // Ultimos 6 meses
+  h+="<div class=\"ops-card\"><span class=\"sec-title\">Últimos 6 meses</span>";
+  h+="<table style=\"width:100%;border-collapse:collapse;font-size:11px\"><thead><tr style=\"border-bottom:1px solid var(--sand-mid)\"><th style=\"text-align:left;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Mês</th><th style=\"text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Base</th><th style=\"text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Imposto</th></tr></thead><tbody>";
+  for(var i=5;i>=0;i--){var d=new Date(repYear,repMonth-i,1);var y=d.getFullYear(),m=d.getMonth();var sn2=computeSNBase(y,m);var imp2=sn2.baseNet*(pctSN/100);var lbl=MONTHS[m]+" "+String(y).slice(-2);var isCur=i===0;
+    h+="<tr style=\"border-bottom:1px solid rgba(232,217,192,0.5);"+(isCur?"background:var(--ocean-light);":"")+"\">";
+    h+="<td style=\"padding:6px 4px;"+(isCur?"font-weight:700;color:var(--ocean)":"")+"\">"+lbl+"</td>";
+    h+="<td style=\"text-align:right;padding:6px 4px\">"+(sn2.baseNet>0?fmt(sn2.baseNet):"&#8212;")+"</td>";
+    h+="<td style=\"text-align:right;padding:6px 4px;color:var(--red);font-weight:600\">"+(imp2>0?fmt(imp2):"&#8212;")+"</td></tr>";
+  }
+  h+="</tbody></table></div>";
+  document.getElementById("repSimples").innerHTML=h;
+}
+
+// ── COMISSOES tab ─────
+function computeComissaoRateGestao(canal,grupoNome,hasAgente){
+  if(hasAgente)return canal==="WhatsApp"?5.0:0.0;
+  var isNord=grupoNome==="Nordestina";
+  var isCarol=grupoNome==="Carol Virginia de Chana"||grupoNome==="Carol";
+  if(canal==="WhatsApp"){if(isNord)return 10.0;if(isCarol)return 7.0;return 0.0;}
+  if(canal==="Booking.com"){if(isNord)return 5.0;if(isCarol)return 3.0;return 0.0;}
+  return 0.0;
+}
+
+// Neto per pago: bank-based paga SN e eventualmente Booking; cash/KamiPay entra 100% (nao paga SN)
+function netoOfPayment(amt,pago,pctBK,pctSN){
+  amt=Number(amt||0);if(amt<=0)return 0;
+  if(PAGOS_BANK.indexOf(pago)<0)return amt; // cash/kamipay: es el neto
+  var afterBK=(pago==="Booking Pagamentos")?amt*(1-pctBK/100):amt;
+  return afterBK*(1-pctSN/100);
+}
+
+function computeComissoes(year,month){
+  var monRes=(allRes||[]).filter(function(r){
+    if(!r.checkin||!r.checkout)return false;
+    if(r.status!=="checkin"&&r.status!=="checkout")return false;
+    var td=new Date();var todayStr=td.getFullYear()+"-"+(td.getMonth()+1<10?"0":"")+(td.getMonth()+1)+"-"+(td.getDate()<10?"0":"")+td.getDate();
+    if(r.checkin>todayStr)return false;
+    var ci=new Date(r.checkin+"T12:00:00");
+    return ci.getFullYear()===year&&ci.getMonth()===month;
+  });
+  var pctBK=Number(appConfig.booking_comissao_pct||0);
+  var pctSN=Number(appConfig.simples_nacional_pct||0);
+  var bookingTotal=0,gestaoTotal=0,agentesTotal=0;
+  var byRes=[];
+  monRes.forEach(function(r){
+    var total=Number(r.total||0);
+    var g=grupoOfApto(r.apto);
+    var grupoNome=g?g.nome:"";
+    // Cap pagamentos a r.total: excedentes son servicos adicionais (nao comissionam)
+    var antRaw=Number(r.anticipo||0),saldoRaw=Number(r.saldo_cobrado||0);
+    var antCap=Math.min(antRaw,total);
+    var saldoCap=Math.min(saldoRaw,Math.max(0,total-antCap));
+    var extras=Math.max(0,(antRaw+saldoRaw)-total);
+    // Booking commission: tied to payment method, on CAPPED amounts (extras nao contam)
+    var comBK=0;
+    if(r.pago_anticipo==="Booking Pagamentos")comBK+=antCap*pctBK/100;
+    if(r.pago_saldo==="Booking Pagamentos")comBK+=saldoCap*pctBK/100;
+    // Neto para Gestão: por pagamento, distinguiendo bank vs cash (sobre CAPPED)
+    var netoAnt=netoOfPayment(antCap,r.pago_anticipo,pctBK,pctSN);
+    var netoSaldo=netoOfPayment(saldoCap,r.pago_saldo,pctBK,pctSN);
+    var netoTotal=netoAnt+netoSaldo;
+    var pctGestao=computeComissaoRateGestao(r.canal,grupoNome,!!r.agente_id);
+    var comGestao=netoTotal*pctGestao/100;
+    // Agentes sobre bruto de la reserva (r.total, tampoco cuenta extras)
+    var comAgente=0,agenteNome="";
+    if(r.agente_id){var ag=(allAgentes||[]).find(function(x){return x.id===r.agente_id;});if(ag){comAgente=total*Number(ag.comissao_pct||0)/100;agenteNome=ag.nome;}}
+    bookingTotal+=comBK;gestaoTotal+=comGestao;agentesTotal+=comAgente;
+    byRes.push({res:r,grupo:grupoNome,total:total,neto:netoTotal,extras:extras,comBK:comBK,pctGestao:pctGestao,comGestao:comGestao,comAgente:comAgente,agenteNome:agenteNome});
+  });
+  return{bookingTotal:bookingTotal,gestaoTotal:gestaoTotal,agentesTotal:agentesTotal,byRes:byRes,total:bookingTotal+gestaoTotal+agentesTotal};
+}
+
+function renderRepComissoes(){
+  var c=computeComissoes(repYear,repMonth);
+  var h="";
+  h+="<div class=\"ops-card\"><span class=\"sec-title\">Comissões · "+MONTHS[repMonth]+" "+repYear+"</span>";
+  h+="<div class=\"detail-row\" style=\"padding:8px 0\"><span class=\"detail-label\" style=\"color:var(--ocean);font-weight:600\">Booking ("+Number(appConfig.booking_comissao_pct).toFixed(2)+"%)</span><span class=\"detail-value\" style=\"color:var(--ocean);font-weight:700\">"+fmt(c.bookingTotal)+"</span></div>";
+  h+="<div class=\"detail-row\" style=\"padding:8px 0\"><span class=\"detail-label\" style=\"color:var(--sand-dark);font-weight:600\">Gestão Comercial <span style=\"font-size:9px;color:var(--text-soft);font-weight:400\">(sobre neto)</span></span><span class=\"detail-value\" style=\"color:var(--sand-dark);font-weight:700\">"+fmt(c.gestaoTotal)+"</span></div>";
+  h+="<div class=\"detail-row\" style=\"padding:8px 0\"><span class=\"detail-label\" style=\"color:var(--green);font-weight:600\">Agentes</span><span class=\"detail-value\" style=\"color:var(--green);font-weight:700\">"+fmt(c.agentesTotal)+"</span></div>";
+  h+="<div class=\"detail-row\" style=\"padding:8px 0;border-top:1.5px solid var(--sand-mid);margin-top:4px\"><span class=\"detail-label\" style=\"font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:1px\">Total comissões</span><span class=\"detail-value\" style=\"font-weight:700;color:var(--ocean);font-size:14px\">"+fmt(c.total)+"</span></div>";
+  h+="</div>";
+  // Detalhe por reserva
+  if(c.byRes.length>0){
+    h+="<div class=\"ops-card\"><span class=\"sec-title\">Detalhe por reserva</span>";
+    h+="<div style=\"overflow-x:auto\"><table style=\"width:100%;border-collapse:collapse;font-size:11px\"><thead><tr style=\"border-bottom:1px solid var(--sand-mid)\">";
+    h+="<th style=\"text-align:left;padding:4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Hóspede</th>";
+    h+="<th style=\"text-align:left;padding:4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Canal</th>";
+    h+="<th style=\"text-align:right;padding:4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Total</th>";
+    h+="<th style=\"text-align:right;padding:4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Neto</th>";
+    h+="<th style=\"text-align:right;padding:4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">BK</th>";
+    h+="<th style=\"text-align:right;padding:4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Gestão</th>";
+    h+="<th style=\"text-align:right;padding:4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Agente</th>";
+    h+="</tr></thead><tbody>";
+    c.byRes.forEach(function(x){
+      var r=x.res;
+      h+="<tr style=\"border-bottom:1px solid rgba(232,217,192,0.5)\">";
+      h+="<td style=\"padding:5px 4px;font-size:11px\">"+(r.nome||"&#8212;")+"<br><span style=\"font-size:9px;color:var(--text-soft)\">"+r.apto+(x.grupo?" · "+x.grupo:"")+"</span>"+(x.extras>0?"<br><span style=\"font-size:9px;color:var(--yellow);font-style:italic\">+"+fmt(x.extras)+" extras (não comissionam)</span>":"")+"</td>";
+      h+="<td style=\"padding:5px 4px;font-size:10px\">"+(r.canal||"&#8212;")+(x.agenteNome?"<br><span style=\"font-size:9px;color:var(--green)\">"+x.agenteNome+"</span>":"")+"</td>";
+      h+="<td style=\"text-align:right;padding:5px 4px;font-size:11px\">"+fmt(x.total)+"</td>";
+      h+="<td style=\"text-align:right;padding:5px 4px;font-size:11px;color:var(--text-soft)\">"+fmt(x.neto)+"</td>";
+      h+="<td style=\"text-align:right;padding:5px 4px;font-size:11px;color:"+(x.comBK>0?"var(--ocean)":"var(--text-soft)")+"\">"+(x.comBK>0?fmt(x.comBK):"&#8212;")+"</td>";
+      h+="<td style=\"text-align:right;padding:5px 4px;font-size:11px;color:"+(x.comGestao>0?"var(--sand-dark)":"var(--text-soft)")+"\">"+(x.comGestao>0?fmt(x.comGestao)+" <span style=\'font-size:9px\'>("+x.pctGestao+"%)</span>":"&#8212;")+"</td>";
+      h+="<td style=\"text-align:right;padding:5px 4px;font-size:11px;color:"+(x.comAgente>0?"var(--green)":"var(--text-soft)")+"\">"+(x.comAgente>0?fmt(x.comAgente):"&#8212;")+"</td>";
+      h+="</tr>";
+    });
+    h+="</tbody></table></div></div>";
+  }else{h+="<div class=\"ops-card\"><div class=\"empty\">Sem reservas neste mês com comissões calculáveis</div></div>";}
+  document.getElementById("repComissoes").innerHTML=h;
+}
+
+// ── CONFIG modal ─────
+function openRepConfig(){
+  document.getElementById("cfgSimplesPct").value=Number(appConfig.simples_nacional_pct||6).toFixed(2);
+  document.getElementById("cfgBookingPct").value=Number(appConfig.booking_comissao_pct||15).toFixed(2);
+  document.getElementById("cfgGestaoPct").value=Number(appConfig.gestao_comercial_pct||0).toFixed(2);
+  renderAgentesList();
+  document.getElementById("repConfigOverlay").classList.add("open");
+}
+
+function renderAgentesList(){
+  var el=document.getElementById("cfgAgentesList");if(!el)return;
+  if(!allAgentes.length){el.innerHTML="<div style=\"font-size:12px;color:var(--text-soft);padding:6px 0\">Nenhum agente cadastrado ainda.</div>";return;}
+  var h="";
+  allAgentes.forEach(function(a){
+    h+="<div style=\"display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--sand-mid);font-size:12px\">";
+    h+="<div><div style=\"font-weight:600\">"+a.nome+" "+(!a.ativo?"<span style=\'font-size:9px;color:var(--red)\'>(inativo)</span>":"")+"</div><div style=\"font-size:10px;color:var(--text-soft)\">"+Number(a.comissao_pct).toFixed(2)+"%</div></div>";
+    h+="<div style=\"display:flex;gap:6px\"><button class=\"btn-sm\" data-aged=\""+a.id+"\">Editar</button><button class=\"btn-sm-red\" data-agdel=\""+a.id+"\">&#128465;</button></div>";
+    h+="</div>";
+  });
+  el.innerHTML=h;
+  document.querySelectorAll("[data-aged]").forEach(function(b){b.addEventListener("click",function(){openAgenteEdit(parseInt(b.dataset.aged));});});
+  document.querySelectorAll("[data-agdel]").forEach(function(b){b.addEventListener("click",function(){delAgente(parseInt(b.dataset.agdel));});});
+}
+
+function openAgenteNew(){editingAgenteId=null;document.getElementById("agenteFormTitle").textContent="Novo Agente";document.getElementById("agFormNome").value="";document.getElementById("agFormPct").value="10.00";document.getElementById("agFormCpf").value="";document.getElementById("agFormEmail").value="";document.getElementById("agFormTel").value="";document.getElementById("agFormObs").value="";document.getElementById("agFormAtivo").value="true";document.getElementById("agenteFormOverlay").classList.add("open");}
+function openAgenteEdit(id){var a=allAgentes.find(function(x){return x.id===id;});if(!a)return;editingAgenteId=id;document.getElementById("agenteFormTitle").textContent="Editar Agente";document.getElementById("agFormNome").value=a.nome||"";document.getElementById("agFormPct").value=Number(a.comissao_pct||0).toFixed(2);document.getElementById("agFormCpf").value=a.cpf||"";document.getElementById("agFormEmail").value=a.email||"";document.getElementById("agFormTel").value=a.telefone||"";document.getElementById("agFormObs").value=a.observacao||"";document.getElementById("agFormAtivo").value=a.ativo?"true":"false";document.getElementById("agenteFormOverlay").classList.add("open");}
+
+async function saveAgente(){
+  var body={nome:document.getElementById("agFormNome").value.trim(),comissao_pct:parseFloat(document.getElementById("agFormPct").value)||0,cpf:document.getElementById("agFormCpf").value.trim()||null,email:document.getElementById("agFormEmail").value.trim()||null,telefone:document.getElementById("agFormTel").value.trim()||null,observacao:document.getElementById("agFormObs").value.trim()||null,ativo:document.getElementById("agFormAtivo").value==="true"};
+  if(!body.nome){showToast("Nome é obrigatório");return;}
+  var res;
+  if(editingAgenteId)res=await api("agentes?id=eq."+editingAgenteId,"PATCH",body);
+  else res=await api("agentes","POST",body);
+  if(res){document.getElementById("agenteFormOverlay").classList.remove("open");await loadReportes();renderAgentesList();showToast("Agente salvo");}
+  else showToast("Erro ao salvar");
+}
+
+async function delAgente(id){
+  var a=allAgentes.find(function(x){return x.id===id;});
+  if(!window.confirm("Remover agente "+(a?a.nome:"")+"?"))return;
+  await api("agentes?id=eq."+id,"DELETE");
+  await loadReportes();renderAgentesList();showToast("Agente removido");
+}
+
+async function saveRepConfig(){
+  var body={simples_nacional_pct:parseFloat(document.getElementById("cfgSimplesPct").value)||0,booking_comissao_pct:parseFloat(document.getElementById("cfgBookingPct").value)||0,gestao_comercial_pct:parseFloat(document.getElementById("cfgGestaoPct").value)||0};
+  await api("app_config?id=eq.1","PATCH",body);
+  document.getElementById("repConfigOverlay").classList.remove("open");
+  await loadReportes();showToast("Configuração salva");
 }
 
 // ── CONSORCIO ────────────────────────────────────────────────────────────────
@@ -1948,6 +2320,22 @@ document.getElementById("usersBtnBack").addEventListener("click",goToDash);
 document.getElementById("btnAddUser").addEventListener("click",openNewUser);
 document.getElementById("userFormClose").addEventListener("click",function(){document.getElementById("userFormOverlay").classList.remove("open");});
 document.getElementById("userFormSave").addEventListener("click",saveUser);
+
+// Reportes
+document.getElementById("repBtnBack").addEventListener("click",goToDash);
+document.getElementById("repBtnSair").addEventListener("click",doLogout);
+document.getElementById("repBtnConfig").addEventListener("click",openRepConfig);
+document.getElementById("repPrev").addEventListener("click",function(){repMonth--;if(repMonth<0){repMonth=11;repYear--;}renderReportes();});
+document.getElementById("repNext").addEventListener("click",function(){repMonth++;if(repMonth>11){repMonth=0;repYear++;}renderReportes();});
+document.getElementById("repTab0").addEventListener("click",function(){repTab="ocupacao";renderReportes();});
+document.getElementById("repTab1").addEventListener("click",function(){repTab="projecao";renderReportes();});
+document.getElementById("repTab2").addEventListener("click",function(){repTab="simples";renderReportes();});
+document.getElementById("repTab3").addEventListener("click",function(){repTab="comissoes";renderReportes();});
+document.getElementById("repConfigClose").addEventListener("click",function(){document.getElementById("repConfigOverlay").classList.remove("open");});
+document.getElementById("repConfigSave").addEventListener("click",saveRepConfig);
+document.getElementById("cfgBtnAddAgente").addEventListener("click",openAgenteNew);
+document.getElementById("agenteFormClose").addEventListener("click",function(){document.getElementById("agenteFormOverlay").classList.remove("open");});
+document.getElementById("agFormSave").addEventListener("click",saveAgente);
 
 // Consorcio
 document.getElementById("consBtnBack").addEventListener("click",goToDash);
