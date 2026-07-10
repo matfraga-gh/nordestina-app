@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-10 10:06 -->
+<!-- BUILD_STAMP: v2026-07-10 10:16 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -80,6 +80,7 @@ body{background:var(--sand);font-family:'Jost',sans-serif;color:var(--text);min-
 
 /* ── CONTENT ── */
 .content{padding:12px 12px 70px;max-width:480px;margin:0 auto}
+#viewReportes .content{max-width:1200px;padding:12px 20px 70px}
 
 /* ── CARDS ── */
 .card{background:var(--white);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 2px 12px rgba(26,74,107,.08);border:1px solid rgba(26,74,107,.06)}
@@ -654,7 +655,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-10 10:06");
+console.log("Nordestina build v2026-07-10 10:16");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -1927,9 +1928,22 @@ async function saveRepConfig(){
     com_canal_terceros_pct:parseFloat(document.getElementById("cfgComCanalTerceros").value)||0,
     com_agente_pct:parseFloat(document.getElementById("cfgComAgente").value)||0
   };
-  await api("app_config?id=eq.1","PATCH",body);
+  var res=await api("app_config?id=eq.1","PATCH",body);
+  if(!res||(Array.isArray(res)&&res.length===0)){
+    // El PATCH falló (probablemente porque falta correr reportes_v2_migration.sql).
+    // Reintentar campo por campo para al menos guardar lo que se pueda.
+    var saved=0,failed=[];
+    for(var k in body){
+      var one={};one[k]=body[k];
+      var r=await api("app_config?id=eq.1","PATCH",one);
+      if(r&&(!Array.isArray(r)||r.length>0))saved++;else failed.push(k);
+    }
+    if(saved===0){showToast("Erro: verificá que corriste reportes_v2_migration.sql");return;}
+    if(failed.length>0){showToast("Salvo parcial. Faltan: "+failed.join(", ")+". Correr reportes_v2_migration.sql");}
+    else showToast("Configuração salva (campo por campo)");
+  }else{showToast("Configuração salva");}
   document.getElementById("repConfigOverlay").classList.remove("open");
-  await loadReportes();showToast("Configuração salva");
+  await loadReportes();
 }
 
 // ── CONSORCIO ────────────────────────────────────────────────────────────────
