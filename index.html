@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-10 09:41 -->
+<!-- BUILD_STAMP: v2026-07-10 10:06 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -654,7 +654,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-10 09:41");
+console.log("Nordestina build v2026-07-10 10:06");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -1257,7 +1257,7 @@ function computeCashIn(year,month){
   var antDeste=0,antFuturos=0,antPasados=0;
   var cashAnt=0,cashSaldo=0; // cash from reservas (goes to Otros)
   var cashAntDeste=0,cashAntFuturos=0,cashAntPasados=0;
-  var otrosManual=0; // manual entries (Aluguel Espaco, etc.)
+  var otrosManual=0,otros=0; // otrosManual: cash/kamipay manual · otros: bank manual (Pix Aluguel Espaco, etc.)
   var monStart=new Date(year,month,1),monEnd=new Date(year,month+1,0,23,59,59);
   monEntries.forEach(function(e){
     var amt=Number(e.amount||0);
@@ -1278,13 +1278,17 @@ function computeCashIn(year,month){
       var res=(allRes||[]).find(function(r){return r.id===e.reserva_id;});
       var pago=res?res.pago_saldo:"";
       if(PAGOS_BANK.indexOf(pago)>=0)saldos+=amt;else cashSaldo+=amt;
-    }else if(!e.reserva_id){otrosManual+=amt;}
+    }else if(!e.reserva_id){
+      var pagoM=e.forma_pagamento||"";
+      if(PAGOS_BANK.indexOf(pagoM)>=0){otros+=amt;} // manual bank income
+      else{otrosManual+=amt;}
+    }
   });
-  var totalBancario=anticipos+saldos;
+  var totalBancario=anticipos+saldos+otros;
   var totalCash=cashAnt+cashSaldo;
   var totalOtros=totalCash+otrosManual;
   var totalGeral=totalBancario+totalOtros;
-  return{anticipos:anticipos,saldos:saldos,antDeste:antDeste,antFuturos:antFuturos,antPasados:antPasados,totalBancario:totalBancario,cashAnt:cashAnt,cashSaldo:cashSaldo,cashAntDeste:cashAntDeste,cashAntFuturos:cashAntFuturos,cashAntPasados:cashAntPasados,totalCash:totalCash,otrosManual:otrosManual,totalOtros:totalOtros,totalGeral:totalGeral};
+  return{anticipos:anticipos,saldos:saldos,antDeste:antDeste,antFuturos:antFuturos,antPasados:antPasados,otrosBank:otros,totalBancario:totalBancario,cashAnt:cashAnt,cashSaldo:cashSaldo,cashAntDeste:cashAntDeste,cashAntFuturos:cashAntFuturos,cashAntPasados:cashAntPasados,totalCash:totalCash,otrosManual:otrosManual,totalOtros:totalOtros,totalGeral:totalGeral};
 }
 
 function renderCashIn(year,month){
