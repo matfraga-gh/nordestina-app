@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-10 10:16 -->
+<!-- BUILD_STAMP: v2026-07-10 10:33 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -424,6 +424,7 @@ canvas{max-width:100%}
       <label>CPF / Passaporte</label><input type="text" id="fDoc" placeholder="Ex: 123.456.789-00"/>
       <label>Canal de Venda</label>
       <select id="fCanal"><option value="">Selecionar...</option><option>WhatsApp</option><option>Booking.com</option><option>Walk-in</option><option>Indicacao</option><option>Instagram</option><option>Outro</option></select>
+      <label>Data da Reserva</label><input type="date" id="fDataReserva"/>
       <label>Agente (opcional)</label>
       <select id="fAgente"><option value="">Nenhum</option></select>
       <label>Valor Total (R$)</label><input type="number" id="fTotal" placeholder="0,00"/>
@@ -616,8 +617,10 @@ canvas{max-width:100%}
     </div>
     <div class="form-section">
       <div class="fsec-title">&#127976; Booking</div>
-      <label>Comissão (%)</label><input type="number" step="0.01" id="cfgBookingPct" placeholder="15.00"/>
-      <label>Dias para acreditar no banco</label><input type="number" step="1" id="cfgBookingDelay" placeholder="15"/>
+      <label>Comissão atual (%)</label><input type="number" step="0.01" id="cfgBookingPct" placeholder="15.00"/>
+      <label>Comissão anterior (%)</label><input type="number" step="0.01" id="cfgBookingPctAnt" placeholder="13.00"/>
+      <label>Data corte (aplica anterior antes desta data)</label><input type="date" id="cfgBookingDataCorte"/>
+      <label>Dias para acreditar no banco</label><input type="number" step="1" id="cfgBookingDelay" placeholder="20"/>
     </div>
     <div class="form-section">
       <div class="fsec-title">&#128203; Gestão Comercial (%)</div>
@@ -655,7 +658,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-10 10:16");
+console.log("Nordestina build v2026-07-10 10:33");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -692,7 +695,7 @@ var gestMonth=new Date().getMonth(), gestYear=new Date().getFullYear();
 var gestTab="dashboard", gestFormType="income";
 var barChartInst=null, pieChartInst=null;
 // Reportes state
-var appConfig={simples_nacional_pct:6.00,booking_comissao_pct:15.00,booking_delay_days:15,com_dir_propias_pct:10.00,com_dir_terceros_pct:7.00,com_canal_propias_pct:5.00,com_canal_terceros_pct:3.00,com_agente_pct:5.00,gestao_comercial_pct:0.00};
+var appConfig={simples_nacional_pct:6.00,booking_comissao_pct:15.00,booking_comissao_pct_anterior:13.00,booking_data_corte:"2026-07-01",booking_delay_days:20,com_dir_propias_pct:10.00,com_dir_terceros_pct:7.00,com_canal_propias_pct:5.00,com_canal_terceros_pct:3.00,com_agente_pct:5.00,gestao_comercial_pct:0.00};
 var allAgentes=[];
 var repYear=new Date().getFullYear(), repMonth=new Date().getMonth(), repTab="ocupacao";
 var editingAgenteId=null;
@@ -1027,10 +1030,11 @@ function resPopulateSelects(){
 
 function resResetForm(){
   resPopulateSelects();
-  ["fCheckin","fCheckout","fNome","fDoc","fTotal","fAnticipo","fObsCom","fSaldoCob","fObsCheckin","fValFxAnt","fTaxaAnt","fValFxSaldo","fTaxaSaldo","fDataAnt","fDataSaldo"].forEach(function(id){document.getElementById(id).value="";});
+  ["fCheckin","fCheckout","fNome","fDoc","fTotal","fAnticipo","fObsCom","fSaldoCob","fObsCheckin","fValFxAnt","fTaxaAnt","fValFxSaldo","fTaxaSaldo","fDataAnt","fDataSaldo","fDataReserva"].forEach(function(id){document.getElementById(id).value="";});
   var td=new Date();var todayStr=td.getFullYear()+"-"+(td.getMonth()+1<10?"0":"")+(td.getMonth()+1)+"-"+(td.getDate()<10?"0":"")+td.getDate();
   document.getElementById("fDataAnt").value=todayStr;
   document.getElementById("fDataSaldo").value=todayStr;
+  document.getElementById("fDataReserva").value=todayStr;
   document.getElementById("fCanal").value="";document.getElementById("fAdultos").value="2";document.getElementById("fCriancas").value="0";document.getElementById("fCafe").checked=false;
   document.getElementById("noitesCalc").textContent="—";document.getElementById("saldoCalc").textContent="R$ 0,00";
   document.getElementById("fxAnticipo").style.display="none";document.getElementById("fxSaldo").style.display="none";
@@ -1049,6 +1053,7 @@ function resFillForm(r){
   document.getElementById("fDataAnt").value=r.data_anticipo||"";
   document.getElementById("fDataSaldo").value=r.data_saldo||"";
   document.getElementById("fAgente").value=r.agente_id||"";
+  document.getElementById("fDataReserva").value=r.data_reserva||"";
   calcNoites();calcSaldo();resPagoChange("anticipo");resPagoChange("saldo");
 }
 
@@ -1084,7 +1089,7 @@ function getFxD(tipo){
 
 function resGetBaseData(){
   var fxA=getFxD("anticipo");
-  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,canal:document.getElementById("fCanal").value,agente_id:document.getElementById("fAgente").value?parseInt(document.getElementById("fAgente").value):null,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,data_anticipo:document.getElementById("fDataAnt").value||null,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked};
+  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,canal:document.getElementById("fCanal").value,agente_id:document.getElementById("fAgente").value?parseInt(document.getElementById("fAgente").value):null,data_reserva:document.getElementById("fDataReserva").value||null,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,data_anticipo:document.getElementById("fDataAnt").value||null,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked};
 }
 
 function checkSolap(apto,ci,co,exId){
@@ -1631,6 +1636,16 @@ function shortGrupo(grupoNome,apto){
   return grupoNome.split(" ")[0]; // fallback: solo el primer nombre
 }
 
+// % de Booking para una reserva especifica (segun cuando se hizo la reserva)
+function bookingPctForReserva(r){
+  var pctActual=Number(appConfig.booking_comissao_pct||15);
+  var pctAnterior=Number(appConfig.booking_comissao_pct_anterior||13);
+  var corte=appConfig.booking_data_corte||"2026-07-01";
+  var d=r.data_reserva||r.checkin;
+  if(!d)return pctActual;
+  return d<corte?pctAnterior:pctActual;
+}
+
 function shortPago(p){
   if(!p)return "";
   var map={"Booking Pagamentos":"Booking Pag","Cartao de Credito":"Cartão","Link Stripe":"Stripe","Contado em R$":"Cash R$","Contado em USD":"USD","Contado em EU$":"EU$","Contado em USD (Arg)":"USD Arg","Contado em AR$ (Arg)":"AR$","KamiPay":"KamiPay","Pix":"Pix","Pendente":"Pend"};
@@ -1718,20 +1733,22 @@ function renderRepProjecao(){
 
 // ── SIMPLES NACIONAL tab ─────
 function computeSNBase(year,month){
-  // Ingressos bancarios NET (descontando comissao Booking)
+  // Ingressos bancarios NET (descontando comissao Booking segun % de cada reserva)
   var ci=computeCashIn(year,month);
   var totalBank=Number(ci.totalBancario||0);
-  // Descontar comissao Booking (solo sobre entries de Booking Pagamentos que ya suman en totalBancario)
-  var pctBK=Number(appConfig.booking_comissao_pct||0)/100;
   var monEntries=(allEntries||[]).filter(function(e){var d=new Date(e.date+"T12:00:00");if(d.getMonth()!==month||d.getFullYear()!==year||e.type!=="income")return false;if(e.reserva_id){var res=(allRes||[]).find(function(r){return r.id===e.reserva_id;});if(res&&res.status==="cancelada")return false;}return true;});
-  var bookingBruto=0;
+  var bookingBruto=0,bookingComissao=0;
   monEntries.forEach(function(e){
     if(!e.reserva_id)return;
     var res=(allRes||[]).find(function(r){return r.id===e.reserva_id;});if(!res)return;
     var pago=e.tipo_receita==="anticipo"?res.pago_anticipo:res.pago_saldo;
-    if(pago==="Booking Pagamentos")bookingBruto+=Number(e.amount||0);
+    if(pago==="Booking Pagamentos"){
+      var amt=Number(e.amount||0);
+      var pctRes=bookingPctForReserva(res)/100;
+      bookingBruto+=amt;
+      bookingComissao+=amt*pctRes;
+    }
   });
-  var bookingComissao=bookingBruto*pctBK;
   var baseNet=totalBank-bookingComissao;
   return{totalBank:totalBank,bookingBruto:bookingBruto,bookingComissao:bookingComissao,baseNet:baseNet};
 }
@@ -1787,15 +1804,15 @@ function netoOfPayment(amt,pago,pctBK,pctSN){
 }
 
 function computeComissoes(year,month){
+  // Agus regla: Comisiones se pagan al CHECKOUT. Se atribuyen al mes del checkout, no del checkin.
   var monRes=(allRes||[]).filter(function(r){
     if(!r.checkin||!r.checkout)return false;
-    if(r.status!=="checkin"&&r.status!=="checkout")return false;
+    if(r.status!=="checkout")return false; // solo reservas cerradas (checkout hecho)
     var td=new Date();var todayStr=td.getFullYear()+"-"+(td.getMonth()+1<10?"0":"")+(td.getMonth()+1)+"-"+(td.getDate()<10?"0":"")+td.getDate();
-    if(r.checkin>todayStr)return false;
-    var ci=new Date(r.checkin+"T12:00:00");
-    return ci.getFullYear()===year&&ci.getMonth()===month;
+    if(r.checkout>todayStr)return false;
+    var co=new Date(r.checkout+"T12:00:00");
+    return co.getFullYear()===year&&co.getMonth()===month;
   });
-  var pctBK=Number(appConfig.booking_comissao_pct||0);
   var pctSN=Number(appConfig.simples_nacional_pct||0);
   var bookingTotal=0,gestaoTotal=0,agentesTotal=0;
   var byRes=[];
@@ -1803,18 +1820,20 @@ function computeComissoes(year,month){
     var total=Number(r.total||0);
     var g=grupoOfApto(r.apto);
     var grupoNome=g?g.nome:"";
+    // Booking % dinamico segun data_reserva
+    var pctBKR=bookingPctForReserva(r);
     // Cap pagamentos a r.total: excedentes son servicos adicionais (nao comissionam)
     var antRaw=Number(r.anticipo||0),saldoRaw=Number(r.saldo_cobrado||0);
     var antCap=Math.min(antRaw,total);
     var saldoCap=Math.min(saldoRaw,Math.max(0,total-antCap));
     var extras=Math.max(0,(antRaw+saldoRaw)-total);
-    // Booking commission: tied to payment method, on CAPPED amounts (extras nao contam)
+    // Booking commission: tied to payment method, on CAPPED amounts (extras nao contam), % dinamico
     var comBK=0;
-    if(r.pago_anticipo==="Booking Pagamentos")comBK+=antCap*pctBK/100;
-    if(r.pago_saldo==="Booking Pagamentos")comBK+=saldoCap*pctBK/100;
+    if(r.pago_anticipo==="Booking Pagamentos")comBK+=antCap*pctBKR/100;
+    if(r.pago_saldo==="Booking Pagamentos")comBK+=saldoCap*pctBKR/100;
     // Neto para Gestão: por pagamento, distinguiendo bank vs cash (sobre CAPPED)
-    var netoAnt=netoOfPayment(antCap,r.pago_anticipo,pctBK,pctSN);
-    var netoSaldo=netoOfPayment(saldoCap,r.pago_saldo,pctBK,pctSN);
+    var netoAnt=netoOfPayment(antCap,r.pago_anticipo,pctBKR,pctSN);
+    var netoSaldo=netoOfPayment(saldoCap,r.pago_saldo,pctBKR,pctSN);
     var netoTotal=netoAnt+netoSaldo;
     var pctGestao=computeComissaoRateGestao(r.canal,grupoNome,!!r.agente_id);
     var comGestao=netoTotal*pctGestao/100;
@@ -1822,7 +1841,7 @@ function computeComissoes(year,month){
     var comAgente=0,agenteNome="";
     if(r.agente_id){var ag=(allAgentes||[]).find(function(x){return x.id===r.agente_id;});if(ag){comAgente=total*Number(ag.comissao_pct||0)/100;agenteNome=ag.nome;}}
     bookingTotal+=comBK;gestaoTotal+=comGestao;agentesTotal+=comAgente;
-    byRes.push({res:r,grupo:grupoNome,total:total,neto:netoTotal,extras:extras,comBK:comBK,pctGestao:pctGestao,comGestao:comGestao,comAgente:comAgente,agenteNome:agenteNome});
+    byRes.push({res:r,grupo:grupoNome,total:total,neto:netoTotal,extras:extras,pctBK:pctBKR,comBK:comBK,pctGestao:pctGestao,comGestao:comGestao,comAgente:comAgente,agenteNome:agenteNome});
   });
   return{bookingTotal:bookingTotal,gestaoTotal:gestaoTotal,agentesTotal:agentesTotal,byRes:byRes,total:bookingTotal+gestaoTotal+agentesTotal};
 }
@@ -1858,7 +1877,7 @@ function renderRepComissoes(){
       h+="<td style=\"padding:5px 4px;font-size:10px;color:var(--text-soft)\">"+payDisplay(r)+"</td>";
       h+="<td style=\"text-align:right;padding:5px 4px;font-size:11px\">"+fmt(x.total)+"</td>";
       h+="<td style=\"text-align:right;padding:5px 4px;font-size:11px;color:var(--text-soft)\">"+fmt(x.neto)+"</td>";
-      h+="<td style=\"text-align:right;padding:5px 4px;font-size:11px;color:"+(x.comBK>0?"var(--ocean)":"var(--text-soft)")+"\">"+(x.comBK>0?fmt(x.comBK):"&#8212;")+"</td>";
+      h+="<td style=\"text-align:right;padding:5px 4px;font-size:11px;color:"+(x.comBK>0?"var(--ocean)":"var(--text-soft)")+"\">"+(x.comBK>0?fmt(x.comBK)+" <span style=\"font-size:9px\">("+x.pctBK+"%)</span>":"&#8212;")+"</td>";
       h+="<td style=\"text-align:right;padding:5px 4px;font-size:11px;color:"+(x.comGestao>0?"var(--sand-dark)":"var(--text-soft)")+"\">"+(x.comGestao>0?fmt(x.comGestao)+" <span style=\'font-size:9px\'>("+x.pctGestao+"%)</span>":"&#8212;")+"</td>";
       h+="<td style=\"text-align:right;padding:5px 4px;font-size:11px;color:"+(x.comAgente>0?"var(--green)":"var(--text-soft)")+"\">"+(x.comAgente>0?fmt(x.comAgente):"&#8212;")+"</td>";
       h+="</tr>";
@@ -1872,7 +1891,9 @@ function renderRepComissoes(){
 function openRepConfig(){
   document.getElementById("cfgSimplesPct").value=Number(appConfig.simples_nacional_pct||6).toFixed(2);
   document.getElementById("cfgBookingPct").value=Number(appConfig.booking_comissao_pct||15).toFixed(2);
-  document.getElementById("cfgBookingDelay").value=Number(appConfig.booking_delay_days||15);
+  document.getElementById("cfgBookingPctAnt").value=Number(appConfig.booking_comissao_pct_anterior||13).toFixed(2);
+  document.getElementById("cfgBookingDataCorte").value=appConfig.booking_data_corte||"2026-07-01";
+  document.getElementById("cfgBookingDelay").value=Number(appConfig.booking_delay_days||20);
   document.getElementById("cfgComDirPropias").value=Number(appConfig.com_dir_propias_pct||10).toFixed(2);
   document.getElementById("cfgComDirTerceros").value=Number(appConfig.com_dir_terceros_pct||7).toFixed(2);
   document.getElementById("cfgComCanalPropias").value=Number(appConfig.com_canal_propias_pct||5).toFixed(2);
@@ -1921,6 +1942,8 @@ async function saveRepConfig(){
   var body={
     simples_nacional_pct:parseFloat(document.getElementById("cfgSimplesPct").value)||0,
     booking_comissao_pct:parseFloat(document.getElementById("cfgBookingPct").value)||0,
+    booking_comissao_pct_anterior:parseFloat(document.getElementById("cfgBookingPctAnt").value)||0,
+    booking_data_corte:document.getElementById("cfgBookingDataCorte").value||"2026-07-01",
     booking_delay_days:parseInt(document.getElementById("cfgBookingDelay").value)||0,
     com_dir_propias_pct:parseFloat(document.getElementById("cfgComDirPropias").value)||0,
     com_dir_terceros_pct:parseFloat(document.getElementById("cfgComDirTerceros").value)||0,
