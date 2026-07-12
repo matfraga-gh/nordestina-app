@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-12 11:07 -->
+<!-- BUILD_STAMP: v2026-07-12 11:57 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -441,6 +441,16 @@ canvas{max-width:100%}
       </div>
     </div>
     <div class="form-section">
+      <div class="fsec-title">&#128717; Serviços Adicionais</div>
+      <div style="font-size:11px;color:var(--text-soft);margin-bottom:8px;font-style:italic">Não somam ao total da reserva nem entram no cálculo de comissões.</div>
+      <label>Cozinheira (R$)</label><input type="number" step="0.01" id="fSvcCozinheira" placeholder="0.00"/>
+      <label>Early check-in (R$)</label><input type="number" step="0.01" id="fSvcEarlyCheckin" placeholder="0.00"/>
+      <label>Late check-out (R$)</label><input type="number" step="0.01" id="fSvcLateCheckout" placeholder="0.00"/>
+      <label>Outros - descrição</label><input type="text" id="fSvcOutrosDesc" placeholder="ex: transfer aeroporto"/>
+      <label>Outros - valor (R$)</label><input type="number" step="0.01" id="fSvcOutrosValor" placeholder="0.00"/>
+      <div class="saldo-box" style="margin-top:8px"><span style="font-size:12px;color:var(--ocean)">Total serviços adicionais</span><span id="svcTotalCalc" style="font-size:13px;font-weight:700;color:var(--ocean)">R$ 0,00</span></div>
+    </div>
+    <div class="form-section">
       <div class="fsec-title">&#128176; Anticipo</div>
       <label>Valor Anticipo (R$)</label><input type="number" id="fAnticipo" placeholder="0,00"/>
       <label>Data do Anticipo</label><input type="date" id="fDataAnt"/>
@@ -470,6 +480,11 @@ canvas{max-width:100%}
         <div class="fx-result">Equivalente em R$: <strong id="fxSaldoResult">&#8212;</strong></div>
       </div>
       <label>Observacoes / Danos</label><textarea id="fObsCheckin" placeholder="Estado do apartamento, danos..."></textarea>
+      <label>Devolução (salida anticipada, R$)</label><input type="number" step="0.01" id="fDevolucao" placeholder="0.00"/>
+      <div id="devolucaoWarn" style="font-size:11px;color:var(--text-soft);margin-top:-4px;margin-bottom:8px;font-style:italic;padding:6px 8px;border-radius:6px">
+        Se aplica reduz o total para cálculo de comissão.<br>
+        <strong>&#9888; Não usar junto com edição direta do "Valor Total" (secção Dados da Reserva). Escolha só uma abordagem — se usar ambas, o desconto será duplicado.</strong>
+      </div>
     </div>
     <div id="resFormActions"></div>
   </div>
@@ -658,7 +673,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-12 11:07");
+console.log("Nordestina build v2026-07-12 11:57");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -926,10 +941,28 @@ function openResDetail(id){
   h+="<div class='detail-row'><span class='detail-label'>Cafe da manha</span><span class='detail-value'>"+(r.cafe?"Sim":"Nao")+"</span></div></div>";
   h+="<div class='detail-section'><span class='sec-title'>Financeiro</span>";
   h+="<div class='detail-row'><span class='detail-label'>Total</span><span class='detail-value' style='font-weight:700;color:var(--ocean)'>"+fmt(r.total)+"</span></div>";
+  var _dev=Number(r.devolucao||0);
+  if(_dev>0){
+    h+="<div class='detail-row'><span class='detail-label' style='color:var(--red)'>(-) Devolução</span><span class='detail-value' style='color:var(--red);font-weight:600'>-"+fmt(_dev)+"</span></div>";
+    var _tef=Math.max(0,Number(r.total||0)-_dev);
+    h+="<div class='detail-row' style='border-top:1px dashed var(--sand-mid);padding-top:6px'><span class='detail-label' style='font-weight:600'>Total efetivo</span><span class='detail-value' style='font-weight:700;color:var(--ocean)'>"+fmt(_tef)+"</span></div>";
+  }
   h+="<div class='detail-row'><span class='detail-label'>Anticipo</span><span class='detail-value'>"+fmt(r.anticipo)+(r.pago_anticipo?" <span class='pago-tag'>"+r.pago_anticipo+"</span>":"")+(r.fx_moeda_anticipo?"<br><span style='font-size:10px;color:var(--text-soft)'>"+r.fx_moeda_anticipo+" "+r.fx_valor_anticipo+" x "+r.fx_taxa_anticipo+"</span>":"")+"</span></div>";
   h+="<div class='detail-row'><span class='detail-label'>Saldo pendente</span><span class='detail-value' style='color:"+(saldo>0?"var(--yellow)":"var(--green)")+"'>"+fmt(saldo)+"</span></div>";
   if(r.saldo_cobrado!=null&&r.saldo_cobrado!=="")h+="<div class='detail-row'><span class='detail-label'>Saldo cobrado</span><span class='detail-value' style='color:var(--green)'>"+fmt(r.saldo_cobrado)+(r.pago_saldo?" <span class='pago-tag'>"+r.pago_saldo+"</span>":"")+"</span></div>";
   h+="</div>";
+  // Serviços Adicionais (si hay alguno)
+  var _svcT=Number(r.svc_cozinheira||0)+Number(r.svc_early_checkin||0)+Number(r.svc_late_checkout||0)+Number(r.svc_outros_valor||0);
+  if(_svcT>0){
+    h+="<div class='detail-section'><span class='sec-title'>Serviços Adicionais</span>";
+    if(Number(r.svc_cozinheira||0)>0)h+="<div class='detail-row'><span class='detail-label'>Cozinheira</span><span class='detail-value'>"+fmt(r.svc_cozinheira)+"</span></div>";
+    if(Number(r.svc_early_checkin||0)>0)h+="<div class='detail-row'><span class='detail-label'>Early check-in</span><span class='detail-value'>"+fmt(r.svc_early_checkin)+"</span></div>";
+    if(Number(r.svc_late_checkout||0)>0)h+="<div class='detail-row'><span class='detail-label'>Late check-out</span><span class='detail-value'>"+fmt(r.svc_late_checkout)+"</span></div>";
+    if(Number(r.svc_outros_valor||0)>0)h+="<div class='detail-row'><span class='detail-label'>"+(r.svc_outros_desc||"Outros")+"</span><span class='detail-value'>"+fmt(r.svc_outros_valor)+"</span></div>";
+    h+="<div class='detail-row' style='border-top:1px solid var(--sand-mid);padding-top:6px'><span class='detail-label' style='font-weight:600'>Total serviços</span><span class='detail-value' style='color:var(--ocean);font-weight:700'>"+fmt(_svcT)+"</span></div>";
+    h+="<div style='font-size:10px;color:var(--text-soft);padding-top:4px;font-style:italic'>Não incluídos no total da reserva. Não geram comissão.</div>";
+    h+="</div>";
+  }
   if(r.obs_comercial||r.obs_checkin){h+="<div class='detail-section'>";if(r.obs_comercial)h+="<div style='font-size:12px;margin-bottom:6px'><strong style='color:var(--text-soft);font-size:10px;display:block;margin-bottom:2px'>COMERCIAL</strong>"+r.obs_comercial+"</div>";if(r.obs_checkin)h+="<div style='font-size:12px'><strong style='color:var(--text-soft);font-size:10px;display:block;margin-bottom:2px'>CHECK-IN</strong>"+r.obs_checkin+"</div>";h+="</div>";}
   if(r.status==="checkout"){
     var allOk=CO_ITEMS.every(function(i){return r["co_"+i.id];});
@@ -1030,7 +1063,7 @@ function resPopulateSelects(){
 
 function resResetForm(){
   resPopulateSelects();
-  ["fCheckin","fCheckout","fNome","fDoc","fTotal","fAnticipo","fObsCom","fSaldoCob","fObsCheckin","fValFxAnt","fTaxaAnt","fValFxSaldo","fTaxaSaldo","fDataAnt","fDataSaldo","fDataReserva"].forEach(function(id){document.getElementById(id).value="";});
+  ["fCheckin","fCheckout","fNome","fDoc","fTotal","fAnticipo","fObsCom","fSaldoCob","fObsCheckin","fValFxAnt","fTaxaAnt","fValFxSaldo","fTaxaSaldo","fDataAnt","fDataSaldo","fDataReserva","fSvcCozinheira","fSvcEarlyCheckin","fSvcLateCheckout","fSvcOutrosDesc","fSvcOutrosValor","fDevolucao"].forEach(function(id){var el=document.getElementById(id);if(el)el.value="";});
   var td=new Date();var todayStr=td.getFullYear()+"-"+(td.getMonth()+1<10?"0":"")+(td.getMonth()+1)+"-"+(td.getDate()<10?"0":"")+td.getDate();
   document.getElementById("fDataAnt").value=todayStr;
   document.getElementById("fDataSaldo").value=todayStr;
@@ -1040,6 +1073,8 @@ function resResetForm(){
   document.getElementById("fxAnticipo").style.display="none";document.getElementById("fxSaldo").style.display="none";
   document.getElementById("fxAntResult").textContent="—";document.getElementById("fxSaldoResult").textContent="—";
   document.getElementById("secCheckinForm").style.display="none";
+  var svcT=document.getElementById("svcTotalCalc");if(svcT)svcT.textContent=fmt(0);
+  updateDevolucaoWarn();
 }
 
 function resFillForm(r){
@@ -1054,7 +1089,13 @@ function resFillForm(r){
   document.getElementById("fDataSaldo").value=r.data_saldo||"";
   document.getElementById("fAgente").value=r.agente_id||"";
   document.getElementById("fDataReserva").value=r.data_reserva||"";
-  calcNoites();calcSaldo();resPagoChange("anticipo");resPagoChange("saldo");
+  var svcC=document.getElementById("fSvcCozinheira");if(svcC)svcC.value=r.svc_cozinheira||"";
+  var svcE=document.getElementById("fSvcEarlyCheckin");if(svcE)svcE.value=r.svc_early_checkin||"";
+  var svcL=document.getElementById("fSvcLateCheckout");if(svcL)svcL.value=r.svc_late_checkout||"";
+  var svcOD=document.getElementById("fSvcOutrosDesc");if(svcOD)svcOD.value=r.svc_outros_desc||"";
+  var svcOV=document.getElementById("fSvcOutrosValor");if(svcOV)svcOV.value=r.svc_outros_valor||"";
+  var devEl=document.getElementById("fDevolucao");if(devEl)devEl.value=r.devolucao||"";
+  calcNoites();calcSaldo();resPagoChange("anticipo");resPagoChange("saldo");calcSvc();updateDevolucaoWarn();
 }
 
 function calcNoites(){
@@ -1063,11 +1104,18 @@ function calcNoites(){
   document.getElementById("noitesCalc").textContent=nights(ci,co)||"—";
 }
 function calcSvc(){
-  var c=parseFloat(document.getElementById("fSvcCozinheira").value)||0;
-  var e=parseFloat(document.getElementById("fSvcEarlyCheckin").value)||0;
-  var l=parseFloat(document.getElementById("fSvcLateCheckout").value)||0;
-  var o=parseFloat(document.getElementById("fSvcOutrosValor").value)||0;
+  var c=parseFloat((document.getElementById("fSvcCozinheira")||{}).value)||0;
+  var e=parseFloat((document.getElementById("fSvcEarlyCheckin")||{}).value)||0;
+  var l=parseFloat((document.getElementById("fSvcLateCheckout")||{}).value)||0;
+  var o=parseFloat((document.getElementById("fSvcOutrosValor")||{}).value)||0;
   var el=document.getElementById("svcTotalCalc");if(el)el.textContent=fmt(c+e+l+o);
+}
+function updateDevolucaoWarn(){
+  var el=document.getElementById("fDevolucao");if(!el)return;
+  var v=parseFloat(el.value)||0;
+  var w=document.getElementById("devolucaoWarn");if(!w)return;
+  if(v>0){w.style.background="var(--yellow-bg)";w.style.color="var(--yellow)";}
+  else{w.style.background="transparent";w.style.color="var(--text-soft)";}
 }
 function calcSaldo(){
   var t=parseFloat(document.getElementById("fTotal").value)||0;
@@ -1096,7 +1144,7 @@ function getFxD(tipo){
 
 function resGetBaseData(){
   var fxA=getFxD("anticipo");
-  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,canal:document.getElementById("fCanal").value,agente_id:document.getElementById("fAgente").value?parseInt(document.getElementById("fAgente").value):null,data_reserva:document.getElementById("fDataReserva").value||null,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,data_anticipo:document.getElementById("fDataAnt").value||null,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked};
+  return{apto:document.getElementById("fApto").value,checkin:document.getElementById("fCheckin").value,checkout:document.getElementById("fCheckout").value,nome:document.getElementById("fNome").value,documento:document.getElementById("fDoc").value,canal:document.getElementById("fCanal").value,agente_id:document.getElementById("fAgente").value?parseInt(document.getElementById("fAgente").value):null,data_reserva:document.getElementById("fDataReserva").value||null,total:parseFloat(document.getElementById("fTotal").value)||0,anticipo:parseFloat(document.getElementById("fAnticipo").value)||0,pago_anticipo:document.getElementById("fPagoAnticipo").value,data_anticipo:document.getElementById("fDataAnt").value||null,fx_moeda_anticipo:fxA?fxA.moeda:null,fx_valor_anticipo:fxA?fxA.valor_fx:null,fx_taxa_anticipo:fxA?fxA.taxa:null,obs_comercial:document.getElementById("fObsCom").value,adultos:parseInt(document.getElementById("fAdultos").value)||0,criancas:parseInt(document.getElementById("fCriancas").value)||0,cafe:document.getElementById("fCafe").checked,svc_cozinheira:parseFloat((document.getElementById("fSvcCozinheira")||{}).value)||0,svc_early_checkin:parseFloat((document.getElementById("fSvcEarlyCheckin")||{}).value)||0,svc_late_checkout:parseFloat((document.getElementById("fSvcLateCheckout")||{}).value)||0,svc_outros_desc:(document.getElementById("fSvcOutrosDesc")||{}).value||null,svc_outros_valor:parseFloat((document.getElementById("fSvcOutrosValor")||{}).value)||0};
 }
 
 function checkSolap(apto,ci,co,exId){
@@ -1105,7 +1153,8 @@ function checkSolap(apto,ci,co,exId){
 }
 
 function resOpenNew(){resEditingId=null;resResetForm();document.getElementById("resFormTitle").textContent="Nova Reserva";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResNew'>Salvar Reserva</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResNew").addEventListener("click",function(){resSaveNew("confirmada");});}
-function resEditForm(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Editar Reserva";if(r.status==="checkin"||r.status==="confirmada")document.getElementById("secCheckinForm").style.display="block";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResEdit'>Salvar Alteracoes</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResEdit").addEventListener("click",resUpdateRes);}
+function resEditForm(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Editar Reserva";document.getElementById("secCheckinForm").style.display="block"; // sempre visible al editar (permite devolucao post-checkout)
+  document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResEdit'>Salvar Alteracoes</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResEdit").addEventListener("click",resUpdateRes);}
 function resOpenCheckin(id){resEditingId=id;document.getElementById("resDetailOverlay").classList.remove("open");var r=allRes.find(function(x){return x.id===id;});if(!r)return;resFillForm(r);document.getElementById("resFormTitle").textContent="Registrar Check-in";document.getElementById("secCheckinForm").style.display="block";document.getElementById("resFormActions").innerHTML="<button class='btn-save' id='btnResCheckin'>Confirmar Check-in</button>";document.getElementById("resFormOverlay").classList.add("open");document.getElementById("btnResCheckin").addEventListener("click",resSaveCheckin);}
 
 async function syncAnticipo(rid,reserva){
@@ -1136,7 +1185,7 @@ async function resSaveNew(status){
 }
 async function resSaveCheckin(){
   var saldo=parseFloat(document.getElementById("fSaldoCob").value)||0,fxS=getFxD("saldo");
-  var patch={saldo_cobrado:saldo,pago_saldo:document.getElementById("fPagoSaldo").value,data_saldo:document.getElementById("fDataSaldo").value||null,obs_checkin:document.getElementById("fObsCheckin").value,status:"checkin",fx_moeda_saldo:fxS?fxS.moeda:null,fx_valor_saldo:fxS?fxS.valor_fx:null,fx_taxa_saldo:fxS?fxS.taxa:null};
+  var patch={saldo_cobrado:saldo,pago_saldo:document.getElementById("fPagoSaldo").value,data_saldo:document.getElementById("fDataSaldo").value||null,obs_checkin:document.getElementById("fObsCheckin").value,devolucao:parseFloat((document.getElementById("fDevolucao")||{}).value)||0,status:"checkin",fx_moeda_saldo:fxS?fxS.moeda:null,fx_valor_saldo:fxS?fxS.valor_fx:null,fx_taxa_saldo:fxS?fxS.taxa:null};
   var res=await api("reservas?id=eq."+resEditingId,"PATCH",patch);
   if(res){var r=allRes.find(function(x){return x.id===resEditingId;});await syncSaldo(resEditingId,Object.assign({},r,patch));document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Check-in registrado!");}
   else showToast("Erro ao salvar");
@@ -1147,7 +1196,7 @@ async function resUpdateRes(){
   if(Number(d.anticipo||0)>Number(d.total||0)){showToast("Anticipo nao pode ser maior que o total da reserva");return;}
   if(checkSolap(d.apto,d.checkin,d.checkout,resEditingId)){showToast("Conflito: "+d.apto+" ja tem reserva nessas datas");return;}
   var fxS=getFxD("saldo");
-  d.saldo_cobrado=parseFloat(document.getElementById("fSaldoCob").value)||null;d.pago_saldo=document.getElementById("fPagoSaldo").value;d.data_saldo=document.getElementById("fDataSaldo").value||null;d.obs_checkin=document.getElementById("fObsCheckin").value;
+  d.saldo_cobrado=parseFloat(document.getElementById("fSaldoCob").value)||null;d.pago_saldo=document.getElementById("fPagoSaldo").value;d.data_saldo=document.getElementById("fDataSaldo").value||null;d.obs_checkin=document.getElementById("fObsCheckin").value;d.devolucao=parseFloat((document.getElementById("fDevolucao")||{}).value)||0;
   d.fx_moeda_saldo=fxS?fxS.moeda:null;d.fx_valor_saldo=fxS?fxS.valor_fx:null;d.fx_taxa_saldo=fxS?fxS.taxa:null;
   var res=await api("reservas?id=eq."+resEditingId,"PATCH",d);
   if(res){await syncAnticipo(resEditingId,Object.assign({},d,{id:resEditingId}));if(d.saldo_cobrado)await syncSaldo(resEditingId,Object.assign({},d,{id:resEditingId}));document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Atualizado!");}
@@ -2402,6 +2451,8 @@ document.getElementById("fCheckin").addEventListener("input",calcNoites);
 document.getElementById("fCheckout").addEventListener("input",calcNoites);
 document.getElementById("fTotal").addEventListener("input",calcSaldo);
 document.getElementById("fAnticipo").addEventListener("input",calcSaldo);
+["fSvcCozinheira","fSvcEarlyCheckin","fSvcLateCheckout","fSvcOutrosValor"].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener("input",calcSvc);});
+var _fdev=document.getElementById("fDevolucao");if(_fdev)_fdev.addEventListener("input",updateDevolucaoWarn);
 document.getElementById("fPagoAnticipo").addEventListener("change",function(){resPagoChange("anticipo");});
 document.getElementById("fPagoSaldo").addEventListener("change",function(){resPagoChange("saldo");});
 document.getElementById("fValFxAnt").addEventListener("input",calcFxAnt);
@@ -2435,50 +2486,4 @@ document.getElementById("provBtnAdd").addEventListener("click",addProv);
 // Usuarios
 document.getElementById("usersBtnBack").addEventListener("click",goToDash);
 document.getElementById("btnAddUser").addEventListener("click",openNewUser);
-document.getElementById("userFormClose").addEventListener("click",function(){document.getElementById("userFormOverlay").classList.remove("open");});
-document.getElementById("userFormSave").addEventListener("click",saveUser);
-
-// Reportes
-document.getElementById("repBtnBack").addEventListener("click",goToDash);
-document.getElementById("repBtnSair").addEventListener("click",doLogout);
-document.getElementById("repBtnConfig").addEventListener("click",openRepConfig);
-document.getElementById("repPrev").addEventListener("click",function(){repMonth--;if(repMonth<0){repMonth=11;repYear--;}renderReportes();});
-document.getElementById("repNext").addEventListener("click",function(){repMonth++;if(repMonth>11){repMonth=0;repYear++;}renderReportes();});
-document.getElementById("repTab0").addEventListener("click",function(){repTab="ocupacao";renderReportes();});
-document.getElementById("repTab1").addEventListener("click",function(){repTab="projecao";renderReportes();});
-document.getElementById("repTab2").addEventListener("click",function(){repTab="simples";renderReportes();});
-document.getElementById("repTab3").addEventListener("click",function(){repTab="comissoes";renderReportes();});
-document.getElementById("repConfigClose").addEventListener("click",function(){document.getElementById("repConfigOverlay").classList.remove("open");});
-document.getElementById("repConfigSave").addEventListener("click",saveRepConfig);
-document.getElementById("cfgBtnAddAgente").addEventListener("click",openAgenteNew);
-document.getElementById("agenteFormClose").addEventListener("click",function(){document.getElementById("agenteFormOverlay").classList.remove("open");});
-document.getElementById("agFormSave").addEventListener("click",saveAgente);
-
-// Consorcio
-document.getElementById("consBtnBack").addEventListener("click",goToDash);
-document.getElementById("consBtnSair").addEventListener("click",doLogout);
-document.getElementById("consBtnNovo").addEventListener("click",openConsForm);
-document.getElementById("consBtnConfig").addEventListener("click",openConsConfig);
-document.getElementById("consPrev").addEventListener("click",function(){consMonth--;if(consMonth<0){consMonth=11;consYear--;}renderConsorcio();});
-document.getElementById("consNext").addEventListener("click",function(){consMonth++;if(consMonth>11){consMonth=0;consYear++;}renderConsorcio();});
-document.getElementById("consTab0").addEventListener("click",function(){consTab="dashboard";renderConsorcio();});
-document.getElementById("consTab1").addEventListener("click",function(){consTab="cobros";renderConsorcio();});
-document.getElementById("consTab2").addEventListener("click",function(){consTab="movimentos";renderConsorcio();});
-document.getElementById("consCloseForm").addEventListener("click",function(){document.getElementById("consFormOverlay").classList.remove("open");});
-document.getElementById("consBtnIncome").addEventListener("click",function(){setConsFormType("income");});
-document.getElementById("consBtnExpense").addEventListener("click",function(){setConsFormType("expense");});
-document.getElementById("consFormIncomeGroup").addEventListener("change",consUpdateIncomeCats);
-document.getElementById("consFormGroup").addEventListener("change",consUpdateSubcats);
-document.getElementById("consFormSave").addEventListener("click",saveConsEntry);
-document.getElementById("consPagoClose").addEventListener("click",function(){document.getElementById("consPagoOverlay").classList.remove("open");});
-document.getElementById("consPagoSave").addEventListener("click",savePago);
-document.getElementById("consConfigClose").addEventListener("click",function(){document.getElementById("consConfigOverlay").classList.remove("open");});
-document.getElementById("consConfigSave").addEventListener("click",saveConsConfig);
-
-// Start
-checkSession();
-
-})();
-</script>
-</body>
-</html>
+document.getElementById("userFormClose").addEventListener("click",function(){document.getElementById("userFormOverlay").classLis
