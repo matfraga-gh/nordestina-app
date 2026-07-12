@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-12 11:57 -->
+<!-- BUILD_STAMP: v2026-07-12 12:14 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -673,7 +673,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-12 11:57");
+console.log("Nordestina build v2026-07-12 12:14");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -2486,4 +2486,50 @@ document.getElementById("provBtnAdd").addEventListener("click",addProv);
 // Usuarios
 document.getElementById("usersBtnBack").addEventListener("click",goToDash);
 document.getElementById("btnAddUser").addEventListener("click",openNewUser);
-document.getElementById("userFormClose").addEventListener("click",function(){document.getElementById("userFormOverlay").classLis
+document.getElementById("userFormClose").addEventListener("click",function(){document.getElementById("userFormOverlay").classList.remove("open");});
+document.getElementById("userFormSave").addEventListener("click",saveUser);
+
+// Reportes
+document.getElementById("repBtnBack").addEventListener("click",goToDash);
+document.getElementById("repBtnSair").addEventListener("click",doLogout);
+document.getElementById("repBtnConfig").addEventListener("click",openRepConfig);
+document.getElementById("repPrev").addEventListener("click",function(){repMonth--;if(repMonth<0){repMonth=11;repYear--;}renderReportes();});
+document.getElementById("repNext").addEventListener("click",function(){repMonth++;if(repMonth>11){repMonth=0;repYear++;}renderReportes();});
+document.getElementById("repTab0").addEventListener("click",function(){repTab="ocupacao";renderReportes();});
+document.getElementById("repTab1").addEventListener("click",function(){repTab="projecao";renderReportes();});
+document.getElementById("repTab2").addEventListener("click",function(){repTab="simples";renderReportes();});
+document.getElementById("repTab3").addEventListener("click",function(){repTab="comissoes";renderReportes();});
+document.getElementById("repConfigClose").addEventListener("click",function(){document.getElementById("repConfigOverlay").classList.remove("open");});
+document.getElementById("repConfigSave").addEventListener("click",saveRepConfig);
+document.getElementById("cfgBtnAddAgente").addEventListener("click",openAgenteNew);
+document.getElementById("agenteFormClose").addEventListener("click",function(){document.getElementById("agenteFormOverlay").classList.remove("open");});
+document.getElementById("agFormSave").addEventListener("click",saveAgente);
+
+// Consorcio
+document.getElementById("consBtnBack").addEventListener("click",goToDash);
+document.getElementById("consBtnSair").addEventListener("click",doLogout);
+document.getElementById("consBtnNovo").addEventListener("click",openConsForm);
+document.getElementById("consBtnConfig").addEventListener("click",openConsConfig);
+document.getElementById("consPrev").addEventListener("click",function(){consMonth--;if(consMonth<0){consMonth=11;consYear--;}renderConsorcio();});
+document.getElementById("consNext").addEventListener("click",function(){consMonth++;if(consMonth>11){consMonth=0;consYear++;}renderConsorcio();});
+document.getElementById("consTab0").addEventListener("click",function(){consTab="dashboard";renderConsorcio();});
+document.getElementById("consTab1").addEventListener("click",function(){consTab="cobros";renderConsorcio();});
+document.getElementById("consTab2").addEventListener("click",function(){consTab="movimentos";renderConsorcio();});
+document.getElementById("consCloseForm").addEventListener("click",function(){document.getElementById("consFormOverlay").classList.remove("open");});
+document.getElementById("consBtnIncome").addEventListener("click",function(){setConsFormType("income");});
+document.getElementById("consBtnExpense").addEventListener("click",function(){setConsFormType("expense");});
+document.getElementById("consFormIncomeGroup").addEventListener("change",consUpdateIncomeCats);
+document.getElementById("consFormGroup").addEventListener("change",consUpdateSubcats);
+document.getElementById("consFormSave").addEventListener("click",saveConsEntry);
+document.getElementById("consPagoClose").addEventListener("click",function(){document.getElementById("consPagoOverlay").classList.remove("open");});
+document.getElementById("consPagoSave").addEventListener("click",savePago);
+document.getElementById("consConfigClose").addEventListener("click",function(){document.getElementById("consConfigOverlay").classList.remove("open");});
+document.getElementById("consConfigSave").addEventListener("click",saveConsConfig);
+
+// Start
+checkSession();
+
+})();
+</script>
+</body>
+</html>
