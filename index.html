@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-10 10:54 -->
+<!-- BUILD_STAMP: v2026-07-12 11:07 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -658,7 +658,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-10 10:54");
+console.log("Nordestina build v2026-07-12 11:07");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -1061,6 +1061,13 @@ function calcNoites(){
   var ci=document.getElementById("fCheckin").value,co=document.getElementById("fCheckout").value;
   if(ci){var m=new Date(ci+"T12:00:00");m.setDate(m.getDate()+1);document.getElementById("fCheckout").min=m.toISOString().slice(0,10);if(co&&new Date(co+"T12:00:00")<=new Date(ci+"T12:00:00")){document.getElementById("fCheckout").value="";document.getElementById("noitesCalc").textContent="—";return;}}
   document.getElementById("noitesCalc").textContent=nights(ci,co)||"—";
+}
+function calcSvc(){
+  var c=parseFloat(document.getElementById("fSvcCozinheira").value)||0;
+  var e=parseFloat(document.getElementById("fSvcEarlyCheckin").value)||0;
+  var l=parseFloat(document.getElementById("fSvcLateCheckout").value)||0;
+  var o=parseFloat(document.getElementById("fSvcOutrosValor").value)||0;
+  var el=document.getElementById("svcTotalCalc");if(el)el.textContent=fmt(c+e+l+o);
 }
 function calcSaldo(){
   var t=parseFloat(document.getElementById("fTotal").value)||0;
