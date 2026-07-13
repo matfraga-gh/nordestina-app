@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-12 12:14 -->
+<!-- BUILD_STAMP: v2026-07-13 15:41 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -673,7 +673,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-12 12:14");
+console.log("Nordestina build v2026-07-13 15:41");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -2095,11 +2095,28 @@ function renderConsDash(){
   var extras=Number(consConfig.aluguel_deposito_playa||0)+Number(consConfig.aluguel_area_playa||0);
   var totalReceita=totalRecebido+tI;
   var resultado=totalReceita-tE;
+  // Arrastre de saldo del ano actual, meses anteriores
+  var saldoAnterior=0;
+  for(var mm=0;mm<consMonth;mm++){
+    var mRef=consYear+"-"+(mm+1<10?"0":"")+(mm+1);
+    var cP=(allCobros||[]).filter(function(c){return c.mes_ref===mRef&&c.pago;}).reduce(function(a,c){return a+Number(c.valor);},0);
+    var mEnt=(allConsEntries||[]).filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===mm&&d.getFullYear()===consYear;});
+    var mIn=mEnt.filter(function(e){return e.type==="income";}).reduce(function(a,e){return a+Number(e.amount);},0);
+    var mEx=mEnt.filter(function(e){return e.type==="expense";}).reduce(function(a,e){return a+Number(e.amount);},0);
+    saldoAnterior+=cP+mIn-mEx;
+  }
+  var saldoAcumulado=saldoAnterior+resultado;
   var h="<div class=\"kpi-grid\" style=\"grid-template-columns:1fr 1fr\">";
   h+="<div class=\"kpi\" style=\"background:var(--green-bg)\"><div class=\"kpi-label\">Recebido</div><div class=\"kpi-value\" style=\"color:var(--green)\">"+fmt(totalRecebido)+"</div></div>";
   h+="<div class=\"kpi\" style=\"background:var(--yellow-bg)\"><div class=\"kpi-label\">Em Mora</div><div class=\"kpi-value\" style=\"color:var(--yellow)\">"+fmt(mora)+"</div></div>";
   h+="<div class=\"kpi\" style=\"background:var(--red-bg)\"><div class=\"kpi-label\">Despesas</div><div class=\"kpi-value\" style=\"color:var(--red)\">"+fmt(tE)+"</div></div>";
-  h+="<div class=\"kpi\" style=\"background:"+(resultado>=0?"var(--green-bg)":"var(--red-bg)")+"\"><div class=\"kpi-label\">Resultado</div><div class=\"kpi-value\" style=\"color:"+(resultado>=0?"var(--green)":"var(--red)")+"\">"+fmt(resultado)+"</div></div>";
+  h+="<div class=\"kpi\" style=\"background:"+(resultado>=0?"var(--green-bg)":"var(--red-bg)")+"\"><div class=\"kpi-label\">Resultado do Mês</div><div class=\"kpi-value\" style=\"color:"+(resultado>=0?"var(--green)":"var(--red)")+"\">"+fmt(resultado)+"</div></div>";
+  h+="</div>";
+  // Card: Arrastre + Saldo Acumulado
+  h+="<div class=\"card\" style=\"margin-top:12px\"><span class=\"sec-title\">Fluxo Acumulado</span>";
+  h+="<div style=\"display:flex;justify-content:space-between;padding:6px 0;font-size:13px\"><span>Arrastre saldo mes anterior</span><span style=\"font-weight:600;color:"+(saldoAnterior>=0?"var(--green)":"var(--red)")+"\">"+fmt(saldoAnterior)+"</span></div>";
+  h+="<div style=\"display:flex;justify-content:space-between;padding:6px 0;font-size:13px\"><span>Resultado do mês</span><span style=\"font-weight:600;color:"+(resultado>=0?"var(--green)":"var(--red)")+"\">"+fmt(resultado)+"</span></div>";
+  h+="<div style=\"display:flex;justify-content:space-between;padding:8px 0;border-top:1.5px solid var(--sand-mid);margin-top:4px;font-size:14px;font-weight:700\"><span style=\"color:var(--ocean)\">SALDO ACUMULADO</span><span style=\"color:"+(saldoAcumulado>=0?"var(--green)":"var(--red)")+"\">"+fmt(saldoAcumulado)+"</span></div>";
   h+="</div>";
   var moraByGrupo={};
   mesCobros.filter(function(c){return !c.pago;}).forEach(function(c){var g=grupoOf(c.unidade_id);if(!g)return;if(!moraByGrupo[g.id])moraByGrupo[g.id]={grupo:g,total:0,count:0};moraByGrupo[g.id].total+=Number(c.valor);moraByGrupo[g.id].count++;});
