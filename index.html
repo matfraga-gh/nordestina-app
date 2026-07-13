@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-13 15:41 -->
+<!-- BUILD_STAMP: v2026-07-13 16:16 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -593,7 +593,9 @@ canvas{max-width:100%}
   <div class="modal">
     <div class="modal-head"><span class="modal-title" id="consPagoTitle">Cobro</span><button class="btn-x" id="consPagoClose">&#215;</button></div>
     <div id="consPagoInfo" style="font-size:14px;margin-bottom:16px;font-weight:600"></div>
-    <div class="cafe-row"><input type="checkbox" id="consPagoPago" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="consPagoPago" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Marcar como pago</label></div>
+    <label>Valor cobrado (R$)</label><input type="number" id="consPagoValor" step="0.01" min="0" placeholder="0.00"/>
+    <div id="consPagoValorHint" style="font-size:11px;color:var(--text-soft);margin-top:-8px;margin-bottom:12px"></div>
+    <div class="cafe-row"><input type="checkbox" id="consPagoPago" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--ocean)"/><label for="consPagoPago" style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);margin:0;cursor:pointer;font-weight:400">Fechar cobro (marcar como pago)</label></div>
     <label>Data do Pagamento</label><input type="date" id="consPagoData"/>
     <label>Forma de Pagamento</label><select id="consPagoForma"><option value="">Selecionar...</option><option>Pix</option><option>Transferencia</option><option>Deposito</option><option>Contado em R$</option><option>Cartao</option><option>Outros</option></select>
     <label>Observacao</label><textarea id="consPagoObs" placeholder="Notas..."></textarea>
@@ -673,7 +675,7 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-13 15:41");
+console.log("Nordestina build v2026-07-13 16:16");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -2080,7 +2082,7 @@ function renderConsDash(){
   var mes=currentConsMesRef();
   var mesCobros=allCobros.filter(function(c){return c.mes_ref===mes;});
   var totalEsperado=mesCobros.reduce(function(s,c){return s+Number(c.valor);},0);
-  var totalRecebido=mesCobros.filter(function(c){return c.pago;}).reduce(function(s,c){return s+Number(c.valor);},0);
+  var totalRecebido=mesCobros.reduce(function(s,c){var vp=(c.valor_pago!=null?Number(c.valor_pago):(c.pago?Number(c.valor):0));return s+vp;},0);
   // Add config values for cobros that dont exist yet (they count as mora too)
   var hasExpensa=mesCobros.some(function(c){return c.tipo==='expensa'||!c.tipo;});
   if(!hasExpensa)totalEsperado+=Number(consConfig.valor_expensa_mensal||0);
@@ -2088,7 +2090,7 @@ function renderConsDash(){
   if(!hasDep)totalEsperado+=Number(consConfig.aluguel_deposito_playa||0);
   var hasArea=mesCobros.some(function(c){return c.tipo==='aluguel_area';});
   if(!hasArea)totalEsperado+=Number(consConfig.aluguel_area_playa||0);
-  var mora=totalEsperado-totalRecebido;
+  var mora=mesCobros.filter(function(c){return !c.pago;}).reduce(function(s,c){var vp=(c.valor_pago!=null?Number(c.valor_pago):0);return s+Math.max(0,Number(c.valor)-vp);},0);
   var mesEntries=allConsEntries.filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===consMonth&&d.getFullYear()===consYear;});
   var tI=mesEntries.filter(function(e){return e.type==="income";}).reduce(function(s,e){return s+Number(e.amount);},0);
   var tE=mesEntries.filter(function(e){return e.type==="expense";}).reduce(function(s,e){return s+Number(e.amount);},0);
@@ -2099,7 +2101,7 @@ function renderConsDash(){
   var saldoAnterior=0;
   for(var mm=0;mm<consMonth;mm++){
     var mRef=consYear+"-"+(mm+1<10?"0":"")+(mm+1);
-    var cP=(allCobros||[]).filter(function(c){return c.mes_ref===mRef&&c.pago;}).reduce(function(a,c){return a+Number(c.valor);},0);
+    var cP=(allCobros||[]).filter(function(c){return c.mes_ref===mRef;}).reduce(function(a,c){var vp=(c.valor_pago!=null?Number(c.valor_pago):(c.pago?Number(c.valor):0));return a+vp;},0);
     var mEnt=(allConsEntries||[]).filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===mm&&d.getFullYear()===consYear;});
     var mIn=mEnt.filter(function(e){return e.type==="income";}).reduce(function(a,e){return a+Number(e.amount);},0);
     var mEx=mEnt.filter(function(e){return e.type==="expense";}).reduce(function(a,e){return a+Number(e.amount);},0);
@@ -2119,7 +2121,7 @@ function renderConsDash(){
   h+="<div style=\"display:flex;justify-content:space-between;padding:8px 0;border-top:1.5px solid var(--sand-mid);margin-top:4px;font-size:14px;font-weight:700\"><span style=\"color:var(--ocean)\">SALDO ACUMULADO</span><span style=\"color:"+(saldoAcumulado>=0?"var(--green)":"var(--red)")+"\">"+fmt(saldoAcumulado)+"</span></div>";
   h+="</div>";
   var moraByGrupo={};
-  mesCobros.filter(function(c){return !c.pago;}).forEach(function(c){var g=grupoOf(c.unidade_id);if(!g)return;if(!moraByGrupo[g.id])moraByGrupo[g.id]={grupo:g,total:0,count:0};moraByGrupo[g.id].total+=Number(c.valor);moraByGrupo[g.id].count++;});
+  mesCobros.filter(function(c){return !c.pago;}).forEach(function(c){var g=grupoOf(c.unidade_id);if(!g)return;var vp=(c.valor_pago!=null?Number(c.valor_pago):0);var pend=Math.max(0,Number(c.valor)-vp);if(pend<=0)return;if(!moraByGrupo[g.id])moraByGrupo[g.id]={grupo:g,total:0,count:0};moraByGrupo[g.id].total+=pend;moraByGrupo[g.id].count++;});
   var moraArr=Object.values(moraByGrupo).sort(function(a,b){return b.total-a.total;});
   h+="<div class=\"card\"><span class=\"sec-title\">Propietarios em Mora</span>";
   if(!moraArr.length){h+="<div style=\"font-size:12px;color:var(--green);padding:8px 0\">&#10003; Todos em dia</div>";}
@@ -2171,14 +2173,18 @@ function renderConsCobros(){
   grupoArr.forEach(function(gr){
     var groupCobros=gr.unidades.map(function(u){return cobroFor(u.id,mes);}).filter(function(c){return c;});
     var totalG=groupCobros.reduce(function(s,c){return s+Number(c.valor);},0);
-    var paidG=groupCobros.filter(function(c){return c.pago;}).reduce(function(s,c){return s+Number(c.valor);},0);
+    var paidG=groupCobros.reduce(function(s,c){var vp=(c.valor_pago!=null?Number(c.valor_pago):(c.pago?Number(c.valor):0));return s+vp;},0);
     h+="<div class=\"card\" style=\"border-left:5px solid "+gr.grupo.cor+"\">";
     h+="<div style=\"display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px\"><div><div style=\"font-family:Cormorant Garamond,serif;font-size:16px;font-weight:700;color:"+gr.grupo.cor+"\">"+gr.grupo.nome+"</div><div style=\"font-size:10px;color:var(--text-soft)\">"+gr.unidades.length+" unidade"+(gr.unidades.length!==1?"s":"")+"</div></div><div style=\"text-align:right\"><div style=\"font-size:13px;font-weight:700;color:"+gr.grupo.cor+"\">"+fmt(totalG)+"</div><div style=\"font-size:10px;color:"+(paidG>=totalG?"var(--green)":"var(--yellow)")+"\">"+fmt(paidG)+" recebido</div></div></div>";
     gr.unidades.forEach(function(u){
       var c=cobroFor(u.id,mes);if(!c)return;
-      var chip=c.pago?"chip-checkin":"chip-pendiente";
-      var chipL=c.pago?"Pago":"Pendente";
-      h+="<div class=\"detail-row\" style=\"cursor:"+(ro?"default":"pointer")+";padding:8px 0\" "+(ro?"":"data-cbid=\""+c.id+"\"")+"><span class=\"detail-label\">"+u.nome+" &middot; "+Number(u.percentual).toFixed(2)+"%</span><span class=\"detail-value\">"+fmt(c.valor)+" <span class=\"chip "+chip+"\">"+chipL+"</span>"+(c.pago&&c.data_pagamento?"<br><span style=\"font-size:10px;color:var(--text-soft)\">"+fmtD(c.data_pagamento)+(c.forma_pagamento?" &middot; "+c.forma_pagamento:"")+"</span>":"")+"</span></div>";
+      var vp=(c.valor_pago!=null?Number(c.valor_pago):(c.pago?Number(c.valor):0));
+      var vE=Number(c.valor);
+      var parcial=vp>0&&vp<vE;
+      var chip=c.pago?"chip-checkin":(vp>0?"chip-pendiente":"chip-pendiente");
+      var chipL=c.pago?(parcial?"Pago parcial":"Pago"):(vp>0?"Parcial":"Pendente");
+      var vHtml=(vp>0&&vp!==vE)?("<span style=\"font-size:11px;color:var(--text-soft)\">"+fmt(vp)+" / </span>"+fmt(vE)):fmt(vE);
+      h+="<div class=\"detail-row\" style=\"cursor:"+(ro?"default":"pointer")+";padding:8px 0\" "+(ro?"":"data-cbid=\""+c.id+"\"")+"><span class=\"detail-label\">"+u.nome+" &middot; "+Number(u.percentual).toFixed(2)+"%</span><span class=\"detail-value\">"+vHtml+" <span class=\"chip "+chip+"\">"+chipL+"</span>"+((c.pago||vp>0)&&c.data_pagamento?"<br><span style=\"font-size:10px;color:var(--text-soft)\">"+fmtD(c.data_pagamento)+(c.forma_pagamento?" &middot; "+c.forma_pagamento:"")+"</span>":"")+"</span></div>";
     });
     h+="</div>";
   });
@@ -2249,6 +2255,10 @@ function openPagoModal(cobroId){
   else{var u=allUnidades.find(function(x){return x.id===c.unidade_id;});var g=grupoOf(c.unidade_id);title=(u?u.nome:"")+" · "+MONTHS[consMonth]+" "+consYear;info="<span style=\"color:"+(g?g.cor:"var(--ocean)")+"\">"+(g?g.nome:"")+"</span> &middot; "+fmt(c.valor);}
   document.getElementById("consPagoTitle").textContent=title;
   document.getElementById("consPagoInfo").innerHTML=info;
+  var vEsperado=Number(c.valor);
+  var vPago=(c.valor_pago!=null?Number(c.valor_pago):(c.pago?vEsperado:vEsperado));
+  document.getElementById("consPagoValor").value=vPago.toFixed(2);
+  document.getElementById("consPagoValorHint").textContent="Valor esperado: "+fmt(vEsperado);
   document.getElementById("consPagoData").value=c.data_pagamento||new Date().toISOString().slice(0,10);
   document.getElementById("consPagoForma").value=c.forma_pagamento||"";
   document.getElementById("consPagoObs").value=c.observacao||"";
@@ -2260,14 +2270,17 @@ async function savePago(){
   var c=allCobros.find(function(x){return x.id===consEditingPagoId;});if(!c)return;
   var pago=document.getElementById("consPagoPago").checked;
   var dataP=document.getElementById("consPagoData").value;
-  var patch={pago:pago,data_pagamento:pago?dataP:null,forma_pagamento:pago?document.getElementById("consPagoForma").value:null,observacao:document.getElementById("consPagoObs").value};
+  var vInp=parseFloat(document.getElementById("consPagoValor").value);
+  var vPago=(isNaN(vInp)||vInp<0)?0:vInp;
+  var patch={pago:pago,valor_pago:vPago>0?vPago:null,data_pagamento:vPago>0?dataP:null,forma_pagamento:vPago>0?document.getElementById("consPagoForma").value:null,observacao:document.getElementById("consPagoObs").value};
   var res=await api("cons_cobros?id=eq."+consEditingPagoId,"PATCH",patch);
   if(res){
-    if(pago){
+    if(vPago>0){
+      var pTag=(vPago<Number(c.valor))?" (parcial)":"";
       var e;
-      if(c.tipo==='aluguel_deposito'){e={type:"income",group_name:"Aluguel Areas Comuns",category:"Deposito de Praia",amount:Number(c.valor),date:dataP,description:"Aluguel Depósito de Praia "+MONTHS[consMonth]+" "+consYear,cobro_id:consEditingPagoId};}
-      else if(c.tipo==='aluguel_area'){e={type:"income",group_name:"Aluguel Areas Comuns",category:"Area de Praia",amount:Number(c.valor),date:dataP,description:"Aluguel Área de Praia "+MONTHS[consMonth]+" "+consYear,cobro_id:consEditingPagoId};}
-      else{var u=allUnidades.find(function(x){return x.id===c.unidade_id;});var g=grupoOf(c.unidade_id);e={type:"income",group_name:"Expensa Ordinaria",category:"Cobro Expensa Mensal",amount:Number(c.valor),date:dataP,description:"Cobro "+MONTHS[consMonth]+" "+consYear+" \u2014 "+(u?u.nome:"")+" ("+(g?g.nome:"")+")",cobro_id:consEditingPagoId};}
+      if(c.tipo==='aluguel_deposito'){e={type:"income",group_name:"Aluguel Areas Comuns",category:"Deposito de Praia",amount:vPago,date:dataP,description:"Aluguel Depósito de Praia "+MONTHS[consMonth]+" "+consYear+pTag,cobro_id:consEditingPagoId};}
+      else if(c.tipo==='aluguel_area'){e={type:"income",group_name:"Aluguel Areas Comuns",category:"Area de Praia",amount:vPago,date:dataP,description:"Aluguel Área de Praia "+MONTHS[consMonth]+" "+consYear+pTag,cobro_id:consEditingPagoId};}
+      else{var u=allUnidades.find(function(x){return x.id===c.unidade_id;});var g=grupoOf(c.unidade_id);e={type:"income",group_name:"Expensa Ordinaria",category:"Cobro Expensa Mensal",amount:vPago,date:dataP,description:"Cobro "+MONTHS[consMonth]+" "+consYear+" \u2014 "+(u?u.nome:"")+" ("+(g?g.nome:"")+")"+pTag,cobro_id:consEditingPagoId};}
       var ex=await api("cons_entries?cobro_id=eq."+consEditingPagoId);
       if(ex&&ex.length){await api("cons_entries?id=eq."+ex[0].id,"PATCH",e);}
       else{await api("cons_entries","POST",e);}
