@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- BUILD_STAMP: v2026-07-13 16:16 -->
+<!-- BUILD_STAMP: v2026-07-14 12:31 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nordestina</title>
@@ -60,6 +60,8 @@ body{background:var(--sand);font-family:'Jost',sans-serif;color:var(--text);min-
 .app-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--sand-dark),var(--sand-mid),var(--sand-dark))}
 .app-brand{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--white);letter-spacing:3px;font-weight:600}
 .app-sub{font-size:8px;color:var(--sand-dark);letter-spacing:2px;text-transform:uppercase;margin-top:1px}
+.app-clock{font-size:10px;color:rgba(255,255,255,.65);letter-spacing:1px;margin-top:3px;font-family:'Jost',sans-serif;font-weight:400}
+.dash-clock{font-size:11px;color:rgba(255,255,255,.6);letter-spacing:1px;margin-top:6px;font-family:'Jost',sans-serif}
 .app-btns{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
 .abtn{border:none;border-radius:7px;padding:6px 10px;cursor:pointer;font-size:11px;font-family:'Jost',sans-serif;font-weight:600}
 .abtn-sand{background:var(--sand-dark);color:var(--white)}
@@ -241,6 +243,7 @@ canvas{max-width:100%}
   <div class="dash-header">
     <div class="dash-logo">&#127958; NORDESTINA</div>
     <div class="dash-sub">Icaraizinho · Painel</div>
+    <div class="dash-clock"></div>
     <div class="dash-user" id="dashUser"></div>
   </div>
   <div class="dash-grid" id="dashGrid"></div>
@@ -250,7 +253,7 @@ canvas{max-width:100%}
 <!-- ══ RESERVAS ═══════════════════════════════════════════════════════════ -->
 <div id="viewReservas" class="view">
   <div class="app-header">
-    <div><div class="app-brand">&#127958; NORDESTINA</div><div class="app-sub">Reservas &amp; Vendas</div></div>
+    <div><div class="app-brand">&#127958; NORDESTINA</div><div class="app-sub">Reservas &amp; Vendas</div><div class="app-clock"></div></div>
     <div class="app-btns">
       <span class="app-user" id="resUser"></span>
       <button class="abtn abtn-outline" id="resBtnBack">&#8592; Painel</button>
@@ -284,7 +287,7 @@ canvas{max-width:100%}
 <!-- ══ GESTAO ═════════════════════════════════════════════════════════════ -->
 <div id="viewGestao" class="view">
   <div class="app-header">
-    <div><div class="app-brand">&#127796; NORDESTINA</div><div class="app-sub">Gestao Administrativa</div></div>
+    <div><div class="app-brand">&#127796; NORDESTINA</div><div class="app-sub">Gestao Administrativa</div><div class="app-clock"></div></div>
     <div class="app-btns">
       <span class="app-user" id="gestUser"></span>
       <button class="abtn abtn-outline" id="gestBtnBack">&#8592; Painel</button>
@@ -340,7 +343,7 @@ canvas{max-width:100%}
 <!-- ══ REPORTES ══════════════════════════════════════════════════════════ -->
 <div id="viewReportes" class="view">
   <div class="app-header">
-    <div><div class="app-brand">&#128202; NORDESTINA</div><div class="app-sub">Reportes</div></div>
+    <div><div class="app-brand">&#128202; NORDESTINA</div><div class="app-sub">Reportes</div><div class="app-clock"></div></div>
     <div class="app-btns">
       <span class="app-user" id="repUser"></span>
       <button class="abtn abtn-outline" id="repBtnBack">&#8592; Painel</button>
@@ -370,7 +373,7 @@ canvas{max-width:100%}
 <!-- ══ CONSORCIO ══════════════════════════════════════════════════════════ -->
 <div id="viewConsorcio" class="view">
   <div class="app-header">
-    <div><div class="app-brand">&#127970; NORDESTINA</div><div class="app-sub">Consorcio</div></div>
+    <div><div class="app-brand">&#127970; NORDESTINA</div><div class="app-sub">Consorcio</div><div class="app-clock"></div></div>
     <div class="app-btns">
       <span class="app-user" id="consUser"></span>
       <button class="abtn abtn-outline" id="consBtnBack">&#8592; Painel</button>
@@ -675,7 +678,12 @@ canvas{max-width:100%}
 
 <script>
 (function(){
-console.log("Nordestina build v2026-07-13 16:16");
+// updateClock: item 6
+function updateClock(){var els=document.querySelectorAll(".app-clock,.dash-clock");if(!els.length)return;var d=new Date();var days=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];var months=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];var hh=String(d.getHours()).padStart(2,"0");var mm=String(d.getMinutes()).padStart(2,"0");var txt=days[d.getDay()]+", "+d.getDate()+" "+months[d.getMonth()]+" "+d.getFullYear()+" · "+hh+":"+mm;els.forEach(function(e){e.textContent=txt;});}
+setInterval(updateClock,30000);
+document.addEventListener("DOMContentLoaded",updateClock);
+setTimeout(updateClock,100);
+console.log("Nordestina build v2026-07-14 12:36");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -2098,17 +2106,30 @@ function renderConsDash(){
   var totalReceita=totalRecebido+tI;
   var resultado=totalReceita-tE;
   // Arrastre de saldo del ano actual, meses anteriores
+  // Arrastre: suma neta de TODO lo anterior al mes actual (todos los años previos + meses previos del año actual)
   var saldoAnterior=0;
-  for(var mm=0;mm<consMonth;mm++){
-    var mRef=consYear+"-"+(mm+1<10?"0":"")+(mm+1);
-    var cP=(allCobros||[]).filter(function(c){return c.mes_ref===mRef;}).reduce(function(a,c){var vp=(c.valor_pago!=null?Number(c.valor_pago):(c.pago?Number(c.valor):0));return a+vp;},0);
-    var mEnt=(allConsEntries||[]).filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===mm&&d.getFullYear()===consYear;});
-    var mIn=mEnt.filter(function(e){return e.type==="income";}).reduce(function(a,e){return a+Number(e.amount);},0);
-    var mEx=mEnt.filter(function(e){return e.type==="expense";}).reduce(function(a,e){return a+Number(e.amount);},0);
-    saldoAnterior+=cP+mIn-mEx;
-  }
+  var priorEntries=(allConsEntries||[]).filter(function(e){var d=new Date(e.date+"T12:00:00");if(d.getFullYear()<consYear)return true;if(d.getFullYear()===consYear&&d.getMonth()<consMonth)return true;return false;});
+  var priorIn=priorEntries.filter(function(e){return e.type==="income";}).reduce(function(a,e){return a+Number(e.amount);},0);
+  var priorEx=priorEntries.filter(function(e){return e.type==="expense";}).reduce(function(a,e){return a+Number(e.amount);},0);
+  var priorCobros=(allCobros||[]).filter(function(c){if(!c.mes_ref)return false;var parts=c.mes_ref.split("-");var cy=parseInt(parts[0]),cm=parseInt(parts[1])-1;if(cy<consYear)return true;if(cy===consYear&&cm<consMonth)return true;return false;});
+  var priorPaid=priorCobros.reduce(function(a,c){var vp=(c.valor_pago!=null?Number(c.valor_pago):(c.pago?Number(c.valor):0));return a+vp;},0);
+  saldoAnterior=priorPaid+priorIn-priorEx;
   var saldoAcumulado=saldoAnterior+resultado;
-  var h="<div class=\"kpi-grid\" style=\"grid-template-columns:1fr 1fr\">";
+  // ITEM 4: Ficha Ingressos do Mês (hero card arriba)
+  var ingrExp=Number(consConfig.valor_expensa_mensal||0);
+  var ingrDep=Number(consConfig.aluguel_deposito_playa||0);
+  var ingrArea=Number(consConfig.aluguel_area_playa||0);
+  var ingressoTotal=ingrExp+ingrDep+ingrArea;
+  var pct=ingressoTotal>0?Math.min(100,Math.round((totalRecebido/ingressoTotal)*100)):0;
+  var h="";
+  h+="<div class=\"card\" style=\"background:linear-gradient(135deg,var(--ocean),var(--ocean-mid));color:var(--white);border:none;padding:16px;margin-bottom:12px\">";
+  h+="<div style=\"font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.75);margin-bottom:4px\">Ingressos do Mês</div>";
+  h+="<div style=\"font-family:Cormorant Garamond,serif;font-size:28px;font-weight:700;color:var(--white);line-height:1.1\">"+fmt(ingressoTotal)+"</div>";
+  h+="<div style=\"font-size:11px;color:rgba(255,255,255,.65);margin-top:4px\">Expensas "+fmt(ingrExp)+" + Aluguéis "+fmt(ingrDep+ingrArea)+"</div>";
+  h+="<div style=\"margin-top:10px;background:rgba(255,255,255,.15);border-radius:8px;height:8px;overflow:hidden\"><div style=\"width:"+pct+"%;height:100%;background:var(--green);transition:width .3s\"></div></div>";
+  h+="<div style=\"display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:rgba(255,255,255,.8)\"><span>Recebido "+fmt(totalRecebido)+"</span><span>"+pct+"%</span></div>";
+  h+="</div>";
+  h+="<div class=\"kpi-grid\" style=\"grid-template-columns:1fr 1fr\">";
   h+="<div class=\"kpi\" style=\"background:var(--green-bg)\"><div class=\"kpi-label\">Recebido</div><div class=\"kpi-value\" style=\"color:var(--green)\">"+fmt(totalRecebido)+"</div></div>";
   h+="<div class=\"kpi\" style=\"background:var(--yellow-bg)\"><div class=\"kpi-label\">Em Mora</div><div class=\"kpi-value\" style=\"color:var(--yellow)\">"+fmt(mora)+"</div></div>";
   h+="<div class=\"kpi\" style=\"background:var(--red-bg)\"><div class=\"kpi-label\">Despesas</div><div class=\"kpi-value\" style=\"color:var(--red)\">"+fmt(tE)+"</div></div>";
@@ -2120,28 +2141,57 @@ function renderConsDash(){
   h+="<div style=\"display:flex;justify-content:space-between;padding:6px 0;font-size:13px\"><span>Resultado do mês</span><span style=\"font-weight:600;color:"+(resultado>=0?"var(--green)":"var(--red)")+"\">"+fmt(resultado)+"</span></div>";
   h+="<div style=\"display:flex;justify-content:space-between;padding:8px 0;border-top:1.5px solid var(--sand-mid);margin-top:4px;font-size:14px;font-weight:700\"><span style=\"color:var(--ocean)\">SALDO ACUMULADO</span><span style=\"color:"+(saldoAcumulado>=0?"var(--green)":"var(--red)")+"\">"+fmt(saldoAcumulado)+"</span></div>";
   h+="</div>";
+  // ITEM 5: Mora acumulada por propietario (todos los meses hasta el actual inclusive)
   var moraByGrupo={};
-  mesCobros.filter(function(c){return !c.pago;}).forEach(function(c){var g=grupoOf(c.unidade_id);if(!g)return;var vp=(c.valor_pago!=null?Number(c.valor_pago):0);var pend=Math.max(0,Number(c.valor)-vp);if(pend<=0)return;if(!moraByGrupo[g.id])moraByGrupo[g.id]={grupo:g,total:0,count:0};moraByGrupo[g.id].total+=pend;moraByGrupo[g.id].count++;});
+  (allCobros||[]).filter(function(c){
+    if(!c.mes_ref||!c.unidade_id)return false;
+    var parts=c.mes_ref.split("-");var cy=parseInt(parts[0]),cm=parseInt(parts[1])-1;
+    if(cy>consYear||(cy===consYear&&cm>consMonth))return false;
+    return !c.pago;
+  }).forEach(function(c){
+    var g=grupoOf(c.unidade_id);if(!g)return;
+    var vp=(c.valor_pago!=null?Number(c.valor_pago):0);
+    var pend=Math.max(0,Number(c.valor)-vp);
+    if(pend<=0)return;
+    if(!moraByGrupo[g.id])moraByGrupo[g.id]={grupo:g,total:0,count:0,meses:{}};
+    moraByGrupo[g.id].total+=pend;
+    if(!moraByGrupo[g.id].meses[c.mes_ref]){moraByGrupo[g.id].meses[c.mes_ref]=true;moraByGrupo[g.id].count++;}
+  });
   var moraArr=Object.values(moraByGrupo).sort(function(a,b){return b.total-a.total;});
+  var alugPend=[];
+  mesCobros.filter(function(c){return !c.pago&&(c.tipo==="aluguel_deposito"||c.tipo==="aluguel_area");}).forEach(function(c){
+    var vp=(c.valor_pago!=null?Number(c.valor_pago):0);
+    var pend=Math.max(0,Number(c.valor)-vp);
+    if(pend>0)alugPend.push({label:c.tipo==="aluguel_deposito"?"Aluguel depósito":"Aluguel área",pend:pend});
+  });
   h+="<div class=\"card\"><span class=\"sec-title\">Propietarios em Mora</span>";
-  if(!moraArr.length){h+="<div style=\"font-size:12px;color:var(--green);padding:8px 0\">&#10003; Todos em dia</div>";}
-  else moraArr.forEach(function(m){h+="<div style=\"display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--sand-mid);border-left:4px solid "+m.grupo.cor+";padding-left:10px\"><div><div style=\"font-weight:600;color:"+m.grupo.cor+"\">"+m.grupo.nome+"</div><div style=\"font-size:11px;color:var(--text-soft)\">"+m.count+" unidade"+(m.count!==1?"s":"")+"</div></div><div style=\"font-size:14px;font-weight:700;color:var(--red)\">"+fmt(m.total)+"</div></div>";});
+  if(!moraArr.length&&!alugPend.length){h+="<div style=\"font-size:12px;color:var(--green);padding:8px 0\">&#10003; Todos em dia</div>";}
+  else {
+    moraArr.forEach(function(m){h+="<div style=\"display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--sand-mid);border-left:4px solid "+m.grupo.cor+";padding-left:10px\"><div><div style=\"font-weight:600;color:"+m.grupo.cor+"\">"+m.grupo.nome+"</div><div style=\"font-size:11px;color:var(--text-soft)\">"+m.count+" mês"+(m.count!==1?"es":"")+" pendente"+(m.count!==1?"s":"")+"</div></div><div style=\"font-size:14px;font-weight:700;color:var(--red)\">"+fmt(m.total)+"</div></div>";});
+    alugPend.forEach(function(a){h+="<div style=\"display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--sand-mid);border-left:4px solid var(--sand-dark);padding-left:10px\"><div><div style=\"font-weight:600;color:var(--sand-dark)\">"+a.label+"</div><div style=\"font-size:11px;color:var(--text-soft)\">Mês corrente</div></div><div style=\"font-size:14px;font-weight:700;color:var(--red)\">"+fmt(a.pend)+"</div></div>";});
+  }
   h+="</div>";
   h+="<div class=\"card\"><span class=\"sec-title\">Aluguéis Extras (mensais)</span>";
   var depC=mesCobros.find(function(c){return c.tipo==='aluguel_deposito';});
   var areaC=mesCobros.find(function(c){return c.tipo==='aluguel_area';});
   function extraRow(label,cobro,configVal){
-    var valor,chip,chipL,cobroId=null;
-    if(cobro){valor=Number(cobro.valor);chip=cobro.pago?'chip-checkin':'chip-pendiente';chipL=cobro.pago?'Pago':'Pendente';cobroId=cobro.id;}
+    var valor,chip,chipL,cobroId=null,vp=0,parcial=false;
+    if(cobro){
+      valor=Number(cobro.valor);
+      vp=(cobro.valor_pago!=null?Number(cobro.valor_pago):(cobro.pago?valor:0));
+      parcial=vp>0&&vp<valor;
+      chip=cobro.pago?'chip-checkin':(vp>0?'chip-pendiente':'chip-pendiente');
+      chipL=cobro.pago?(parcial?'Pago parcial':'Pago'):(vp>0?'Parcial':'Pendente');
+      cobroId=cobro.id;
+    }
     else if(Number(configVal||0)>0){valor=Number(configVal);chip='chip-cancelada';chipL='Sem cobro';}
     else return '';
     var attr=cobroId?' data-cbid=\''+cobroId+'\' style=\'cursor:pointer\'':'';
-    var html='';
-    html+='<div'+attr+' style=\'display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px\'>';
-    html+='<span>'+label+' <span class=\''+('chip '+chip)+'\' style=\'margin-left:6px;font-size:9px\'>'+chipL+'</span>';
-    if(cobro&&cobro.pago&&cobro.data_pagamento)html+='<div style=\'font-size:10px;color:var(--text-soft);margin-top:2px\'>'+fmtD(cobro.data_pagamento)+(cobro.forma_pagamento?' &middot; '+cobro.forma_pagamento:'')+'</div>';
-    html+='</span>';
-    html+='<span style=\'font-weight:600\'>'+fmt(valor)+'</span>';
+    var vHtml=(vp>0&&vp!==valor)?('<span style=\'font-size:11px;color:var(--text-soft)\'>'+fmt(vp)+' / </span>'+fmt(valor)):fmt(valor);
+    var dateBelow=(cobro&&(cobro.pago||vp>0)&&cobro.data_pagamento)?('<div style=\'font-size:10px;color:var(--text-soft);margin-top:2px\'>'+fmtD(cobro.data_pagamento)+(cobro.forma_pagamento?' &middot; '+cobro.forma_pagamento:'')+'</div>'):'';
+    var html='<div'+attr+' style=\'display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;font-size:13px;gap:8px\'>';
+    html+='<div style=\'flex:1;min-width:0\'><span>'+label+' <span class=\''+('chip '+chip)+'\' style=\'margin-left:6px;font-size:9px\'>'+chipL+'</span></span>'+dateBelow+'</div>';
+    html+='<div style=\'font-weight:600;white-space:nowrap\'>'+vHtml+'</div>';
     html+='</div>';
     return html;
   }
@@ -2378,9 +2428,9 @@ async function saveConsEntry(){
 }
 
 function openConsConfig(){
-  document.getElementById("cfgValorExpensa").value=Number(consConfig.valor_expensa_mensal||15000);
-  document.getElementById("cfgAluguelDep").value=Number(consConfig.aluguel_deposito_playa||0);
-  document.getElementById("cfgAluguelArea").value=Number(consConfig.aluguel_area_playa||0);
+  document.getElementById("cfgValorExpensa").value=Number(consConfig.valor_expensa_mensal!=null?consConfig.valor_expensa_mensal:15000);
+  document.getElementById("cfgAluguelDep").value=Number(consConfig.aluguel_deposito_playa!=null?consConfig.aluguel_deposito_playa:0);
+  document.getElementById("cfgAluguelArea").value=Number(consConfig.aluguel_area_playa!=null?consConfig.aluguel_area_playa:0);
   renderCfgUnidades();
   renderCfgGrupos();
   document.getElementById("consConfigOverlay").classList.add("open");
@@ -2406,10 +2456,16 @@ function renderCfgGrupos(){
 }
 
 async function saveConsConfig(){
-  var valorExp=parseFloat(document.getElementById("cfgValorExpensa").value)||15000;
-  var alugDep=parseFloat(document.getElementById("cfgAluguelDep").value)||0;
-  var alugArea=parseFloat(document.getElementById("cfgAluguelArea").value)||0;
-  await api("cons_config?id=eq.1","PATCH",{valor_expensa_mensal:valorExp,aluguel_deposito_playa:alugDep,aluguel_area_playa:alugArea});
+  var vExpRaw=parseFloat(document.getElementById("cfgValorExpensa").value);
+  var vDepRaw=parseFloat(document.getElementById("cfgAluguelDep").value);
+  var vAreaRaw=parseFloat(document.getElementById("cfgAluguelArea").value);
+  var valorExp=isNaN(vExpRaw)?0:vExpRaw;
+  var alugDep=isNaN(vDepRaw)?0:vDepRaw;
+  var alugArea=isNaN(vAreaRaw)?0:vAreaRaw;
+  var cfgId=(consConfig&&consConfig.id)?consConfig.id:1;
+  console.log("[saveConsConfig] enviando",{id:cfgId,valor_expensa_mensal:valorExp,aluguel_deposito_playa:alugDep,aluguel_area_playa:alugArea});
+  var res=await api("cons_config?id=eq."+cfgId,"PATCH",{valor_expensa_mensal:valorExp,aluguel_deposito_playa:alugDep,aluguel_area_playa:alugArea});
+  if(res===null){showToast("Erro ao salvar configuracao");return;}
   var uidUpdates=[];
   document.querySelectorAll(".cfg-uid").forEach(function(inp){uidUpdates.push({id:parseInt(inp.dataset.uid),percentual:parseFloat(inp.value)||0});});
   for(var i=0;i<uidUpdates.length;i++){await api("cons_unidades?id=eq."+uidUpdates[i].id,"PATCH",{percentual:uidUpdates[i].percentual});}
@@ -2418,6 +2474,7 @@ async function saveConsConfig(){
   for(var i=0;i<grupos.length;i++){await api("cons_grupos?id=eq."+grupos[i].id,"PATCH",{cor:grupos[i].cor,nome:grupos[i].nome});}
   document.getElementById("consConfigOverlay").classList.remove("open");
   await loadConsorcio();
+  console.log("[saveConsConfig] consConfig despues del reload:",consConfig);
   showToast("Configuracao salva");
 }
 
@@ -2556,7 +2613,6 @@ document.getElementById("consPagoSave").addEventListener("click",savePago);
 document.getElementById("consConfigClose").addEventListener("click",function(){document.getElementById("consConfigOverlay").classList.remove("open");});
 document.getElementById("consConfigSave").addEventListener("click",saveConsConfig);
 
-// Start
 checkSession();
 
 })();
