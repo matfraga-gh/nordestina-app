@@ -683,7 +683,7 @@ function updateClock(){var els=document.querySelectorAll(".app-clock,.dash-clock
 setInterval(updateClock,30000);
 document.addEventListener("DOMContentLoaded",updateClock);
 setTimeout(updateClock,100);
-console.log("Nordestina build v2026-07-31 20:08");
+console.log("Nordestina build v2026-07-31 20:34");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -2272,7 +2272,13 @@ function renderConsCobros(){
     h+="<div class=\"card\" style=\"border-left:5px solid "+gr.grupo.cor+"\">";
     h+="<div style=\"display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px\"><div><div style=\"font-family:Cormorant Garamond,serif;font-size:16px;font-weight:700;color:"+gr.grupo.cor+"\">"+gr.grupo.nome+"</div><div style=\"font-size:10px;color:var(--text-soft)\">"+gr.unidades.length+" unidade"+(gr.unidades.length!==1?"s":"")+"</div></div><div style=\"text-align:right\"><div style=\"font-size:13px;font-weight:700;color:"+gr.grupo.cor+"\">"+fmt(totalG)+"</div><div style=\"font-size:10px;color:"+(paidG>=totalG?"var(--green)":"var(--yellow)")+"\">"+fmt(paidG)+" recebido</div></div></div>";
     gr.unidades.forEach(function(u){
-      var c=cobroFor(u.id,mes);if(!c)return;
+      var c=cobroFor(u.id,mes);
+      if(!c){
+        // Cobro faltante: mostrar botón para adicionar (a menos que sea readonly)
+        if(ro){h+="<div class=\"detail-row\" style=\"padding:8px 0;color:var(--text-soft)\"><span class=\"detail-label\">"+u.nome+" &middot; "+Number(u.percentual).toFixed(2)+"%</span><span class=\"detail-value\"><span class=\"chip chip-cancelada\" style=\"font-size:9px\">Sem cobro</span></span></div>";}
+        else{h+="<div class=\"detail-row\" style=\"padding:8px 0\"><span class=\"detail-label\">"+u.nome+" &middot; "+Number(u.percentual).toFixed(2)+"%</span><span class=\"detail-value\"><button data-addcobro=\""+u.id+"\" style=\"background:var(--ocean-mid);color:var(--white);border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:Jost,sans-serif;font-weight:600\">+ Adicionar cobro</button></span></div>";}
+        return;
+      }
       var vp=(c.valor_pago!=null?Number(c.valor_pago):(c.pago?Number(c.valor):0));
       var vE=Number(c.valor);
       var parcial=vp>0&&vp<vE;
@@ -2316,6 +2322,7 @@ function renderConsCobros(){
   }
   document.getElementById("consCobros").innerHTML=h;
   document.querySelectorAll("[data-adalug]").forEach(function(el){el.addEventListener("click",function(){addAluguelCobro(el.dataset.adalug);});});
+  document.querySelectorAll("[data-addcobro]").forEach(function(el){el.addEventListener("click",function(ev){ev.stopPropagation();addCobroForUnit(parseInt(el.dataset.addcobro));});});
   document.querySelectorAll("[data-cbid]").forEach(function(el){el.addEventListener("click",function(){openPagoModal(parseInt(el.dataset.cbid));});});
 }
 
@@ -2339,6 +2346,16 @@ async function addAluguelCobro(tipo){
   var res=await api("cons_cobros","POST",{unidade_id:null,mes_ref:mes,valor:valor,pago:false,tipo:tipo});
   if(res){await loadConsorcio();showToast("Aluguel adicionado");}
   else showToast("Erro ao adicionar");
+}
+
+async function addCobroForUnit(unidadeId){
+  var u=(allUnidades||[]).find(function(x){return x.id===unidadeId;});if(!u){showToast("Unidade nao encontrada");return;}
+  var mes=currentConsMesRef();
+  var total=Number(consConfig.valor_expensa_mensal||15000);
+  var valor=Number((total*Number(u.percentual)/100).toFixed(2));
+  var res=await api("cons_cobros","POST",{unidade_id:unidadeId,mes_ref:mes,valor:valor,pago:false,tipo:'expensa'});
+  if(res&&res[0]){await loadConsorcio();openPagoModal(res[0].id);showToast("Cobro criado — edite se necessario");}
+  else showToast("Erro ao criar cobro");
 }
 
 function openPagoModal(cobroId){
@@ -2367,25 +2384,76 @@ async function savePago(){
   var dataP=document.getElementById("consPagoData").value;
   var vInp=parseFloat(document.getElementById("consPagoValor").value);
   var vPago=(isNaN(vInp)||vInp<0)?0:vInp;
-  var patch={pago:pago,valor_pago:vPago>0?vPago:null,data_pagamento:vPago>0?dataP:null,forma_pagamento:vPago>0?document.getElementById("consPagoForma").value:null,observacao:document.getElementById("consPagoObs").value};
+  var vE=Number(c.valor);
+  // Excedente: si vPago > valor y es cobro de unidade (expensa), aplicar sobrante al mes siguiente
+  var excedente=0, vPagoClamp=vPago;
+  if(vPago>vE+0.005 && c.unidade_id && c.tipo!=="aluguel_deposito" && c.tipo!=="aluguel_area"){
+    excedente=Number((vPago-vE).toFixed(2));
+    vPagoClamp=vE;
+    pago=true;
+  }
+  var patch={pago:pago,valor_pago:vPagoClamp>0?vPagoClamp:null,data_pagamento:vPagoClamp>0?dataP:null,forma_pagamento:vPagoClamp>0?document.getElementById("consPagoForma").value:null,observacao:document.getElementById("consPagoObs").value};
   var res=await api("cons_cobros?id=eq."+consEditingPagoId,"PATCH",patch);
-  if(res){
-    if(vPago>0){
-      var pTag=(vPago<Number(c.valor))?" (parcial)":"";
-      var e;
-      if(c.tipo==='aluguel_deposito'){e={type:"income",group_name:"Aluguel Areas Comuns",category:"Deposito de Praia",amount:vPago,date:dataP,description:"Aluguel Depósito de Praia "+MONTHS[consMonth]+" "+consYear+pTag,cobro_id:consEditingPagoId};}
-      else if(c.tipo==='aluguel_area'){e={type:"income",group_name:"Aluguel Areas Comuns",category:"Area de Praia",amount:vPago,date:dataP,description:"Aluguel Área de Praia "+MONTHS[consMonth]+" "+consYear+pTag,cobro_id:consEditingPagoId};}
-      else{var u=allUnidades.find(function(x){return x.id===c.unidade_id;});var g=grupoOf(c.unidade_id);e={type:"income",group_name:"Expensa Ordinaria",category:"Cobro Expensa Mensal",amount:vPago,date:dataP,description:"Cobro "+MONTHS[consMonth]+" "+consYear+" \u2014 "+(u?u.nome:"")+" ("+(g?g.nome:"")+")"+pTag,cobro_id:consEditingPagoId};}
-      var ex=await api("cons_entries?cobro_id=eq."+consEditingPagoId);
-      if(ex&&ex.length){await api("cons_entries?id=eq."+ex[0].id,"PATCH",e);}
-      else{await api("cons_entries","POST",e);}
-    } else {
-      await api("cons_entries?cobro_id=eq."+consEditingPagoId,"DELETE");
-    }
-    document.getElementById("consPagoOverlay").classList.remove("open");
-    await loadConsorcio();
-    showToast("Pagamento atualizado");
-  } else showToast("Erro ao salvar");
+  if(res===null){showToast("Erro ao salvar");return;}
+  if(vPagoClamp>0){
+    var pTag=(vPagoClamp<vE)?" (parcial)":"";
+    var e;
+    if(c.tipo==='aluguel_deposito'){e={type:"income",group_name:"Aluguel Areas Comuns",category:"Deposito de Praia",amount:vPagoClamp,date:dataP,description:"Aluguel Depósito de Praia "+MONTHS[consMonth]+" "+consYear+pTag,cobro_id:consEditingPagoId};}
+    else if(c.tipo==='aluguel_area'){e={type:"income",group_name:"Aluguel Areas Comuns",category:"Area de Praia",amount:vPagoClamp,date:dataP,description:"Aluguel Área de Praia "+MONTHS[consMonth]+" "+consYear+pTag,cobro_id:consEditingPagoId};}
+    else{var u=allUnidades.find(function(x){return x.id===c.unidade_id;});var g=grupoOf(c.unidade_id);e={type:"income",group_name:"Expensa Ordinaria",category:"Cobro Expensa Mensal",amount:vPagoClamp,date:dataP,description:"Cobro "+MONTHS[consMonth]+" "+consYear+" \u2014 "+(u?u.nome:"")+" ("+(g?g.nome:"")+")"+pTag,cobro_id:consEditingPagoId};}
+    var ex=await api("cons_entries?cobro_id=eq."+consEditingPagoId);
+    if(ex&&ex.length){await api("cons_entries?id=eq."+ex[0].id,"PATCH",e);}
+    else{await api("cons_entries","POST",e);}
+  } else {
+    await api("cons_entries?cobro_id=eq."+consEditingPagoId,"DELETE");
+  }
+  var msgExtra="";
+  if(excedente>0){
+    var freshCobros=await api("cons_cobros?select=*&order=mes_ref.asc");
+    if(freshCobros)allCobros=freshCobros;
+    var affectedMeses=await applyExcedente(c, excedente, dataP);
+    msgExtra=" \u00b7 R$ "+excedente.toFixed(2).replace(".",",")+" excedente aplicado a "+affectedMeses+" m\u00eas(es)";
+  }
+  document.getElementById("consPagoOverlay").classList.remove("open");
+  await loadConsorcio();
+  showToast("Pagamento atualizado"+msgExtra);
+}
+
+async function applyExcedente(prevCobro, excedente, dataP){
+  if(excedente<=0.005)return 0;
+  var parts=prevCobro.mes_ref.split("-");
+  var y=parseInt(parts[0]), m=parseInt(parts[1])-1;
+  m++; if(m>11){m=0;y++;}
+  var nextMesRef=y+"-"+(m+1<10?"0":"")+(m+1);
+  var u=(allUnidades||[]).find(function(x){return x.id===prevCobro.unidade_id;});
+  if(!u)return 0;
+  var g=grupoOf(prevCobro.unidade_id);
+  var nextCobro=(allCobros||[]).find(function(x){return x.unidade_id===prevCobro.unidade_id && x.mes_ref===nextMesRef && x.tipo==="expensa";});
+  if(!nextCobro){
+    var valor=Number((Number(consConfig.valor_expensa_mensal||15000)*Number(u.percentual)/100).toFixed(2));
+    var nr=await api("cons_cobros","POST",{unidade_id:prevCobro.unidade_id,mes_ref:nextMesRef,valor:valor,pago:false,tipo:'expensa',valor_pago:null});
+    if(!nr||!nr[0])return 0;
+    nextCobro=nr[0];
+    allCobros.push(nextCobro);
+  }
+  var prevValorPago=Number(nextCobro.valor_pago||0);
+  var newTotal=prevValorPago+excedente;
+  var nextVE=Number(nextCobro.valor);
+  var clamp=Math.min(newTotal, nextVE);
+  var overflow=Number((newTotal-clamp).toFixed(2));
+  var nextPago=clamp>=nextVE-0.005;
+  await api("cons_cobros?id=eq."+nextCobro.id,"PATCH",{valor_pago:clamp,pago:nextPago,data_pagamento:dataP});
+  var pTag=(clamp<nextVE)?" (parcial)":"";
+  var eNext={type:"income",group_name:"Expensa Ordinaria",category:"Cobro Expensa Mensal",amount:clamp,date:dataP,description:"Cobro "+MONTHS[m]+" "+y+" \u2014 "+u.nome+" ("+(g?g.nome:"")+") \u00b7 Antecipado do mes anterior"+pTag,cobro_id:nextCobro.id};
+  var ex=await api("cons_entries?cobro_id=eq."+nextCobro.id);
+  if(ex&&ex.length){await api("cons_entries?id=eq."+ex[0].id,"PATCH",eNext);}
+  else{await api("cons_entries","POST",eNext);}
+  var deeper=0;
+  if(overflow>0.005){
+    nextCobro.valor_pago=clamp;nextCobro.pago=nextPago;
+    deeper=await applyExcedente(nextCobro, overflow, dataP);
+  }
+  return 1+deeper;
 }
 
 function renderConsMovs(){
@@ -2542,10 +2610,30 @@ async function saveConsConfig(){
   var grupos=[];
   document.querySelectorAll(".cfg-gcolor").forEach(function(inp){var id=parseInt(inp.dataset.gcid);var nameInp=document.querySelector(".cfg-gname[data-gnid='"+id+"']");grupos.push({id:id,cor:inp.value,nome:nameInp.value});});
   for(var i=0;i<grupos.length;i++){await api("cons_grupos?id=eq."+grupos[i].id,"PATCH",{cor:grupos[i].cor,nome:grupos[i].nome});}
+  // Recalcular automaticamente TODOS los cobros según nuevo config × %unidade
+  // No toca valor_pago ni pago → cobros pagos con valor menor pasan a "Pago parcial" solos
+  var uidByIdNew={};uidUpdates.forEach(function(u){uidByIdNew[u.id]=u.percentual;});
+  var recalcCount=0;
+  var patches=(allCobros||[]).map(function(c){
+    var newValor=null;
+    if(c.tipo==="aluguel_deposito")newValor=alugDep;
+    else if(c.tipo==="aluguel_area")newValor=alugArea;
+    else {
+      var pct=uidByIdNew[c.unidade_id];
+      if(pct==null){var u=(allUnidades||[]).find(function(x){return x.id===c.unidade_id;});if(u)pct=Number(u.percentual);}
+      if(pct==null)return null;
+      newValor=Number((valorExp*pct/100).toFixed(2));
+    }
+    if(newValor==null)return null;
+    if(Math.abs(Number(c.valor)-newValor)<0.005)return null; // sin cambio
+    recalcCount++;
+    return api("cons_cobros?id=eq."+c.id,"PATCH",{valor:newValor});
+  }).filter(function(p){return p!==null;});
+  if(patches.length){await Promise.all(patches);console.log("[saveConsConfig] cobros recalculados:",recalcCount);}
   document.getElementById("consConfigOverlay").classList.remove("open");
   await loadConsorcio();
   console.log("[saveConsConfig] consConfig despues del reload:",consConfig);
-  showToast("Configuracao salva");
+  showToast(recalcCount>0?"Config salva · "+recalcCount+" cobros recalculados":"Configuracao salva");
 }
 
 // ── USUARIOS ─────────────────────────────────────────────────────────────────
