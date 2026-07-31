@@ -76,8 +76,8 @@ body{background:var(--sand);font-family:'Jost',sans-serif;color:var(--text);min-
 .month-label{color:var(--white);font-size:11px;letter-spacing:3px;text-transform:uppercase;font-family:'Jost',sans-serif;font-weight:300}
 
 /* ── TABS ── */
-.tabs{display:flex;border-bottom:2px solid var(--sand-mid);background:var(--white)}
-.tab{flex:1;padding:10px 4px;border:none;background:none;cursor:pointer;font-size:11px;font-family:'Jost',sans-serif;color:var(--text-soft);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tabs{display:flex;border-bottom:2px solid var(--sand-mid);background:var(--white);justify-content:center;gap:6px;max-width:520px;margin:0 auto}
+.tab{flex:0 0 auto;padding:10px 18px;border:none;background:none;cursor:pointer;font-size:11px;font-family:'Jost',sans-serif;color:var(--text-soft);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap}
 .tab.active{color:var(--ocean);border-bottom-color:var(--ocean);font-weight:600}
 
 /* ── CONTENT ── */
@@ -683,7 +683,7 @@ function updateClock(){var els=document.querySelectorAll(".app-clock,.dash-clock
 setInterval(updateClock,30000);
 document.addEventListener("DOMContentLoaded",updateClock);
 setTimeout(updateClock,100);
-console.log("Nordestina build v2026-07-31 19:55");
+console.log("Nordestina build v2026-07-31 20:08");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -2162,6 +2162,30 @@ function renderConsDash(){
   h+="<div style=\"display:flex;justify-content:space-between;padding:6px 0;font-size:13px\"><span>Resultado do mês</span><span style=\"font-weight:600;color:"+(resultado>=0?"var(--green)":"var(--red)")+"\">"+fmt(resultado)+"</span></div>";
   h+="<div style=\"display:flex;justify-content:space-between;padding:8px 0;border-top:1.5px solid var(--sand-mid);margin-top:4px;font-size:14px;font-weight:700\"><span style=\"color:var(--ocean)\">SALDO ACUMULADO</span><span style=\"color:"+(saldoAcumulado>=0?"var(--green)":"var(--red)")+"\">"+fmt(saldoAcumulado)+"</span></div>";
   h+="</div>";
+  // ITEM C: Despesas por Categoria — desglose de los R$ tE del mes agrupado por group_name
+  if(tE>0){
+    var expByGrp={};
+    mesEntries.filter(function(e){return e.type==="expense";}).forEach(function(e){
+      var g=e.group_name||"Sem categoría";
+      if(!expByGrp[g])expByGrp[g]={total:0,cats:{}};
+      expByGrp[g].total+=Number(e.amount);
+      var c=e.category||"Outros";
+      expByGrp[g].cats[c]=(expByGrp[g].cats[c]||0)+Number(e.amount);
+    });
+    var expArr=Object.keys(expByGrp).map(function(k){return{name:k,total:expByGrp[k].total,cats:expByGrp[k].cats};}).sort(function(a,b){return b.total-a.total;});
+    h+="<div class=\"card\"><span class=\"sec-title\">Despesas por Categoria</span>";
+    expArr.forEach(function(g){
+      var pctG=tE>0?Math.round((g.total/tE)*100):0;
+      h+="<div style=\"padding:8px 0;border-bottom:1px solid var(--sand-mid);font-family:Jost,sans-serif\">";
+      h+="<div style=\"display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:var(--text)\"><span>"+g.name+"</span><span style=\"color:var(--red)\">"+fmt(g.total)+" · "+pctG+"%</span></div>";
+      var catKeys=Object.keys(g.cats).sort(function(a,b){return g.cats[b]-g.cats[a];});
+      catKeys.forEach(function(c){h+="<div style=\"display:flex;justify-content:space-between;padding:2px 0 2px 8px;font-size:11px;color:var(--text-soft)\"><span>"+c+"</span><span>"+fmt(g.cats[c])+"</span></div>";});
+      h+="</div>";
+    });
+    h+="<div style=\"display:flex;justify-content:space-between;padding:8px 0 4px;font-size:13px;font-weight:700;color:var(--red);font-family:Jost,sans-serif\"><span>Total Despesas</span><span>"+fmt(tE)+"</span></div>";
+    h+="</div>";
+  }
+
   // ITEM 5: Mora acumulada por propietario (todos los meses hasta el actual inclusive)
   var moraByGrupo={};
   (allCobros||[]).filter(function(c){
@@ -2201,18 +2225,18 @@ function renderConsDash(){
       valor=Number(cobro.valor);
       vp=(cobro.valor_pago!=null?Number(cobro.valor_pago):(cobro.pago?valor:0));
       parcial=vp>0&&vp<valor;
-      chip=cobro.pago?'chip-checkin':(vp>0?'chip-pendiente':'chip-pendiente');
+      chip=cobro.pago?'chip-checkin':'chip-pendiente';
       chipL=cobro.pago?(parcial?'Pago parcial':'Pago'):(vp>0?'Parcial':'Pendente');
       cobroId=cobro.id;
     }
     else if(Number(configVal||0)>0){valor=Number(configVal);chip='chip-cancelada';chipL='Sem cobro';}
     else return '';
     var attr=cobroId?' data-cbid=\''+cobroId+'\' style=\'cursor:pointer\'':'';
-    var vHtml=(vp>0&&vp!==valor)?('<span style=\'font-size:11px;color:var(--text-soft)\'>'+fmt(vp)+' / </span>'+fmt(valor)):fmt(valor);
-    var dateBelow=(cobro&&(cobro.pago||vp>0)&&cobro.data_pagamento)?('<div style=\'font-size:10px;color:var(--text-soft);margin-top:2px\'>'+fmtD(cobro.data_pagamento)+(cobro.forma_pagamento?' &middot; '+cobro.forma_pagamento:'')+'</div>'):'';
-    var html='<div'+attr+' style=\'display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;font-size:13px;gap:8px\'>';
-    html+='<div style=\'flex:1;min-width:0\'><span>'+label+' <span class=\''+('chip '+chip)+'\' style=\'margin-left:6px;font-size:9px\'>'+chipL+'</span></span>'+dateBelow+'</div>';
-    html+='<div style=\'font-weight:600;white-space:nowrap\'>'+vHtml+'</div>';
+    var vHtml=(vp>0&&vp!==valor)?('<span style=\'font-size:12px;color:var(--text-soft);font-weight:400\'>'+fmt(vp)+' / </span>'+fmt(valor)):fmt(valor);
+    var dateBelow=(cobro&&(cobro.pago||vp>0)&&cobro.data_pagamento)?('<div style=\'font-size:10px;color:var(--text-soft);margin-top:2px;font-weight:400\'>'+fmtD(cobro.data_pagamento)+(cobro.forma_pagamento?' &middot; '+cobro.forma_pagamento:'')+'</div>'):'';
+    var html='<div'+attr+' style=\'display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;font-family:Jost,sans-serif;line-height:1.4\'>';
+    html+='<div style=\'flex:1;min-width:0\'><div style=\'display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400\'><span>'+label+'</span><span class=\''+('chip '+chip)+'\' style=\'font-size:9px\'>'+chipL+'</span></div>'+dateBelow+'</div>';
+    html+='<div style=\'font-size:13px;font-weight:600;white-space:nowrap;font-family:Jost,sans-serif\'>'+vHtml+'</div>';
     html+='</div>';
     return html;
   }
@@ -2220,8 +2244,8 @@ function renderConsDash(){
   h+=extraRow("Aluguel área de praia",areaC,consConfig.aluguel_area_playa);
   var totExtras=(depC?Number(depC.valor):Number(consConfig.aluguel_deposito_playa||0))+(areaC?Number(areaC.valor):Number(consConfig.aluguel_area_playa||0));
   var recExtras=(depC&&depC.pago?Number(depC.valor):0)+(areaC&&areaC.pago?Number(areaC.valor):0);
-  h+="<div style=\"display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--sand-mid);margin-top:4px;font-size:13px;font-weight:700;color:var(--ocean)\"><span>Total esperado</span><span>"+fmt(totExtras)+"</span></div>";
-  h+="<div style=\"display:flex;justify-content:space-between;padding:4px 0;font-size:11px;color:var(--green)\"><span>Recebido</span><span>"+fmt(recExtras)+"</span></div>";
+  h+="<div style=\"display:flex;justify-content:space-between;padding:8px 0 4px;border-top:1px solid var(--sand-mid);margin-top:4px;font-size:13px;font-weight:600;color:var(--ocean);font-family:Jost,sans-serif\"><span>Total esperado</span><span>"+fmt(totExtras)+"</span></div>";
+  h+="<div style=\"display:flex;justify-content:space-between;padding:4px 0;font-size:13px;font-weight:400;color:var(--green);font-family:Jost,sans-serif\"><span>Recebido</span><span>"+fmt(recExtras)+"</span></div>";
   h+="</div>";
   document.getElementById("consDash").innerHTML=h;
 }
@@ -2367,23 +2391,48 @@ async function savePago(){
 function renderConsMovs(){
   var mesEntries=allConsEntries.filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===consMonth&&d.getFullYear()===consYear;});
   var ro=isReadonly();
-  var h="<div class=\"card\"><span class=\"sec-title\">Movimentos - "+MONTHS[consMonth]+" "+consYear+"</span>";
-  if(!mesEntries.length){h+="<div class=\"empty\">Nenhum movimento neste mes.</div>";}
-  else mesEntries.forEach(function(e){
-    var isI=e.type==="income";
-    h+="<div class=\"entry-row\"><div class=\"entry-dot\" style=\"background:"+(isI?"#2e6e9e":"#c9b48a")+"\"></div><div class=\"entry-info\"><div class=\"entry-cat\">"+e.category+"</div>";
-    if(e.group_name)h+="<div class=\"entry-group\">"+e.group_name+"</div>";
-    if(e.description)h+="<div class=\"entry-desc\">"+e.description+"</div>";
-    h+="<div class=\"entry-date\">"+e.date+"</div>";
-    if(e.cobro_id)h+="<span class=\"entry-source\">&#128279; Cobro</span>";
-    h+="</div><div class=\"entry-amt\" style=\"color:"+(isI?"var(--green)":"var(--red)")+"\">"+(isI?"+":"-")+fmt(e.amount)+"</div>";
-    if(!e.cobro_id&&!ro)h+="<button class=\"btn-del-ce\" data-cid=\""+e.id+"\" style=\"background:none;border:none;cursor:pointer;color:#c8a0a0;font-size:16px\">&#128465;</button>";
-    else h+="<div style=\"width:24px\"></div>";
+  var incomes=mesEntries.filter(function(e){return e.type==="income";});
+  var expenses=mesEntries.filter(function(e){return e.type==="expense";});
+  var totIn=incomes.reduce(function(s,e){return s+Number(e.amount);},0);
+  var totEx=expenses.reduce(function(s,e){return s+Number(e.amount);},0);
+  var h="";
+  if(!mesEntries.length){h+="<div class=\"card\"><span class=\"sec-title\">Movimentos - "+MONTHS[consMonth]+" "+consYear+"</span><div class=\"empty\">Nenhum movimento neste mes.</div></div>";document.getElementById("consMovs").innerHTML=h;return;}
+  // INGRESOS
+  if(incomes.length){
+    h+="<div class=\"card\"><span class=\"sec-title\">Ingressos · "+MONTHS[consMonth]+" "+consYear+" · "+fmt(totIn)+"</span>";
+    incomes.forEach(function(e){h+=movRow(e,ro);});
     h+="</div>";
-  });
-  h+="</div>";
+  }
+  // EGRESOS agrupados por group_name
+  if(expenses.length){
+    var byGrp={};
+    expenses.forEach(function(e){var g=e.group_name||"Sem categoría";if(!byGrp[g])byGrp[g]={total:0,entries:[]};byGrp[g].total+=Number(e.amount);byGrp[g].entries.push(e);});
+    var grpArr=Object.keys(byGrp).map(function(k){return{name:k,total:byGrp[k].total,entries:byGrp[k].entries};}).sort(function(a,b){return b.total-a.total;});
+    h+="<div class=\"card\"><span class=\"sec-title\">Despesas · "+MONTHS[consMonth]+" "+consYear+" · "+fmt(totEx)+"</span>";
+    grpArr.forEach(function(g){
+      var pct=totEx>0?Math.round((g.total/totEx)*100):0;
+      h+="<div style=\"margin-top:8px;padding:8px 0;border-top:1px solid var(--sand-mid)\">";
+      h+="<div style=\"display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--text);font-family:Jost,sans-serif;margin-bottom:4px\"><span>"+g.name+"</span><span style=\"color:var(--red)\">"+fmt(g.total)+" · "+pct+"%</span></div>";
+      g.entries.forEach(function(e){h+=movRow(e,ro);});
+      h+="</div>";
+    });
+    h+="</div>";
+  }
   document.getElementById("consMovs").innerHTML=h;
   document.querySelectorAll(".btn-del-ce").forEach(function(btn){btn.addEventListener("click",function(){delConsEntry(parseInt(btn.dataset.cid));});});
+}
+
+function movRow(e,ro){
+  var isI=e.type==="income";
+  var h="<div class=\"entry-row\"><div class=\"entry-dot\" style=\"background:"+(isI?"#2e6e9e":"#c9b48a")+"\"></div><div class=\"entry-info\"><div class=\"entry-cat\">"+e.category+"</div>";
+  if(e.description)h+="<div class=\"entry-desc\">"+e.description+"</div>";
+  h+="<div class=\"entry-date\">"+e.date+"</div>";
+  if(e.cobro_id)h+="<span class=\"entry-source\">&#128279; Cobro</span>";
+  h+="</div><div class=\"entry-amt\" style=\"color:"+(isI?"var(--green)":"var(--red)")+"\">"+(isI?"+":"-")+fmt(e.amount)+"</div>";
+  if(!e.cobro_id&&!ro)h+="<button class=\"btn-del-ce\" data-cid=\""+e.id+"\" style=\"background:none;border:none;cursor:pointer;color:#c8a0a0;font-size:16px\">&#128465;</button>";
+  else h+="<div style=\"width:24px\"></div>";
+  h+="</div>";
+  return h;
 }
 
 async function delConsEntry(id){
