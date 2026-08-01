@@ -683,7 +683,7 @@ function updateClock(){var els=document.querySelectorAll(".app-clock,.dash-clock
 setInterval(updateClock,30000);
 document.addEventListener("DOMContentLoaded",updateClock);
 setTimeout(updateClock,100);
-console.log("Nordestina build v2026-07-31 20:40");
+console.log("Nordestina build v2026-07-31 20:57");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -1396,9 +1396,31 @@ function computeCashIn(year,month){
 function renderCashIn(year,month){
   var el=document.getElementById("cashInCard");if(!el)return;
   var ci=computeCashIn(year,month);
-  if(ci.totalGeral===0){el.style.display="none";return;}
+  var cm=computeOpsMetrics(year,month);
+  var vendas=Number(cm.receita||0);
+  if(ci.totalGeral===0&&vendas===0){el.style.display="none";return;}
   el.style.display="block";
   var h="";
+  // VENDAS section (accrual: reservas con checkin este mes)
+  if(vendas>0){
+    var diff=Math.abs(vendas-ci.totalGeral);
+    h+="<div style=\"font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;font-weight:600\">Vendas do Mês <span style=\"color:var(--text-soft);font-weight:400;text-transform:none;letter-spacing:0\">· reservas com check-in em "+MONTHS[month]+"</span></div>";
+    var canaisArr=Object.keys(cm.vendasByCanal||{}).map(function(k){return{name:k.replace(/^Vendas /,""),value:Number(cm.vendasByCanal[k])};}).filter(function(c){return c.value>0;}).sort(function(a,b){return b.value-a.value;});
+    canaisArr.forEach(function(c){
+      var pct=vendas>0?Math.round(c.value/vendas*100):0;
+      h+="<div class=\"detail-row\" style=\"padding:5px 0;font-size:12px\"><span class=\"detail-label\" style=\"font-size:12px\">"+c.name+" <span style=\"color:var(--text-soft);font-size:10px\">· "+pct+"%</span></span><span class=\"detail-value\" style=\"color:var(--ocean);font-weight:600\">"+fmt(c.value)+"</span></div>";
+    });
+    h+="<div class=\"detail-row\" style=\"padding:8px 0;border-top:1.5px solid var(--sand-mid);margin-top:4px\"><span class=\"detail-label\" style=\"font-weight:700;color:var(--ocean);text-transform:uppercase;font-size:11px;letter-spacing:1px\">Total Vendas</span><span class=\"detail-value\" style=\"font-weight:700;color:var(--ocean);font-size:14px\">"+fmt(vendas)+"</span></div>";
+    // Diff con ingressos bancarios
+    if(ci.totalGeral>0&&diff>0.01){
+      var deltaTxt=(vendas>ci.totalGeral?" (falta cobrar / a cobrar em outros meses)":" (parte foi cobrada em outros meses)");
+      h+="<div style=\"font-size:10px;color:var(--text-soft);padding:4px 0 12px;font-style:italic\">Diferença com Ingressos: "+fmt(diff)+deltaTxt+"</div>";
+    } else {
+      h+="<div style=\"height:12px\"></div>";
+    }
+    h+="<div style=\"border-top:1px dashed var(--sand-mid);margin-bottom:14px\"></div>";
+  }
+  if(ci.totalGeral===0){document.getElementById("cashInList").innerHTML=h;return;}
   // BANK section (Simples Nacional base)
   h+="<div style=\"font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;font-weight:600\">Formas bancarias (Pix, cartao, transferencia, Booking)</div>";
   h+="<div class=\"detail-row\" style=\"padding:6px 0\"><span class=\"detail-label\" style=\"color:var(--green);font-weight:600\">Anticipos recebidos</span><span class=\"detail-value\" style=\"color:var(--green);font-weight:700\">"+fmt(ci.anticipos)+"</span></div>";
