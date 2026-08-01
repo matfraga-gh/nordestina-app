@@ -683,7 +683,7 @@ function updateClock(){var els=document.querySelectorAll(".app-clock,.dash-clock
 setInterval(updateClock,30000);
 document.addEventListener("DOMContentLoaded",updateClock);
 setTimeout(updateClock,100);
-console.log("Nordestina build v2026-07-31 21:50");
+console.log("Nordestina build v2026-07-31 22:07");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -2150,7 +2150,7 @@ function renderConsDash(){
   if(!hasDep)totalEsperado+=Number(consConfig.aluguel_deposito_playa||0);
   var hasArea=mesCobros.some(function(c){return c.tipo==='aluguel_area';});
   if(!hasArea)totalEsperado+=Number(consConfig.aluguel_area_playa||0);
-  var mora=mesCobros.filter(function(c){return !c.pago;}).reduce(function(s,c){var vp=(c.valor_pago!=null?Number(c.valor_pago):0);return s+Math.max(0,Number(c.valor)-vp);},0);
+  var mora=mesCobros.filter(function(c){return !c.pago;}).reduce(function(s,c){var vp=(c.valor_pago!=null?Number(c.valor_pago):0);var d=Number(c.valor)-vp;return s+(d>=1?d:0);},0);
   var mesEntries=allConsEntries.filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===consMonth&&d.getFullYear()===consYear;});
   var tI=mesEntries.filter(function(e){return e.type==="income";}).reduce(function(s,e){return s+Number(e.amount);},0);
   var tE=mesEntries.filter(function(e){return e.type==="expense";}).reduce(function(s,e){return s+Number(e.amount);},0);
@@ -2228,7 +2228,7 @@ function renderConsDash(){
     var g=grupoOf(c.unidade_id);if(!g)return;
     var vp=(c.valor_pago!=null?Number(c.valor_pago):0);
     var pend=Math.max(0,Number(c.valor)-vp);
-    if(pend<=0)return;
+    if(pend<1)return;
     if(!moraByGrupo[g.id])moraByGrupo[g.id]={grupo:g,total:0,count:0,meses:{}};
     moraByGrupo[g.id].total+=pend;
     if(!moraByGrupo[g.id].meses[c.mes_ref]){moraByGrupo[g.id].meses[c.mes_ref]=true;moraByGrupo[g.id].count++;}
@@ -2238,7 +2238,7 @@ function renderConsDash(){
   mesCobros.filter(function(c){return !c.pago&&(c.tipo==="aluguel_deposito"||c.tipo==="aluguel_area");}).forEach(function(c){
     var vp=(c.valor_pago!=null?Number(c.valor_pago):0);
     var pend=Math.max(0,Number(c.valor)-vp);
-    if(pend>0)alugPend.push({label:c.tipo==="aluguel_deposito"?"Aluguel depósito":"Aluguel área",pend:pend});
+    if(pend>=1)alugPend.push({label:c.tipo==="aluguel_deposito"?"Aluguel depósito":"Aluguel área",pend:pend});
   });
   h+="<div class=\"card\"><span class=\"sec-title\">Propietarios em Mora</span>";
   if(!moraArr.length&&!alugPend.length){h+="<div style=\"font-size:12px;color:var(--green);padding:8px 0\">&#10003; Todos em dia</div>";}
@@ -2255,15 +2255,15 @@ function renderConsDash(){
     if(cobro){
       valor=Number(cobro.valor);
       vp=(cobro.valor_pago!=null?Number(cobro.valor_pago):(cobro.pago?valor:0));
-      parcial=vp>0&&vp<valor;
+      parcial=vp>0&&(valor-vp)>=1; // threshold R$1
       chip=cobro.pago?'chip-checkin':'chip-pendiente';
-      chipL=cobro.pago?(parcial?'Pago parcial':'Pago'):(vp>0?'Parcial':'Pendente');
+      chipL=cobro.pago?(parcial?'Pago parcial':'Pago'):(vp>0?(parcial?'Parcial':'Pago'):'Pendente');
       cobroId=cobro.id;
     }
     else if(Number(configVal||0)>0){valor=Number(configVal);chip='chip-cancelada';chipL='Sem cobro';}
     else return '';
     var attr=cobroId?' data-cbid=\''+cobroId+'\' style=\'cursor:pointer\'':'';
-    var vHtml=(vp>0&&vp!==valor)?('<span style=\'font-size:12px;color:var(--text-soft);font-weight:400\'>'+fmt(vp)+' / </span>'+fmt(valor)):fmt(valor);
+    var vHtml=parcial?('<span style=\'font-size:12px;color:var(--text-soft);font-weight:400\'>'+fmt(vp)+' / </span>'+fmt(valor)):fmt(valor);
     var dateBelow=(cobro&&(cobro.pago||vp>0)&&cobro.data_pagamento)?('<div style=\'font-size:10px;color:var(--text-soft);margin-top:2px;font-weight:400\'>'+fmtD(cobro.data_pagamento)+(cobro.forma_pagamento?' &middot; '+cobro.forma_pagamento:'')+'</div>'):'';
     var html='<div'+attr+' style=\'display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;font-family:Jost,sans-serif;line-height:1.4\'>';
     html+='<div style=\'flex:1;min-width:0\'><div style=\'display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400\'><span>'+label+'</span><span class=\''+('chip '+chip)+'\' style=\'font-size:9px\'>'+chipL+'</span></div>'+dateBelow+'</div>';
@@ -2305,17 +2305,19 @@ function renderConsCobros(){
     gr.unidades.forEach(function(u){
       var c=cobroFor(u.id,mes);
       if(!c){
-        // Cobro faltante: mostrar botón para adicionar (a menos que sea readonly)
-        if(ro){h+="<div class=\"detail-row\" style=\"padding:8px 0;color:var(--text-soft)\"><span class=\"detail-label\">"+u.nome+" &middot; "+Number(u.percentual).toFixed(2)+"%</span><span class=\"detail-value\"><span class=\"chip chip-cancelada\" style=\"font-size:9px\">Sem cobro</span></span></div>";}
-        else{h+="<div class=\"detail-row\" style=\"padding:8px 0\"><span class=\"detail-label\">"+u.nome+" &middot; "+Number(u.percentual).toFixed(2)+"%</span><span class=\"detail-value\"><button data-addcobro=\""+u.id+"\" style=\"background:var(--ocean-mid);color:var(--white);border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:Jost,sans-serif;font-weight:600\">+ Adicionar cobro</button></span></div>";}
+        // Sin cobro registrado: mostramos como Pendente clickeable, con valor de referencia
+        var vRef=Number((Number(consConfig.valor_expensa_mensal||15000)*Number(u.percentual)/100).toFixed(2));
+        if(ro){h+="<div class=\"detail-row\" style=\"padding:8px 0;color:var(--text-soft)\"><span class=\"detail-label\">"+u.nome+" &middot; "+Number(u.percentual).toFixed(2)+"%</span><span class=\"detail-value\">"+fmt(vRef)+" <span class=\"chip chip-pendiente\">Pendente</span></span></div>";}
+        else{h+="<div class=\"detail-row\" style=\"cursor:pointer;padding:8px 0\" data-cbnew=\""+u.id+"\"><span class=\"detail-label\">"+u.nome+" &middot; "+Number(u.percentual).toFixed(2)+"%</span><span class=\"detail-value\">"+fmt(vRef)+" <span class=\"chip chip-pendiente\">Pendente</span></span></div>";}
         return;
       }
       var vp=(c.valor_pago!=null?Number(c.valor_pago):(c.pago?Number(c.valor):0));
       var vE=Number(c.valor);
-      var parcial=vp>0&&vp<vE;
-      var chip=c.pago?"chip-checkin":(vp>0?"chip-pendiente":"chip-pendiente");
+      // Considera "pago total" si la diferencia es menor a R$ 1 (evita parciales por redondeo)
+      var parcial=vp>0&&(vE-vp)>=1;
+      var chip=c.pago?"chip-checkin":"chip-pendiente";
       var chipL=c.pago?(parcial?"Pago parcial":"Pago"):(vp>0?"Parcial":"Pendente");
-      var vHtml=(vp>0&&vp!==vE)?("<span style=\"font-size:11px;color:var(--text-soft)\">"+fmt(vp)+" / </span>"+fmt(vE)):fmt(vE);
+      var vHtml=parcial?("<span style=\"font-size:11px;color:var(--text-soft)\">"+fmt(vp)+" / </span>"+fmt(vE)):fmt(vE);
       h+="<div class=\"detail-row\" style=\"cursor:"+(ro?"default":"pointer")+";padding:8px 0\" "+(ro?"":"data-cbid=\""+c.id+"\"")+"><span class=\"detail-label\">"+u.nome+" &middot; "+Number(u.percentual).toFixed(2)+"%</span><span class=\"detail-value\">"+vHtml+" <span class=\"chip "+chip+"\">"+chipL+"</span>"+((c.pago||vp>0)&&c.data_pagamento?"<br><span style=\"font-size:10px;color:var(--text-soft)\">"+fmtD(c.data_pagamento)+(c.forma_pagamento?" &middot; "+c.forma_pagamento:"")+"</span>":"")+"</span></div>";
     });
     h+="</div>";
@@ -2353,7 +2355,7 @@ function renderConsCobros(){
   }
   document.getElementById("consCobros").innerHTML=h;
   document.querySelectorAll("[data-adalug]").forEach(function(el){el.addEventListener("click",function(){addAluguelCobro(el.dataset.adalug);});});
-  document.querySelectorAll("[data-addcobro]").forEach(function(el){el.addEventListener("click",function(ev){ev.stopPropagation();addCobroForUnit(parseInt(el.dataset.addcobro));});});
+  document.querySelectorAll("[data-cbnew]").forEach(function(el){el.addEventListener("click",function(){addCobroForUnit(parseInt(el.dataset.cbnew));});});
   document.querySelectorAll("[data-cbid]").forEach(function(el){el.addEventListener("click",function(){openPagoModal(parseInt(el.dataset.cbid));});});
 }
 
