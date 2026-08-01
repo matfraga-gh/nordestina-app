@@ -683,7 +683,7 @@ function updateClock(){var els=document.querySelectorAll(".app-clock,.dash-clock
 setInterval(updateClock,30000);
 document.addEventListener("DOMContentLoaded",updateClock);
 setTimeout(updateClock,100);
-console.log("Nordestina build v2026-07-31 20:57");
+console.log("Nordestina build v2026-07-31 21:50");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -2641,11 +2641,14 @@ async function saveConsConfig(){
   var grupos=[];
   document.querySelectorAll(".cfg-gcolor").forEach(function(inp){var id=parseInt(inp.dataset.gcid);var nameInp=document.querySelector(".cfg-gname[data-gnid='"+id+"']");grupos.push({id:id,cor:inp.value,nome:nameInp.value});});
   for(var i=0;i<grupos.length;i++){await api("cons_grupos?id=eq."+grupos[i].id,"PATCH",{cor:grupos[i].cor,nome:grupos[i].nome});}
-  // Recalcular automaticamente TODOS los cobros según nuevo config × %unidade
+  // Recalcular automáticamente cobros del MES ACTUAL en adelante (no toca meses previos)
   // No toca valor_pago ni pago → cobros pagos con valor menor pasan a "Pago parcial" solos
+  var currentMesRef=consYear+"-"+(consMonth+1<10?"0":"")+(consMonth+1);
   var uidByIdNew={};uidUpdates.forEach(function(u){uidByIdNew[u.id]=u.percentual;});
   var recalcCount=0;
   var patches=(allCobros||[]).map(function(c){
+    if(!c.mes_ref)return null;
+    if(c.mes_ref<currentMesRef)return null; // mes anterior al actual: preservar valor histórico
     var newValor=null;
     if(c.tipo==="aluguel_deposito")newValor=alugDep;
     else if(c.tipo==="aluguel_area")newValor=alugArea;
@@ -2660,11 +2663,11 @@ async function saveConsConfig(){
     recalcCount++;
     return api("cons_cobros?id=eq."+c.id,"PATCH",{valor:newValor});
   }).filter(function(p){return p!==null;});
-  if(patches.length){await Promise.all(patches);console.log("[saveConsConfig] cobros recalculados:",recalcCount);}
+  if(patches.length){await Promise.all(patches);console.log("[saveConsConfig] cobros recalculados (desde",currentMesRef,"):",recalcCount);}
   document.getElementById("consConfigOverlay").classList.remove("open");
   await loadConsorcio();
   console.log("[saveConsConfig] consConfig despues del reload:",consConfig);
-  showToast(recalcCount>0?"Config salva · "+recalcCount+" cobros recalculados":"Configuracao salva");
+  showToast(recalcCount>0?"Config salva · "+recalcCount+" cobros recalculados desde "+MONTHS[consMonth]:"Configuracao salva");
 }
 
 // ── USUARIOS ─────────────────────────────────────────────────────────────────
