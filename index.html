@@ -308,8 +308,9 @@ canvas{max-width:100%}
     <button class="tab" id="gestTab2">&#128196; Resumo</button>
   </div>
   <div class="content">
-    <div class="kpi-grid">
-      <div class="kpi" style="background:var(--green-bg)"><div class="kpi-label">Receita</div><div class="kpi-value" style="color:var(--green)" id="kpiReceita">R$ 0</div></div>
+    <div class="kpi-grid" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr">
+      <div class="kpi" style="background:var(--green-bg)" title="Vendas de reservas com check-in neste mês. Usado para medir a marcha do negócio."><div class="kpi-label">Faturamento</div><div class="kpi-value" style="color:var(--green)" id="kpiReceita">R$ 0</div><div style="font-size:8px;color:var(--text-soft);margin-top:2px;letter-spacing:0;text-transform:none">check-in do mês</div></div>
+      <div class="kpi" style="background:var(--ocean-light)" title="Total de ingressos bancários (Pix, cartão, transferência, Booking). Base para cálculo do Simples Nacional."><div class="kpi-label">Base SN</div><div class="kpi-value" style="color:var(--ocean)" id="kpiBaseSN">R$ 0</div><div style="font-size:8px;color:var(--text-soft);margin-top:2px;letter-spacing:0;text-transform:none">cash bancário</div></div>
       <div class="kpi" style="background:var(--red-bg)"><div class="kpi-label">Despesas</div><div class="kpi-value" style="color:var(--red)" id="kpiDespesas">R$ 0</div></div>
       <div class="kpi" style="background:var(--green-bg)"><div class="kpi-label">Resultado</div><div class="kpi-value" style="color:var(--green)" id="kpiResultado">R$ 0</div></div>
       <div class="kpi" style="background:var(--ocean-light)"><div class="kpi-label">Rentab.</div><div class="kpi-value" style="color:var(--ocean)" id="kpiRentab">0%</div></div>
@@ -322,6 +323,7 @@ canvas{max-width:100%}
       <div id="cashInList"></div>
     </div>
     <div id="gestViewDashboard">
+      <div class="card" id="conciliacaoCard" style="display:none"><span class="sec-title">Conciliação · Reservas do Mês</span><div id="conciliacaoBody"></div></div>
       <div class="card"><span class="sec-title">Ultimos 6 meses</span><canvas id="barChart" height="175"></canvas></div>
       <div class="card" id="pieCard"><span class="sec-title">Despesas por Grupo</span><canvas id="pieChart" height="200"></canvas></div>
     </div>
@@ -683,7 +685,7 @@ function updateClock(){var els=document.querySelectorAll(".app-clock,.dash-clock
 setInterval(updateClock,30000);
 document.addEventListener("DOMContentLoaded",updateClock);
 setTimeout(updateClock,100);
-console.log("Nordestina build v2026-07-31 22:07");
+console.log("Nordestina build v2026-08-25 18:57");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -1486,20 +1488,80 @@ function renderOpsHistory(){
 function renderGestao(){
   document.getElementById("gestMonthLabel").textContent=MONTHS[gestMonth]+" "+gestYear;
   var cm=computeOpsMetrics(gestYear,gestMonth);
+  var ci=computeCashIn(gestYear,gestMonth);
   var f=allEntries.filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===gestMonth&&d.getFullYear()===gestYear;});
-  // Receita = vendas prorateadas de estadias que ja fizeram checkout (nao conta anticipos nem estadias futuras)
+  // Faturamento = vendas por check-in (accrual). Base SN = cash bancario.
   var tI=Number(cm.receita||0);
   var tE=Number(cm.despesas||0);
+  var baseSN=Number(ci.totalBancario||0);
   var bal=tI-tE,ren=tI>0?(bal/tI)*100:0;
-  document.getElementById("kpiReceita").textContent=fmt(tI);document.getElementById("kpiDespesas").textContent=fmt(tE);document.getElementById("kpiResultado").textContent=fmt(bal);document.getElementById("kpiRentab").textContent=ren.toFixed(1)+"%";
-  document.querySelectorAll(".kpi")[2].style.background=bal>=0?"var(--green-bg)":"var(--red-bg)";document.getElementById("kpiResultado").style.color=bal>=0?"var(--green)":"var(--red)";
+  document.getElementById("kpiReceita").textContent=fmt(tI);
+  document.getElementById("kpiBaseSN").textContent=fmt(baseSN);
+  document.getElementById("kpiDespesas").textContent=fmt(tE);
+  document.getElementById("kpiResultado").textContent=fmt(bal);
+  document.getElementById("kpiRentab").textContent=ren.toFixed(1)+"%";
+  // Resultado card cambia color según signo (índice 3 en la nueva grilla de 5)
+  var kpis=document.querySelectorAll(".kpi-grid .kpi");
+  if(kpis[3]){kpis[3].style.background=bal>=0?"var(--green-bg)":"var(--red-bg)";document.getElementById("kpiResultado").style.color=bal>=0?"var(--green)":"var(--red)";}
   renderCashIn(gestYear,gestMonth);
   if(gestTab==="dashboard")renderGestDash(f,tI,tE);
   else if(gestTab==="list")renderGestList(f);
   else renderGestReport(f,tI,tE,bal,ren,cm);
 }
 
+function renderConciliacao(year,month){
+  var card=document.getElementById("conciliacaoCard");if(!card)return;
+  var body=document.getElementById("conciliacaoBody");if(!body)return;
+  var td=new Date();
+  var todayStr=td.getFullYear()+"-"+(td.getMonth()+1<10?"0":"")+(td.getMonth()+1)+"-"+(td.getDate()<10?"0":"")+td.getDate();
+  var res=(allRes||[]).filter(function(r){
+    if(!r.checkin||!r.checkout)return false;
+    if(r.status==="cancelada")return false;
+    var ci=new Date(r.checkin+"T12:00:00");
+    return ci.getFullYear()===year&&ci.getMonth()===month;
+  }).sort(function(a,b){return a.checkin.localeCompare(b.checkin);});
+  if(!res.length){card.style.display="none";return;}
+  card.style.display="block";
+  var totF=0,totAnt=0,totSal=0,totPend=0;
+  var h="<div style=\"overflow-x:auto\"><table style=\"width:100%;border-collapse:collapse;font-size:11px\">";
+  h+="<thead><tr style=\"border-bottom:2px solid var(--sand-mid);color:var(--text-soft);text-transform:uppercase\">";
+  h+="<th style=\"text-align:left;padding:6px 4px;font-size:9px;font-weight:600\">Reserva</th>";
+  h+="<th style=\"text-align:right;padding:6px 4px;font-size:9px;font-weight:600\">Total</th>";
+  h+="<th style=\"text-align:right;padding:6px 4px;font-size:9px;font-weight:600\">Anticipo</th>";
+  h+="<th style=\"text-align:right;padding:6px 4px;font-size:9px;font-weight:600\">Saldo</th>";
+  h+="<th style=\"text-align:right;padding:6px 4px;font-size:9px;font-weight:600\">Pendente</th>";
+  h+="</tr></thead><tbody>";
+  res.forEach(function(r){
+    var total=Number(r.total||0);
+    var ant=Number(r.anticipo||0);
+    var sal=Number(r.saldo_cobrado||0);
+    var recebido=ant+sal;
+    var pend=Math.max(0,total-recebido);
+    totF+=total;totAnt+=ant;totSal+=sal;totPend+=pend;
+    var status=r.status;
+    var statusColor=(status==="checkout")?"var(--green)":(status==="checkin")?"var(--ocean)":(status==="confirmada")?"var(--sand-dark)":"var(--text-soft)";
+    var statusL={confirmada:"Confirmada",checkin:"Check-in",checkout:"Check-out",pendiente:"Pendente"}[status]||status;
+    h+="<tr style=\"border-bottom:1px solid var(--sand-mid)\">";
+    h+="<td style=\"padding:7px 4px;font-size:11px\"><div style=\"font-weight:600;color:var(--ocean)\">"+(r.apto||"?")+"</div><div style=\"font-size:10px;color:var(--text-soft)\">"+(r.nome||"?")+" &middot; "+fmtD(r.checkin)+"</div><div style=\"font-size:9px;color:"+statusColor+";font-weight:600\">"+statusL+"</div></td>";
+    h+="<td style=\"text-align:right;padding:7px 4px;font-weight:600\">"+fmt(total)+"</td>";
+    h+="<td style=\"text-align:right;padding:7px 4px;color:"+(ant>0?"var(--green)":"var(--text-soft)")+"\">"+(ant>0?fmt(ant):"—")+(ant>0&&r.data_anticipo?"<div style=\"font-size:9px;color:var(--text-soft)\">"+fmtD(r.data_anticipo)+"</div>":"")+"</td>";
+    h+="<td style=\"text-align:right;padding:7px 4px;color:"+(sal>0?"var(--green)":"var(--text-soft)")+"\">"+(sal>0?fmt(sal):"—")+(sal>0&&r.data_saldo?"<div style=\"font-size:9px;color:var(--text-soft)\">"+fmtD(r.data_saldo)+"</div>":"")+"</td>";
+    h+="<td style=\"text-align:right;padding:7px 4px;color:"+(pend>=1?"var(--red)":"var(--green)")+";font-weight:"+(pend>=1?"700":"400")+"\">"+(pend>=1?fmt(pend):"—")+"</td>";
+    h+="</tr>";
+  });
+  h+="<tr style=\"background:var(--ocean-light);font-weight:700\">";
+  h+="<td style=\"padding:8px 4px;color:var(--ocean);text-transform:uppercase;font-size:10px\">Total ("+res.length+" reservas)</td>";
+  h+="<td style=\"text-align:right;padding:8px 4px;color:var(--ocean)\">"+fmt(totF)+"</td>";
+  h+="<td style=\"text-align:right;padding:8px 4px;color:var(--green)\">"+fmt(totAnt)+"</td>";
+  h+="<td style=\"text-align:right;padding:8px 4px;color:var(--green)\">"+fmt(totSal)+"</td>";
+  h+="<td style=\"text-align:right;padding:8px 4px;color:"+(totPend>=1?"var(--red)":"var(--green)")+"\">"+(totPend>=1?fmt(totPend):"—")+"</td>";
+  h+="</tr></tbody></table></div>";
+  h+="<div style=\"margin-top:10px;padding:8px;background:var(--sand);border-radius:8px;font-size:11px;color:var(--text);line-height:1.5\"><b>Faturamento</b> = Total (R$ "+fmt(totF).replace('R$ ','')+"). <b>Recebido do faturamento</b> = Anticipo + Saldo (R$ "+fmt(totAnt+totSal).replace('R$ ','')+"). <b>Falta cobrar</b> = R$ "+fmt(totPend).replace('R$ ','')+".<br><span style=\"color:var(--text-soft);font-size:10px\">Nota: nem tudo o que entrou no banco este mês corresponde a stays deste mês — anticipos podem ser para meses futuros/passados. Ver <i>Ingressos Bancarios</i> para o cash real do mês (base SN).</span></div>";
+  body.innerHTML=h;
+}
+
 function renderGestDash(f,tI,tE){
+  renderConciliacao(gestYear,gestMonth);
   var labels=[],incD=[],expD=[];
   for(var i=5;i>=0;i--){var d=new Date(gestYear,gestMonth-i,1),m=d.getMonth(),y=d.getFullYear();labels.push(MONTHS[m]);incD.push(allEntries.filter(function(e){var ed=new Date(e.date+"T12:00:00");return ed.getMonth()===m&&ed.getFullYear()===y&&e.type==="income";}).reduce(function(s,e){return s+Number(e.amount);},0));expD.push(allEntries.filter(function(e){var ed=new Date(e.date+"T12:00:00");return ed.getMonth()===m&&ed.getFullYear()===y&&e.type==="expense";}).reduce(function(s,e){return s+Number(e.amount);},0));}
   if(barChartInst)barChartInst.destroy();
