@@ -7,6 +7,7 @@
 <title>Nordestina</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -294,6 +295,7 @@ canvas{max-width:100%}
       <button class="abtn abtn-sand" id="gestBtnNovo">+ Novo</button>
       <button class="abtn abtn-mid" id="gestBtnFornec">&#128101;</button>
       <button class="abtn abtn-green" id="gestBtnExcel">&#8675; Excel</button>
+      <button class="abtn abtn-mid" id="gestBtnBank" title="Exporta apenas ingressos bancários (Pix, Cartão, Stripe, Booking) para conciliar com extrato">&#127974; Extrato</button>
       <button class="abtn abtn-outline" id="gestBtnSair">Sair</button>
     </div>
   </div>
@@ -685,7 +687,7 @@ function updateClock(){var els=document.querySelectorAll(".app-clock,.dash-clock
 setInterval(updateClock,30000);
 document.addEventListener("DOMContentLoaded",updateClock);
 setTimeout(updateClock,100);
-console.log("Nordestina build v2026-08-25 18:57");
+console.log("Nordestina build v2026-08-25 19:27");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -1738,15 +1740,102 @@ async function delProv(id){
 
 // ── EXPORT ───────────────────────────────────────────────────────────────────
 async function exportExcel(){
-  showToast("Gerando exportacao...");
+  if(typeof XLSX==="undefined"){showToast("XLSX ainda carregando... tente novamente em 3 seg");return;}
+  showToast("Gerando XLSX...");
   var res=await Promise.all([api("entries?select=*&order=date.desc"),api("reservas?select=*&order=checkin.desc"),api("fornecedores?select=*&order=categoria.asc")]);
+  var entries=res[0]||[], reservas=res[1]||[], fornecedores=res[2]||[];
+  var resById={};reservas.forEach(function(r){resById[r.id]=r;});
+  // Parse descripci\u00F3n: "Anticipo \u2014 Nome \u2014 Apto (DD/MM/YYYY->DD/MM/YYYY) FormaPago"
+  function parseEntry(e){
+    var r=e.reserva_id?resById[e.reserva_id]:null;
+    var tipo=e.tipo_receita||"";
+    var nome="",apto="",ci="",co="",forma="";
+    if(r){nome=r.nome||"";apto=r.apto||"";ci=r.checkin||"";co=r.checkout||"";
+      forma=(tipo==="anticipo"?r.pago_anticipo:tipo==="saldo"?r.pago_saldo:"")||"";}
+    else if(e.description){
+      var mDesc=/^([A-Za-z\u00C1-\u00FA\u00C0-\u00F9]+)\s+\u2014\s+([^\u2014]+)\u2014\s+([^(]+)\((\d{2}\/\d{2}\/\d{4})->(\d{2}\/\d{2}\/\d{4})\)\s*(.*)$/.exec(e.description);
+      if(mDesc){nome=(mDesc[2]||"").trim();apto=(mDesc[3]||"").trim();ci=mDesc[4].split("/").reverse().join("-");co=mDesc[5].split("/").reverse().join("-");forma=(mDesc[6]||"").trim();}
+    }
+    var isBank=PAGOS_BANK.indexOf(forma)>=0;
+    return{
+      Data:e.date, Tipo:e.type==="income"?"Receita":"Despesa",
+      Categoria:e.category||"", Grupo:e.group_name||"", Canal:r?(r.canal||""):"",
+      Apto:apto, Hospede:nome, "Check-in":ci, "Check-out":co,
+      "Tipo Receita":tipo, "Forma Pagamento":forma, "Banco?":isBank?"SIM":"NAO",
+      "Valor (R$)":Number(e.amount||0), Descricao:e.description||"", "ID Reserva":e.reserva_id||""
+    };
+  }
+  // Detectar duplicados (mismo desc + mismo valor + mismo dia)
+  var dupKey={};entries.forEach(function(e){var k=e.date+"|"+(e.description||"")+"|"+e.amount;dupKey[k]=(dupKey[k]||0)+1;});
+  var mvRows=entries.map(parseEntry);
+  mvRows.forEach(function(row,i){var k=entries[i].date+"|"+(entries[i].description||"")+"|"+entries[i].amount;row.Duplicado=dupKey[k]>1?"SIM":"";});
+  var wb=XLSX.utils.book_new();
+  // Sheet 1: MOVIMENTOS
+  var ws1=XLSX.utils.json_to_sheet(mvRows);
+  ws1["!cols"]=[{wch:11},{wch:9},{wch:26},{wch:22},{wch:14},{wch:16},{wch:22},{wch:11},{wch:11},{wch:11},{wch:18},{wch:7},{wch:12},{wch:60},{wch:9},{wch:10}];
+  ws1["!autofilter"]={ref:"A1:"+XLSX.utils.encode_col(Object.keys(mvRows[0]||{}).length-1)+"1"};
+  XLSX.utils.book_append_sheet(wb,ws1,"Movimentos");
+  // Sheet 2: CONCILIACAO BANCARIA (s\u00F3 bank)
+  var bankRows=mvRows.filter(function(r){return r["Banco?"]==="SIM"&&r.Tipo==="Receita";});
+  var wsB=XLSX.utils.json_to_sheet(bankRows);
+  wsB["!cols"]=ws1["!cols"];
+  if(bankRows.length)wsB["!autofilter"]={ref:"A1:"+XLSX.utils.encode_col(Object.keys(bankRows[0]).length-1)+"1"};
+  XLSX.utils.book_append_sheet(wb,wsB,"Conciliacao Banco");
+  // Sheet 3: DUPLICADOS
+  var dups=mvRows.filter(function(r){return r.Duplicado==="SIM";});
+  if(dups.length){
+    var wsD=XLSX.utils.json_to_sheet(dups);
+    wsD["!cols"]=ws1["!cols"];
+    XLSX.utils.book_append_sheet(wb,wsD,"Duplicados ("+dups.length+")");
+  }
+  // Sheet 4: RESERVAS
+  var resRows=reservas.map(function(r){return{
+    ID:r.id, Apto:r.apto||"", Hospede:r.nome||"", Documento:r.documento||"", Canal:r.canal||"",
+    "Data Reserva":r.data_reserva||"", "Check-in":r.checkin||"", "Check-out":r.checkout||"",
+    Total:Number(r.total||0), Anticipo:Number(r.anticipo||0), "Data Anticipo":r.data_anticipo||"",
+    "Pago Anticipo":r.pago_anticipo||"", Saldo:Number(r.saldo_cobrado||0), "Data Saldo":r.data_saldo||"",
+    "Pago Saldo":r.pago_saldo||"", Status:r.status||"", Devolucao:Number(r.devolucao||0)
+  };});
+  var ws2=XLSX.utils.json_to_sheet(resRows);
+  ws2["!cols"]=[{wch:6},{wch:16},{wch:26},{wch:14},{wch:16},{wch:11},{wch:11},{wch:11},{wch:12},{wch:12},{wch:11},{wch:16},{wch:12},{wch:11},{wch:16},{wch:12},{wch:11}];
+  if(resRows.length)ws2["!autofilter"]={ref:"A1:"+XLSX.utils.encode_col(Object.keys(resRows[0]).length-1)+"1"};
+  XLSX.utils.book_append_sheet(wb,ws2,"Reservas");
+  // Sheet 5: FORNECEDORES
+  var wsF=XLSX.utils.json_to_sheet(fornecedores.map(function(f){return{Categoria:f.categoria||"",Nome:f.nome||""};}));
+  XLSX.utils.book_append_sheet(wb,wsF,"Fornecedores");
   var stamp=new Date().toLocaleDateString("pt-BR").replace(/\//g,"-");
+  XLSX.writeFile(wb,"nordestina_"+stamp+".xlsx");
+  showToast("XLSX gerado \u2014 "+mvRows.length+" movimentos"+(dups.length?" \u00B7 "+dups.length+" duplicados detectados!":""));
+}
+
+async function exportBankConcil(){
+  showToast("Preparando extrato...");
+  // Todas las entries del mes gestMonth/gestYear con pago_anticipo o pago_saldo en PAGOS_BANK
+  var res=await Promise.all([api("entries?select=*&order=date.asc"),api("reservas?select=id,pago_anticipo,pago_saldo,nome,apto,canal")]);
+  var allE=res[0]||[],allR=res[1]||[];
+  var byRes={};allR.forEach(function(r){byRes[r.id]=r;});
+  var monEnt=allE.filter(function(e){var d=new Date(e.date+"T12:00:00");return d.getMonth()===gestMonth&&d.getFullYear()===gestYear&&e.type==="income";});
+  var rows=monEnt.map(function(e){
+    var r=e.reserva_id?byRes[e.reserva_id]:null;
+    var pagoForma="";
+    if(r){pagoForma=(e.tipo_receita==="anticipo"?r.pago_anticipo:e.tipo_receita==="saldo"?r.pago_saldo:"")||"";}
+    var isBank=PAGOS_BANK.indexOf(pagoForma)>=0;
+    return{date:e.date,categoria:e.category,valor:Number(e.amount||0).toFixed(2).replace(".",","),forma:pagoForma||"(sem link a reserva)",bank:isBank?"SIM":"NAO",descricao:e.description||"",reserva:r?(r.apto+" - "+r.nome):"","canal":r?r.canal:""};
+  });
+  var bankRows=rows.filter(function(x){return x.bank==="SIM";});
+  var cashRows=rows.filter(function(x){return x.bank==="NAO";});
+  var totBank=bankRows.reduce(function(s,x){return s+parseFloat(x.valor.replace(",","."));},0);
+  var totCash=cashRows.reduce(function(s,x){return s+parseFloat(x.valor.replace(",","."));},0);
   function esc(v){if(v===null||v===undefined)return "";var s=String(v).replace(/"/g,'""');return(s.includes(",")||s.includes("\n")||s.includes('"'))?'"'+s+'"':s;}
   function toCSV(rows,cols){var lines=[cols.map(function(c){return esc(c.l);}).join(",")];rows.forEach(function(r){lines.push(cols.map(function(c){return esc(r[c.k]);}).join(","));});return lines.join("\n");}
-  function dl(content,filename){var blob=new Blob(["\uFEFF"+content],{type:"text/csv;charset=utf-8"});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
-  dl(toCSV(res[0]||[],[{k:"date",l:"Data"},{k:"type",l:"Tipo"},{k:"group_name",l:"Grupo"},{k:"category",l:"Categoria"},{k:"amount",l:"Valor (R$)"},{k:"description",l:"Descricao"},{k:"reserva_id",l:"ID Reserva"}]),"nordestina_movimentos_"+stamp+".csv");
-  setTimeout(function(){dl(toCSV(res[1]||[],[{k:"id",l:"ID"},{k:"apto",l:"Apto"},{k:"nome",l:"Hospede"},{k:"canal",l:"Canal"},{k:"checkin",l:"Check-in"},{k:"checkout",l:"Check-out"},{k:"total",l:"Total"},{k:"anticipo",l:"Anticipo"},{k:"saldo_cobrado",l:"Saldo"},{k:"status",l:"Status"}]),"nordestina_reservas_"+stamp+".csv");},400);
-  setTimeout(function(){dl(toCSV(res[2]||[],[{k:"categoria",l:"Categoria"},{k:"nome",l:"Fornecedor"}]),"nordestina_fornecedores_"+stamp+".csv");showToast("3 arquivos exportados!");},800);
+  function dl(content,filename){var blob=new Blob(["﻿"+content],{type:"text/csv;charset=utf-8"});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+  var stamp=MONTHS[gestMonth].toLowerCase()+"_"+gestYear;
+  var cols=[{k:"date",l:"Data"},{k:"reserva",l:"Reserva"},{k:"canal",l:"Canal"},{k:"forma",l:"Forma de pagamento"},{k:"categoria",l:"Categoria"},{k:"valor",l:"Valor (R$)"},{k:"descricao",l:"Descricao"}];
+  var header="# EXTRATO BANCARIO SIMULADO — Nordestina — "+MONTHS[gestMonth]+" "+gestYear+"\n";
+  header+="# So entradas com forma de pagamento bancaria (Pix, Cartao, Stripe, Booking).\n";
+  header+="# Total bancario: R$ "+totBank.toFixed(2).replace(".",",")+" — Total cash/outros: R$ "+totCash.toFixed(2).replace(".",",")+"\n\n";
+  dl(header+toCSV(bankRows,cols)+"\n\n# CASH / OUTROS (nao caem no banco)\n"+toCSV(cashRows,cols),"nordestina_conciliacao_bancaria_"+stamp+".csv");
+  showToast("Extrato gerado: "+bankRows.length+" bank + "+cashRows.length+" cash. Total bank: R$ "+totBank.toFixed(2).replace(".",","));
 }
 
 // ── REPORTES ─────────────────────────────────────────────────────────────────
@@ -1863,9 +1952,14 @@ function renderRepOcupacao(){
   h+="<th style=\"text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px\">ADR</th>";
   h+="<th style=\"text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px\">Receita</th>";
   h+="<th style=\"text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px\">Despesas</th>";
+  h+="<th style=\"text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px\">Resultado</th>";
+  h+="<th style=\"text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px\">Rentab.</th>";
   h+="</tr></thead><tbody>";
   rows.forEach(function(r){
     var m=r.metrics;var rowStyle=r.isCurrent?"background:var(--ocean-light);":"";var cellCol=r.isCurrent?"color:var(--ocean);font-weight:700":"color:var(--text)";
+    var res=(m.receita||0)-(m.despesas||0);
+    var rent=m.receita>0?(res/m.receita)*100:0;
+    var resCol=res>=0?"var(--green)":"var(--red)";
     h+="<tr style=\"border-bottom:1px solid rgba(232,217,192,0.5);"+rowStyle+"\">";
     h+="<td style=\"padding:6px 4px;"+cellCol+"\">"+r.label+"</td>";
     h+="<td style=\"text-align:center;padding:6px 4px\">"+(m.noites>0?m.noites:"&#8212;")+"</td>";
@@ -1873,6 +1967,8 @@ function renderRepOcupacao(){
     h+="<td style=\"text-align:right;padding:6px 4px\">"+(m.noitesPagas>0?fmt(m.preco):"&#8212;")+"</td>";
     h+="<td style=\"text-align:right;padding:6px 4px;font-weight:700;color:var(--green)\">"+(m.receita>0?fmt(m.receita):"&#8212;")+"</td>";
     h+="<td style=\"text-align:right;padding:6px 4px;font-weight:600;color:var(--red)\">"+(m.despesas>0?fmt(m.despesas):"&#8212;")+"</td>";
+    h+="<td style=\"text-align:right;padding:6px 4px;font-weight:700;color:"+resCol+"\">"+(m.receita>0||m.despesas>0?fmt(res):"&#8212;")+"</td>";
+    h+="<td style=\"text-align:right;padding:6px 4px;font-weight:600;color:"+resCol+"\">"+(m.receita>0?rent.toFixed(0)+"%":"&#8212;")+"</td>";
     h+="</tr>";
   });
   h+="</tbody></table></div>";
@@ -2809,6 +2905,7 @@ document.getElementById("gestBtnSair").addEventListener("click",doLogout);
 document.getElementById("gestBtnNovo").addEventListener("click",openGestForm);
 document.getElementById("gestBtnFornec").addEventListener("click",openProvModal);
 document.getElementById("gestBtnExcel").addEventListener("click",exportExcel);
+document.getElementById("gestBtnBank").addEventListener("click",exportBankConcil);
 document.getElementById("gestPrev").addEventListener("click",function(){gestMonth--;if(gestMonth<0){gestMonth=11;gestYear--;}renderGestao();});
 document.getElementById("gestNext").addEventListener("click",function(){gestMonth++;if(gestMonth>11){gestMonth=0;gestYear++;}renderGestao();});
 document.getElementById("gestTab0").addEventListener("click",function(){setGestView("dashboard");});
