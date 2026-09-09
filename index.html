@@ -84,6 +84,7 @@ body{background:var(--sand);font-family:'Jost',sans-serif;color:var(--text);min-
 /* ── CONTENT ── */
 .content{padding:12px 12px 70px;max-width:480px;margin:0 auto}
 #viewReportes .content{max-width:1200px;padding:12px 20px 70px}
+@media(max-width:640px){#viewReportes .content{padding:10px 8px 70px}#viewReportes .card,#viewReportes .ops-card{padding:10px}}
 
 /* ── CARDS ── */
 .card{background:var(--white);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 2px 12px rgba(26,74,107,.08);border:1px solid rgba(26,74,107,.06)}
@@ -295,7 +296,6 @@ canvas{max-width:100%}
       <button class="abtn abtn-sand" id="gestBtnNovo">+ Novo</button>
       <button class="abtn abtn-mid" id="gestBtnFornec">&#128101;</button>
       <button class="abtn abtn-green" id="gestBtnExcel">&#8675; Excel</button>
-      <button class="abtn abtn-mid" id="gestBtnBank" title="Exporta apenas ingressos bancários (Pix, Cartão, Stripe, Booking) para conciliar com extrato">&#127974; Extrato</button>
       <button class="abtn abtn-outline" id="gestBtnSair">Sair</button>
     </div>
   </div>
@@ -687,7 +687,7 @@ function updateClock(){var els=document.querySelectorAll(".app-clock,.dash-clock
 setInterval(updateClock,30000);
 document.addEventListener("DOMContentLoaded",updateClock);
 setTimeout(updateClock,100);
-console.log("Nordestina build v2026-08-25 19:27");
+console.log("Nordestina build v2026-09-09 08:19");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -1001,7 +1001,7 @@ function openResDetail(id){
     if(r.status==="pendiente"){h+="<button class='btn-save' data-a='confirmar' data-id='"+r.id+"'>Confirmar Reserva</button><button class='btn-secondary' data-a='editar' data-id='"+r.id+"'>Editar</button><button class='btn-danger' data-a='cancelar' data-id='"+r.id+"'>Cancelar</button>";}
     else if(r.status==="confirmada"){h+="<button class='btn-save' data-a='checkin' data-id='"+r.id+"'>Registrar Check-in</button><button class='btn-secondary' data-a='editar' data-id='"+r.id+"'>Editar</button><button class='btn-danger' data-a='cancelar' data-id='"+r.id+"'>Cancelar</button>";}
     else if(r.status==="checkin"){h+="<button class='btn-green' data-a='checkout' data-id='"+r.id+"'>&#128722; Registrar Checkout</button><button class='btn-secondary' data-a='editar' data-id='"+r.id+"'>Editar</button>";}
-    else if(r.status==="checkout"){h+="<button class='btn-secondary' data-a='recheckout' data-id='"+r.id+"'>&#9998; Editar Verificacao</button>";}
+    else if(r.status==="checkout"){h+="<button class='btn-secondary' data-a='recheckout' data-id='"+r.id+"'>&#9998; Editar Verificacao</button><button class='btn-secondary' data-a='editar' data-id='"+r.id+"'>&#128176; Editar Dados/Pagamento</button>";}
     else if(r.status==="cancelada"){h+="<button class='btn-secondary' data-a='reativar' data-id='"+r.id+"'>Reativar</button>";}
   } else {
     h+="<div style='text-align:center;padding:12px;font-size:12px;color:var(--text-soft);background:var(--sand-mid);border-radius:8px'>&#128274; Modo somente leitura</div>";
@@ -1945,7 +1945,7 @@ function renderRepOcupacao(){
   var rows=[];
   for(var i=5;i>=0;i--){var d=new Date(repYear,repMonth-i,1);var y=d.getFullYear(),m=d.getMonth();rows.push({label:MONTHS[m]+" "+String(y).slice(-2),isCurrent:i===0,metrics:computeOpsMetrics(y,m)});}
   h+="<div style=\"margin-top:14px;padding-top:12px;border-top:1px solid var(--sand-mid)\"><div style=\"font-size:9px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;font-weight:600\">Últimos 6 meses</div>";
-  h+="<table style=\"width:100%;border-collapse:collapse;font-size:11px\"><thead><tr style=\"border-bottom:1px solid var(--sand-mid)\">";
+  h+="<div style=\"overflow-x:auto;-webkit-overflow-scrolling:touch\"><table style=\"width:100%;min-width:640px;border-collapse:collapse;font-size:11px\"><thead><tr style=\"border-bottom:1px solid var(--sand-mid)\">";
   h+="<th style=\"text-align:left;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px\">Mês</th>";
   h+="<th style=\"text-align:center;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px\">Noites</th>";
   h+="<th style=\"text-align:center;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600;letter-spacing:1px\">Ocup.</th>";
@@ -1971,7 +1971,7 @@ function renderRepOcupacao(){
     h+="<td style=\"text-align:right;padding:6px 4px;font-weight:600;color:"+resCol+"\">"+(m.receita>0?rent.toFixed(0)+"%":"&#8212;")+"</td>";
     h+="</tr>";
   });
-  h+="</tbody></table></div>";
+  h+="</tbody></table></div></div>";
   h+="</div>";
   document.getElementById("repOcupacao").innerHTML=h;
 }
@@ -2050,14 +2050,14 @@ function renderRepSimples(){
   h+="</div>";
   // Ultimos 6 meses
   h+="<div class=\"ops-card\"><span class=\"sec-title\">Últimos 6 meses</span>";
-  h+="<table style=\"width:100%;border-collapse:collapse;font-size:11px\"><thead><tr style=\"border-bottom:1px solid var(--sand-mid)\"><th style=\"text-align:left;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Mês</th><th style=\"text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Base</th><th style=\"text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Imposto</th></tr></thead><tbody>";
+  h+="<div style=\"overflow-x:auto;-webkit-overflow-scrolling:touch\"><table style=\"width:100%;min-width:360px;border-collapse:collapse;font-size:11px\"><thead><tr style=\"border-bottom:1px solid var(--sand-mid)\"><th style=\"text-align:left;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Mês</th><th style=\"text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Base</th><th style=\"text-align:right;padding:4px 4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Imposto</th></tr></thead><tbody>";
   for(var i=5;i>=0;i--){var d=new Date(repYear,repMonth-i,1);var y=d.getFullYear(),m=d.getMonth();var sn2=computeSNBase(y,m);var imp2=sn2.baseNet*(pctSN/100);var lbl=MONTHS[m]+" "+String(y).slice(-2);var isCur=i===0;
     h+="<tr style=\"border-bottom:1px solid rgba(232,217,192,0.5);"+(isCur?"background:var(--ocean-light);":"")+"\">";
     h+="<td style=\"padding:6px 4px;"+(isCur?"font-weight:700;color:var(--ocean)":"")+"\">"+lbl+"</td>";
     h+="<td style=\"text-align:right;padding:6px 4px\">"+(sn2.baseNet>0?fmt(sn2.baseNet):"&#8212;")+"</td>";
     h+="<td style=\"text-align:right;padding:6px 4px;color:var(--red);font-weight:600\">"+(imp2>0?fmt(imp2):"&#8212;")+"</td></tr>";
   }
-  h+="</tbody></table></div>";
+  h+="</tbody></table></div></div>";
   document.getElementById("repSimples").innerHTML=h;
 }
 
@@ -2138,7 +2138,7 @@ function renderRepComissoes(){
   // Detalhe por reserva
   if(c.byRes.length>0){
     h+="<div class=\"ops-card\"><span class=\"sec-title\">Detalhe por reserva</span>";
-    h+="<div style=\"overflow-x:auto\"><table style=\"width:100%;border-collapse:collapse;font-size:11px\"><thead><tr style=\"border-bottom:1px solid var(--sand-mid)\">";
+    h+="<div style=\"overflow-x:auto;-webkit-overflow-scrolling:touch\"><table style=\"width:100%;min-width:640px;border-collapse:collapse;font-size:11px\"><thead><tr style=\"border-bottom:1px solid var(--sand-mid)\">";
     h+="<th style=\"text-align:left;padding:4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Hóspede</th>";
     h+="<th style=\"text-align:left;padding:4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Canal</th>";
     h+="<th style=\"text-align:left;padding:4px;font-size:9px;color:var(--text-soft);text-transform:uppercase;font-weight:600\">Med Pag</th>";
@@ -2905,7 +2905,6 @@ document.getElementById("gestBtnSair").addEventListener("click",doLogout);
 document.getElementById("gestBtnNovo").addEventListener("click",openGestForm);
 document.getElementById("gestBtnFornec").addEventListener("click",openProvModal);
 document.getElementById("gestBtnExcel").addEventListener("click",exportExcel);
-document.getElementById("gestBtnBank").addEventListener("click",exportBankConcil);
 document.getElementById("gestPrev").addEventListener("click",function(){gestMonth--;if(gestMonth<0){gestMonth=11;gestYear--;}renderGestao();});
 document.getElementById("gestNext").addEventListener("click",function(){gestMonth++;if(gestMonth>11){gestMonth=0;gestYear++;}renderGestao();});
 document.getElementById("gestTab0").addEventListener("click",function(){setGestView("dashboard");});
