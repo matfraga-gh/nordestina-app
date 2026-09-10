@@ -83,6 +83,7 @@ body{background:var(--sand);font-family:'Jost',sans-serif;color:var(--text);min-
 
 /* ── CONTENT ── */
 .content{padding:12px 12px 70px;max-width:480px;margin:0 auto}
+.res-card-dup{border:2px solid var(--red)!important;background:linear-gradient(to right,rgba(220,60,60,0.05),transparent)!important}
 #viewReportes .content{max-width:1200px;padding:12px 20px 70px}
 @media(max-width:640px){#viewReportes .content{padding:10px 8px 70px}#viewReportes .card,#viewReportes .ops-card{padding:10px}}
 
@@ -687,7 +688,7 @@ function updateClock(){var els=document.querySelectorAll(".app-clock,.dash-clock
 setInterval(updateClock,30000);
 document.addEventListener("DOMContentLoaded",updateClock);
 setTimeout(updateClock,100);
-console.log("Nordestina build v2026-09-09 08:19");
+console.log("Nordestina build v2026-09-10 10:19");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -862,13 +863,21 @@ function renderResList(){
     h+="<button class='fbtn"+(resFilter===s?" active":"")+"' data-rf='"+s+"'>"+(s==="todas"?"Todas":RES_SL[s])+"</button>";
   });
   h+="</div>";
+  // Detectar duplicados: mismo apto+nome+checkin+checkout+total (probablemente same reserva creada 2 veces)
+  var dupMap={};
+  f.forEach(function(r){var k=(r.apto||"")+"|"+(r.nome||"").toLowerCase().trim()+"|"+r.checkin+"|"+r.checkout+"|"+Number(r.total||0);dupMap[k]=(dupMap[k]||0)+1;});
   if(!f.length){h+="<div class='empty'>Nenhuma reserva neste mes.</div>";}
   else f.forEach(function(r){
-    var n=nights(r.checkin,r.checkout),saldo=Number(r.total||0)-Number(r.anticipo||0);
+    var n=nights(r.checkin,r.checkout);
+    var recebido=Number(r.anticipo||0)+Number(r.saldo_cobrado||0);
+    var pendente=Number(r.total||0)-recebido;
+    var dupKey=(r.apto||"")+"|"+(r.nome||"").toLowerCase().trim()+"|"+r.checkin+"|"+r.checkout+"|"+Number(r.total||0);
+    var isDup=dupMap[dupKey]>1;
     var sH="";
-    if(r.status!=="checkin"&&r.status!=="cancelada"&&r.status!=="checkout"&&saldo>0)sH="<div style='font-size:11px;font-weight:600;color:var(--yellow)'>Saldo: "+fmt(saldo)+"</div>";
-    if(r.status==="checkin")sH="<div style='font-size:11px;font-weight:600;color:var(--green)'>Pago completo</div>";
-    h+="<div class='res-card' data-rid='"+r.id+"'><div class='res-header'><div><div class='res-apto'>"+(r.apto||"—")+"</div><div class='res-huesped'>"+(r.nome||"—")+"</div><div class='res-fechas'>"+fmtD(r.checkin)+" → "+fmtD(r.checkout)+" · "+n+" noite"+(n!==1?"s":"")+"</div></div><span class='chip "+(RES_SC[r.status]||"chip-pendiente")+"'>"+(RES_SL[r.status]||r.status)+"</span></div><div class='res-footer'><div><span class='res-canal'>"+(r.canal||"—")+"</span>"+(r.pago_anticipo?"<div class='pago-tag'>"+r.pago_anticipo+"</div>":"")+"</div><div style='text-align:right'><div style='font-size:14px;font-weight:700;color:var(--ocean)'>"+fmt(r.total)+"</div><div style='font-size:10px;color:var(--text-soft)'>Anticipo: "+fmt(r.anticipo)+"</div>"+sH+"</div></div></div>";
+    if(r.status!=="checkin"&&r.status!=="cancelada"&&r.status!=="checkout"&&pendente>=1)sH="<div style='font-size:11px;font-weight:600;color:var(--yellow)'>Saldo: "+fmt(pendente)+"</div>";
+    else if(r.status!=="cancelada"&&pendente<1&&(Number(r.anticipo||0)>0||Number(r.saldo_cobrado||0)>0))sH="<div style='font-size:11px;font-weight:600;color:var(--green)'>Pago completo</div>";
+    var dupBadge=isDup?"<div style='background:var(--red);color:var(--white);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;display:inline-block;margin-bottom:4px;letter-spacing:1px'>DUPLICADA?</div>":"";
+    h+="<div class='res-card"+(isDup?" res-card-dup":"")+"' data-rid='"+r.id+"'>"+(dupBadge?"<div style='padding:4px 0 0'>"+dupBadge+"</div>":"")+"<div class='res-header'><div><div class='res-apto'>"+(r.apto||"—")+"</div><div class='res-huesped'>"+(r.nome||"—")+"</div><div class='res-fechas'>"+fmtD(r.checkin)+" → "+fmtD(r.checkout)+" · "+n+" noite"+(n!==1?"s":"")+"</div></div><span class='chip "+(RES_SC[r.status]||"chip-pendiente")+"'>"+(RES_SL[r.status]||r.status)+"</span></div><div class='res-footer'><div><span class='res-canal'>"+(r.canal||"—")+"</span>"+(r.pago_anticipo?"<div class='pago-tag'>"+r.pago_anticipo+"</div>":"")+"</div><div style='text-align:right'><div style='font-size:14px;font-weight:700;color:var(--ocean)'>"+fmt(r.total)+"</div><div style='font-size:10px;color:var(--text-soft)'>Anticipo: "+fmt(r.anticipo)+"</div>"+(Number(r.saldo_cobrado||0)>0?"<div style='font-size:10px;color:var(--text-soft)'>Saldo cobr.: "+fmt(r.saldo_cobrado)+"</div>":"")+sH+"</div></div></div>";
   });
   document.getElementById("resListContent").innerHTML=h;
   document.querySelectorAll("[data-rid]").forEach(function(el){el.addEventListener("click",function(){openResDetail(parseInt(el.dataset.rid));});});
@@ -1198,35 +1207,47 @@ async function syncSaldo(rid,reserva){
   if(ex&&ex.length>0)await api("entries?id=eq."+ex[0].id,"PATCH",e);else await api("entries","POST",e);
 }
 
+var _resIsSaving=false;
+function _disableSaveButtons(){document.querySelectorAll("#resFormActions button").forEach(function(b){b.disabled=true;b.style.opacity="0.5";});}
+function _enableSaveButtons(){document.querySelectorAll("#resFormActions button").forEach(function(b){b.disabled=false;b.style.opacity="1";});_resIsSaving=false;}
 async function resSaveNew(status){
+  if(_resIsSaving){showToast("Salvando... aguarde");return;}
   var d=resGetBaseData();
   if(!d.apto||!d.checkin||!d.checkout||!d.nome){showToast("Preencha os campos obrigatorios");return;}
   if(new Date(d.checkout+"T12:00:00")<=new Date(d.checkin+"T12:00:00")){showToast("Check-out deve ser posterior ao check-in");return;}
   if(Number(d.anticipo||0)>Number(d.total||0)){showToast("Anticipo nao pode ser maior que o total da reserva");return;}
   if(checkSolap(d.apto,d.checkin,d.checkout,null)){showToast("Conflito: "+d.apto+" ja tem reserva nessas datas");return;}
+  _resIsSaving=true;_disableSaveButtons();
   d.status=status;
   var res=await api("reservas","POST",d);
   if(res&&res[0]){await syncAnticipo(res[0].id,res[0]);document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Reserva salva!");}
   else showToast("Erro ao salvar");
+  _enableSaveButtons();
 }
 async function resSaveCheckin(){
+  if(_resIsSaving){showToast("Salvando... aguarde");return;}
+  _resIsSaving=true;_disableSaveButtons();
   var saldo=parseFloat(document.getElementById("fSaldoCob").value)||0,fxS=getFxD("saldo");
   var patch={saldo_cobrado:saldo,pago_saldo:document.getElementById("fPagoSaldo").value,data_saldo:document.getElementById("fDataSaldo").value||null,obs_checkin:document.getElementById("fObsCheckin").value,devolucao:parseFloat((document.getElementById("fDevolucao")||{}).value)||0,status:"checkin",fx_moeda_saldo:fxS?fxS.moeda:null,fx_valor_saldo:fxS?fxS.valor_fx:null,fx_taxa_saldo:fxS?fxS.taxa:null};
   var res=await api("reservas?id=eq."+resEditingId,"PATCH",patch);
   if(res){var r=allRes.find(function(x){return x.id===resEditingId;});await syncSaldo(resEditingId,Object.assign({},r,patch));document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Check-in registrado!");}
   else showToast("Erro ao salvar");
+  _enableSaveButtons();
 }
 async function resUpdateRes(){
+  if(_resIsSaving){showToast("Salvando... aguarde");return;}
   var d=resGetBaseData();
   if(new Date(d.checkout+"T12:00:00")<=new Date(d.checkin+"T12:00:00")){showToast("Check-out deve ser posterior ao check-in");return;}
   if(Number(d.anticipo||0)>Number(d.total||0)){showToast("Anticipo nao pode ser maior que o total da reserva");return;}
   if(checkSolap(d.apto,d.checkin,d.checkout,resEditingId)){showToast("Conflito: "+d.apto+" ja tem reserva nessas datas");return;}
+  _resIsSaving=true;_disableSaveButtons();
   var fxS=getFxD("saldo");
   d.saldo_cobrado=parseFloat(document.getElementById("fSaldoCob").value)||null;d.pago_saldo=document.getElementById("fPagoSaldo").value;d.data_saldo=document.getElementById("fDataSaldo").value||null;d.obs_checkin=document.getElementById("fObsCheckin").value;d.devolucao=parseFloat((document.getElementById("fDevolucao")||{}).value)||0;
   d.fx_moeda_saldo=fxS?fxS.moeda:null;d.fx_valor_saldo=fxS?fxS.valor_fx:null;d.fx_taxa_saldo=fxS?fxS.taxa:null;
   var res=await api("reservas?id=eq."+resEditingId,"PATCH",d);
   if(res){await syncAnticipo(resEditingId,Object.assign({},d,{id:resEditingId}));if(d.saldo_cobrado)await syncSaldo(resEditingId,Object.assign({},d,{id:resEditingId}));document.getElementById("resFormOverlay").classList.remove("open");await loadReservas();showToast("Atualizado!");}
   else showToast("Erro ao atualizar");
+  _enableSaveButtons();
 }
 
 // ── GESTAO ───────────────────────────────────────────────────────────────────
