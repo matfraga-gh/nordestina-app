@@ -556,12 +556,25 @@ canvas{max-width:100%}
 <div class="overlay" id="calcOverlay">
   <div class="modal">
     <div class="modal-head"><span class="modal-title">&#129518; Calculadora de Câmbio</span><button class="btn-x" id="calcClose">&#215;</button></div>
-    <div style="font-size:11px;color:var(--text-soft);margin-bottom:14px;line-height:1.5">Câmbio Nordestina = cotação oficial <b>menos 5%</b> (spread a favor da Nordestina).</div>
+    <div style="font-size:11px;color:var(--text-soft);margin-bottom:14px;line-height:1.5">Câmbio Nordestina baseado na cotação BNA (compra).</div>
     <label>Valor em Reais (R$)</label>
     <input type="number" id="calcInput" step="0.01" placeholder="Ex: 1000" autofocus/>
     <div id="calcOutput" style="min-height:120px;margin-top:8px"></div>
     <div id="calcRatesInfo" style="font-size:10px;color:var(--text-soft);margin-top:14px;padding-top:12px;border-top:1px solid var(--sand-mid);line-height:1.6">Carregando cotação...</div>
-    <button class="btn-secondary" id="calcRefresh" style="margin-top:12px">&#8635; Atualizar cotação</button>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn-secondary" id="calcRefresh" style="margin-top:0;flex:1">&#8635; Auto</button>
+      <button class="btn-secondary" id="calcEditRates" style="margin-top:0;flex:1">&#9998; Editar rates</button>
+    </div>
+    <div id="calcEditPanel" style="display:none;margin-top:14px;padding:12px;background:var(--sand);border-radius:8px">
+      <div style="font-size:11px;color:var(--text-soft);margin-bottom:10px;line-height:1.5">Copiar da página <b>bna.com.ar/Personas</b> &middot; Cotização Billetes &middot; <b>Compra</b>:</div>
+      <label style="font-size:11px">USD Compra (ARS)</label>
+      <input type="number" id="calcRateUSD" step="0.01" placeholder="Ex: 1480"/>
+      <label style="font-size:11px">EUR Compra (ARS)</label>
+      <input type="number" id="calcRateEUR" step="0.01" placeholder="Ex: 1700"/>
+      <label style="font-size:11px">Real Compra por 100 unidades (ARS)</label>
+      <input type="number" id="calcRateBRL" step="0.01" placeholder="Ex: 28500"/>
+      <button class="btn-save" id="calcSaveRates" style="margin-top:6px">Salvar rates</button>
+    </div>
   </div>
 </div>
 
@@ -701,7 +714,7 @@ function updateClock(){var els=document.querySelectorAll(".app-clock,.dash-clock
 setInterval(updateClock,30000);
 document.addEventListener("DOMContentLoaded",updateClock);
 setTimeout(updateClock,100);
-console.log("Nordestina build v2026-09-14 10:00");
+console.log("Nordestina build v2026-09-14 11:11");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -807,7 +820,7 @@ function goToDash(){
   if(acc.consorcio){var consFull=(!acc.reservas&&!acc.admin&&!acc.users)?" full":"";h+="<div class='dash-card"+consFull+"' id='dcConsorcio'><div class='dash-icon'>&#127970;</div><div class='dash-title'>Consorcio</div><div class='dash-desc'>Expensas e areas comuns</div><span class='dash-badge "+(acc.readonly?"badge-blue":"badge-green")+"'>"+(acc.readonly?"Somente leitura":"Acesso completo")+"</span></div>";}
   if(acc.users)    h+="<div class='dash-card full' id='dcUsuarios'><div class='dash-icon'>&#128101;</div><div class='dash-title'>Usuarios</div><div class='dash-desc'>Gerenciar usuarios e permissoes</div><span class='dash-badge badge-amber'>Master</span></div>";
   // Calculadora — disponible para todos
-  h+="<div class='dash-card full' id='dcCalc'><div class='dash-icon'>&#129518;</div><div class='dash-title'>Calculadora de Câmbio</div><div class='dash-desc'>Converter R$ para USD, EUR e ARS (cotação BNA compra, câmbio Nordestina com 5% de spread)</div><span class='dash-badge badge-blue'>Todos os usuários</span></div>";
+  h+="<div class='dash-card full' id='dcCalc'><div class='dash-icon'>&#129518;</div><div class='dash-title'>Calculadora de Câmbio</div><div class='dash-desc'>Converter R$ para USD, EUR e ARS (cotação BNA)</div><span class='dash-badge badge-blue'>Todos os usuários</span></div>";
   document.getElementById("dashGrid").innerHTML=h;
   if(acc.reservas) document.getElementById("dcReservas").addEventListener("click",openReservas);
   if(acc.admin)    document.getElementById("dcGestao").addEventListener("click",openGestao);
@@ -819,29 +832,49 @@ function goToDash(){
 }
 
 // ── CALCULADORA DE CÂMBIO ────────────────────────────────────────────────────
-// Usa cotações do Banco Nación (BNA) vía dolarapi.com — compra em pesos argentinos
+// Usa cotações BNA (compra em ARS). Auto-fetch via dolarapi.com; fallback manual persistido em localStorage.
 var _fxCache=null, _fxCacheTime=0, _FX_TTL=15*60*1000;
+function _getStoredRates(){
+  try {
+    var raw=localStorage.getItem("nordestina_bna_rates");
+    if(!raw) return null;
+    var r=JSON.parse(raw);
+    if(r&&r.USD_ARS_compra&&r.EUR_ARS_compra&&r.BRL_ARS_compra) return r;
+  } catch(e){}
+  return null;
+}
+function _storeRates(rates){
+  try { localStorage.setItem("nordestina_bna_rates",JSON.stringify(rates)); } catch(e){}
+}
 async function getFxRates(force){
   var now=Date.now();
   if(!force && _fxCache && (now-_fxCacheTime)<_FX_TTL) return _fxCache;
+  // Tentar auto-fetch primeiro
   try {
     var responses=await Promise.all([
       fetch("https://dolarapi.com/v1/dolares/nacion"),
       fetch("https://dolarapi.com/v1/cotizaciones/eur"),
       fetch("https://dolarapi.com/v1/cotizaciones/brl")
     ]);
-    if(!responses.every(function(r){return r.ok;})) return _fxCache;
-    var data=await Promise.all(responses.map(function(r){return r.json();}));
-    var usdArs=Number(data[0].compra), eurArs=Number(data[1].compra), brlArs=Number(data[2].compra);
-    if(!usdArs||!eurArs||!brlArs) return _fxCache;
-    _fxCache={
-      USD_ARS_compra:usdArs, EUR_ARS_compra:eurArs, BRL_ARS_compra:brlArs,
-      updated:data[0].fechaActualizacion || new Date().toISOString()
-    };
-    _fxCacheTime=now;
-    return _fxCache;
-  } catch(e){ console.error("[FX] fetch failed",e); }
-  return _fxCache;
+    if(responses.every(function(r){return r.ok;})){
+      var data=await Promise.all(responses.map(function(r){return r.json();}));
+      var usdArs=Number(data[0].compra), eurArs=Number(data[1].compra), brlArs=Number(data[2].compra);
+      if(usdArs&&eurArs&&brlArs){
+        _fxCache={
+          USD_ARS_compra:usdArs, EUR_ARS_compra:eurArs, BRL_ARS_compra:brlArs,
+          updated:data[0].fechaActualizacion || new Date().toISOString(),
+          source:"auto (dolarapi)"
+        };
+        _fxCacheTime=now;
+        _storeRates(_fxCache);
+        return _fxCache;
+      }
+    }
+  } catch(e){ console.warn("[FX] auto-fetch failed, using stored/manual",e); }
+  // Fallback: usar rates manuais salvos localmente
+  var stored=_getStoredRates();
+  if(stored){_fxCache=Object.assign({},stored,{source:"manual (localStorage)"});_fxCacheTime=now;return _fxCache;}
+  return null;
 }
 function openCalculadora(){
   document.getElementById("calcInput").value="";
@@ -854,11 +887,10 @@ async function _updateCalcRates(force){
   var infoEl=document.getElementById("calcRatesInfo");
   infoEl.innerHTML="<span style='color:var(--text-soft)'>Carregando cotação BNA...</span>";
   var fx=await getFxRates(force);
-  if(!fx){infoEl.innerHTML="<span style='color:var(--red)'>Erro ao carregar cotação. Sem conexão?</span>";return;}
-  // Cross rates BRL → target via ARS (BNA)
-  // 1 BRL = fx.BRL_ARS_compra ARS
-  // 1 USD = fx.USD_ARS_compra ARS  → 1 BRL = (BRL_ARS/USD_ARS) USD
-  // 1 EUR = fx.EUR_ARS_compra ARS  → 1 BRL = (BRL_ARS/EUR_ARS) EUR
+  if(!fx){
+    infoEl.innerHTML="<span style='color:var(--red)'>Auto-fetch falhou. Toque em <b>Editar rates</b> para inserir manualmente da página BNA.</span>";
+    return;
+  }
   var brlUsdOfic=fx.BRL_ARS_compra/fx.USD_ARS_compra;
   var brlEurOfic=fx.BRL_ARS_compra/fx.EUR_ARS_compra;
   var brlArsOfic=fx.BRL_ARS_compra;
@@ -869,9 +901,11 @@ async function _updateCalcRates(force){
     "1 USD = "+fx.USD_ARS_compra.toFixed(2)+" ARS<br>" +
     "1 EUR = "+fx.EUR_ARS_compra.toFixed(2)+" ARS<br>" +
     "1 BRL = "+fx.BRL_ARS_compra.toFixed(2)+" ARS<br><br>" +
-    "<b>Cross rate BRL (oficial):</b><br>" +
-    "R$ 1 = US$ "+brlUsdOfic.toFixed(4)+" &middot; € "+brlEurOfic.toFixed(4)+" &middot; AR$ "+brlArsOfic.toFixed(2)+"<br><br>" +
-    "<span style='font-size:9px'>Atualizado: "+updStr+" &middot; Fonte: BNA via dolarapi.com</span>";
+    "<span style='font-size:9px'>Atualizado: "+updStr+" &middot; "+(fx.source||"")+"</span>";
+  // Pré-preencher inputs manuais con los rates atuais
+  document.getElementById("calcRateUSD").value=fx.USD_ARS_compra.toFixed(2);
+  document.getElementById("calcRateEUR").value=fx.EUR_ARS_compra.toFixed(2);
+  document.getElementById("calcRateBRL").value=(fx.BRL_ARS_compra*100).toFixed(2);
   var inp=document.getElementById("calcInput");
   inp.oninput=function(){
     var v=parseFloat(this.value)||0;
@@ -881,7 +915,7 @@ async function _updateCalcRates(force){
     var ars=(v*brlArsOfic)/0.95;
     document.getElementById("calcOutput").innerHTML=
       "<div style='background:linear-gradient(135deg,var(--ocean),var(--ocean-mid));color:var(--white);border-radius:12px;padding:16px;margin-top:8px'>" +
-      "<div style='font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:8px'>R$ "+v.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})+" &middot; cliente paga (5% a favor Nordestina)</div>" +
+      "<div style='font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:8px'>R$ "+v.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})+" equivale a</div>" +
       "<div style='display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.15)'>" +
       "<span style='font-size:15px'>&#127482;&#127480; USD</span>" +
       "<span style='font-family:Cormorant Garamond,serif;font-size:26px;font-weight:700'>$ "+usd.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})+"</span>" +
@@ -897,6 +931,19 @@ async function _updateCalcRates(force){
       "</div>";
   };
   if(inp.value) inp.oninput.call(inp);
+}
+
+function _saveManualRates(){
+  var usd=parseFloat(document.getElementById("calcRateUSD").value)||0;
+  var eur=parseFloat(document.getElementById("calcRateEUR").value)||0;
+  var brl100=parseFloat(document.getElementById("calcRateBRL").value)||0;
+  if(usd<=0||eur<=0||brl100<=0){showToast("Preencha os 3 valores");return;}
+  var rates={USD_ARS_compra:usd, EUR_ARS_compra:eur, BRL_ARS_compra:brl100/100, updated:new Date().toISOString(), source:"manual (BNA)"};
+  _storeRates(rates);
+  _fxCache=rates; _fxCacheTime=Date.now();
+  document.getElementById("calcEditPanel").style.display="none";
+  _updateCalcRates(false);
+  showToast("Cotações BNA salvas");
 }
 
 function getAccess(){
@@ -2985,7 +3032,9 @@ async function deleteUser(id){
 // Login
 document.getElementById("confirmCancel").addEventListener("click",function(){document.getElementById("confirmOverlay").classList.remove("open");});
 document.getElementById("calcClose").addEventListener("click",function(){document.getElementById("calcOverlay").classList.remove("open");});
-document.getElementById("calcRefresh").addEventListener("click",function(){_updateCalcRates(true);showToast("Cotação atualizada");});
+document.getElementById("calcRefresh").addEventListener("click",function(){_updateCalcRates(true);});
+document.getElementById("calcEditRates").addEventListener("click",function(){var p=document.getElementById("calcEditPanel");p.style.display=p.style.display==="none"?"block":"none";});
+document.getElementById("calcSaveRates").addEventListener("click",_saveManualRates);
 // Login
 document.getElementById("btnLogin").addEventListener("click",doLogin);
 document.getElementById("loginUser").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
