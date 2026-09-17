@@ -701,7 +701,7 @@ function updateClock(){var els=document.querySelectorAll(".app-clock,.dash-clock
 setInterval(updateClock,30000);
 document.addEventListener("DOMContentLoaded",updateClock);
 setTimeout(updateClock,100);
-console.log("Nordestina build v2026-09-14 11:29");
+console.log("Nordestina build v2026-09-17 19:15");
 
 var SB_URL="https://cmtbmpzklorhmgkwvcfa.supabase.co";
 var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdGJtcHprbG9yaG1na3d2Y2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjAxMjEsImV4cCI6MjA5MjYzNjEyMX0.K0dLwCoof_61Hfn2BnQndaeilMtiaIeX32-l3ZgO3kk";
@@ -872,9 +872,9 @@ async function _updateCalcRates(force){
   inp.oninput=function(){
     var v=parseFloat(this.value)||0;
     if(v<=0){document.getElementById("calcOutput").innerHTML="<div style='font-size:11px;color:var(--text-soft);text-align:center;padding:24px 0'>Digite um valor em R$ acima para converter</div>";return;}
-    var usd=(v*brlUsdOfic)/0.95;
-    var eur=(v*brlEurOfic)/0.95;
-    var ars=(v*brlArsOfic)/0.95;
+    var usd=(v*brlUsdOfic)/0.93;
+    var eur=(v*brlEurOfic)/0.93;
+    var ars=(v*brlArsOfic)/0.93;
     document.getElementById("calcOutput").innerHTML=
       "<div style='background:linear-gradient(135deg,var(--ocean),var(--ocean-mid));color:var(--white);border-radius:12px;padding:16px;margin-top:8px'>" +
       "<div style='font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:8px'>R$ "+v.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})+" equivale a</div>" +
